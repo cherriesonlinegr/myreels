@@ -77,7 +77,32 @@
 
     form.addEventListener("change", (e) => {
       const t = e.target;
-      if (!(t instanceof HTMLInputElement) || t.name !== "interest") return;
+      if (!(t instanceof HTMLInputElement)) return;
+
+      if (t.name === "plan_content") {
+        const box = form.querySelector('input[name="interest"][value="content"]');
+        if (box) box.checked = true;
+      }
+      if (t.name === "plan_videos") {
+        const box = form.querySelector('input[name="interest"][value="videos"]');
+        if (box) box.checked = true;
+      }
+      if (t.name === "plan_maps") {
+        const box = form.querySelector('input[name="interest"][value="maps"]');
+        if (box) box.checked = true;
+      }
+
+      if (t.name !== "interest") {
+        if (
+          allBox &&
+          (t.name === "plan_content" ||
+            t.name === "plan_videos" ||
+            t.name === "plan_maps")
+        ) {
+          allBox.checked = serviceBoxes().every((box) => box.checked);
+        }
+        return;
+      }
 
       if (t.value === "all") {
         serviceBoxes().forEach((box) => {
@@ -109,9 +134,29 @@
         .getAll("interest")
         .map(String)
         .filter((v) => v !== "all");
-      if (data.getAll("interest").includes("all") || services.length === 3) {
+      const wantsAll = data.getAll("interest").includes("all") || services.length === 3;
+      if (wantsAll) {
         services = ["content", "videos", "maps"];
       }
+
+      const planLabel = (id) => {
+        if (id === "content") {
+          return data.get("plan_content") === "quarterly"
+            ? "600€ / 3 μήνες"
+            : "300€ / μήνα";
+        }
+        if (id === "videos") {
+          return data.get("plan_videos") === "quarterly"
+            ? "900€ / 3 μήνες"
+            : "400€ / μήνα";
+        }
+        if (id === "maps") {
+          return data.get("plan_maps") === "quarterly"
+            ? "300€ / 3 μήνες"
+            : "150€ / μήνα";
+        }
+        return "";
+      };
 
       const labels = {
         content: "Διαχείριση Social Media",
@@ -119,9 +164,13 @@
         avatar: "AI Avatar Videos",
         maps: "Google My Business",
       };
-      const interestNote = services.length
-        ? `Ενδιαφέρον: ${services.map((id) => labels[id] || id).join(", ")}`
-        : "Ενδιαφέρον: δεν επιλέχθηκε";
+      const interestNote = wantsAll
+        ? "Ενδιαφέρον: Όλες μαζί — Ρωτήστε μας"
+        : services.length
+          ? `Ενδιαφέρον: ${services
+              .map((id) => `${labels[id] || id} (${planLabel(id)})`)
+              .join(", ")}`
+          : "Ενδιαφέρον: δεν επιλέχθηκε";
 
       // Local admin pipeline
       try {
@@ -186,4 +235,12 @@
       }
     });
   }
+
+  const processIgEmbeds = () => {
+    if (window.instgrm?.Embeds?.process) {
+      window.instgrm.Embeds.process();
+    }
+  };
+  processIgEmbeds();
+  window.addEventListener("load", processIgEmbeds);
 })();

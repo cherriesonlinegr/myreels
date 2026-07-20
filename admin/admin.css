@@ -621,6 +621,11 @@ textarea {
   margin-top: 2px;
 }
 
+.svc-check__price {
+  color: var(--blue) !important;
+  font-weight: 500;
+}
+
 .stats--inline {
   padding: 0;
   gap: 8px;

@@ -118,11 +118,11 @@ MyReels`,
 
 Όπως συζητήσαμε, σου στέλνω την πρόταση συνεργασίας MyReels για την {{business}}.
 
-Τι περιλαμβάνει:
-• AI Avatar & κλωνοποίηση φωνής
-• Στρατηγική περιεχομένου
-• Παραγωγή & δημοσίευση Reels
-• Βασική διαχείριση λογαριασμών
+Υπηρεσίες & τιμές (χωρίς ΦΠΑ):
+• Social Media (διαχείριση + content): 300€/μήνα ή Super 600€/3 μήνες
+• AI Avatar Videos (30/μήνα): 400€/μήνα ή Super 900€/3 μήνες
+• Google My Business (setup + 15 posts): 150€/μήνα ή Super 300€/3 μήνες
+• Όλες μαζί: Ρωτήστε μας
 
 {{value_line}}
 
@@ -388,6 +388,19 @@ MyReels`,
             sequences[s.id] = cloneDefaults()[s.id] || [];
           }
         });
+        // Refresh offer template pricing (GMB Super 300€ / 3 μήνες κ.λπ.)
+        const defaults = cloneDefaults();
+        const offer0 = (sequences.send_offer || []).find((m) => m.id === "offer-0");
+        const defaultOffer0 = (defaults.send_offer || []).find((m) => m.id === "offer-0");
+        if (
+          offer0 &&
+          defaultOffer0 &&
+          !String(offer0.body || "").includes("Super 300€/3 μήνες")
+        ) {
+          offer0.body = defaultOffer0.body;
+          offer0.subject = defaultOffer0.subject;
+          saveSequences();
+        }
       } else {
         sequences = cloneDefaults();
         saveSequences();
@@ -436,7 +449,7 @@ MyReels`,
   function personalize(text, lead) {
     const money = formatMoney(lead.value);
     const valueLine = money
-      ? `Επένδυση: ${money} / μήνα`
+      ? `Επένδυση: ${money} (χωρίς ΦΠΑ)`
       : "Τα οικονομικά στοιχεία βρίσκονται στην πρόταση.";
     return String(text || "")
       .replaceAll("{{name}}", lead.name || "")
@@ -643,17 +656,26 @@ MyReels`,
 
   function fillServiceChecks(selected = []) {
     const set = new Set(selected);
-    leadServicesEl.innerHTML = SERVICES.map(
-      (s) => `
+    leadServicesEl.innerHTML = SERVICES.map((s) => {
+      const monthly = s.priceMonthly != null ? `${s.priceMonthly}€/μήνα` : "";
+      const quarterly =
+        s.priceQuarterly != null ? `Super ${s.priceQuarterly}€/3 μήνες` : "";
+      const priceLine = [monthly, quarterly].filter(Boolean).join(" · ");
+      return `
       <label class="svc-check">
         <input type="checkbox" name="services" value="${s.id}" ${set.has(s.id) ? "checked" : ""} />
         <span>
           <strong>${escapeHtml(s.name)}</strong>
           <small>${escapeHtml(s.short)}</small>
+          ${
+            priceLine
+              ? `<small class="svc-check__price">${escapeHtml(priceLine)} · χωρίς ΦΠΑ</small>`
+              : ""
+          }
         </span>
       </label>
-    `
-    ).join("");
+    `;
+    }).join("");
   }
 
   function selectedServicesFromForm() {

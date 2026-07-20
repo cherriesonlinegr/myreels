@@ -53,8 +53,8 @@ window.MYREELS_SERVICES = [
     ],
     result: "Περισσότεροι πελάτες από το «κοντά μου».",
     priceMonthly: 150,
-    priceQuarterly: null,
-    priceNote: null,
+    priceQuarterly: 300,
+    priceNote: "Super προσφορά: 300€ για 3 μήνες",
     vatExcluded: true,
   },
 ];

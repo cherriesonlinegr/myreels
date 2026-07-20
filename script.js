@@ -6,17 +6,26 @@
   const cta = document.getElementById("cta");
   const burger = document.getElementById("nav-burger");
   const navLinks = document.getElementById("nav-links");
+  const navBackdrop = document.getElementById("nav-backdrop");
+
+  const setNavOpen = (open) => {
+    if (!nav || !burger) return;
+    nav.classList.toggle("is-open", open);
+    document.body.classList.toggle("is-nav-open", open);
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+    burger.setAttribute("aria-label", open ? "Κλείσιμο μενού" : "Άνοιγμα μενού");
+  };
 
   if (burger && nav) {
     burger.addEventListener("click", () => {
-      const open = nav.classList.toggle("is-open");
-      burger.setAttribute("aria-expanded", open ? "true" : "false");
+      setNavOpen(!nav.classList.contains("is-open"));
     });
+    navBackdrop?.addEventListener("click", () => setNavOpen(false));
     navLinks?.querySelectorAll("a").forEach((a) => {
-      a.addEventListener("click", () => {
-        nav.classList.remove("is-open");
-        burger.setAttribute("aria-expanded", "false");
-      });
+      a.addEventListener("click", () => setNavOpen(false));
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setNavOpen(false);
     });
   }
 

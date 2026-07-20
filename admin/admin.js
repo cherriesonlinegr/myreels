@@ -1,7 +1,69 @@
 (() => {
   const STORAGE_KEY = "myreels_leads";
   const SEQ_KEY = "myreels_sequences";
+  const AUTH_KEY = "myreels_admin_auth";
+  const AUTH_USER = "Thereelproject";
+  const AUTH_PASS = "reels4YOU";
 
+  const loginGate = document.getElementById("login-gate");
+  const adminApp = document.getElementById("admin-app");
+  const loginForm = document.getElementById("login-form");
+  const loginError = document.getElementById("login-error");
+  const btnLogout = document.getElementById("btn-logout");
+
+  const isAuthed = () => sessionStorage.getItem(AUTH_KEY) === "1";
+
+  const showAdmin = () => {
+    document.body.classList.remove("is-login");
+    if (loginGate) loginGate.hidden = true;
+    if (adminApp) adminApp.hidden = false;
+  };
+
+  const showLogin = () => {
+    document.body.classList.add("is-login");
+    if (loginGate) loginGate.hidden = false;
+    if (adminApp) adminApp.hidden = true;
+    if (loginError) loginError.hidden = true;
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem(AUTH_KEY);
+    showLogin();
+  };
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = String(document.getElementById("login-user")?.value || "").trim();
+      const pass = String(document.getElementById("login-pass")?.value || "");
+      if (user === AUTH_USER && pass === AUTH_PASS) {
+        sessionStorage.setItem(AUTH_KEY, "1");
+        if (loginError) loginError.hidden = true;
+        showAdmin();
+        initAdmin();
+        return;
+      }
+      if (loginError) loginError.hidden = false;
+    });
+  }
+
+  btnLogout?.addEventListener("click", logout);
+
+  if (!isAuthed()) {
+    showLogin();
+    return;
+  }
+
+  showAdmin();
+  initAdmin();
+
+  function initAdmin() {
+    if (window.__myreelsAdminReady) return;
+    window.__myreelsAdminReady = true;
+    bootAdmin();
+  }
+
+  function bootAdmin() {
   const STAGES = [
     { id: "lead", label: "Lead", short: "Lead" },
     { id: "send_offer", label: "Αποστολή Προσφοράς", short: "Προσφορά" },
@@ -1003,4 +1065,5 @@ MyReels`,
   fillServiceChecks([]);
   load();
   renderBoard();
+  }
 })();

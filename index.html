@@ -13,20 +13,23 @@
 <body>
   <header class="nav" id="nav">
     <div class="nav__inner">
-      <a href="#" class="nav__brand">MyReels</a>
+      <a href="#hero" class="nav__brand">MyReels</a>
       <nav class="nav__links" id="nav-links" aria-label="Κύρια πλοήγηση">
-        <a href="#problem">Γιατί χάνεις πελάτες</a>
+        <a href="#problem">Πρόβλημα</a>
         <a href="#services">Υπηρεσίες</a>
+        <a href="#process">Διαδικασία</a>
+        <a href="#reviews">Κριτικές</a>
         <a href="/vsl.html">VSL</a>
         <a href="#cta" class="nav__links-cta">Ξεκίνα τώρα</a>
       </nav>
       <div class="nav__right">
         <a href="#cta" class="btn btn--sm nav__cta-desktop">Ξεκίνα τώρα</a>
-        <button type="button" class="nav__burger" id="nav-burger" aria-label="Μενού" aria-expanded="false">
+        <button type="button" class="nav__burger" id="nav-burger" aria-label="Άνοιγμα μενού" aria-controls="nav-links" aria-expanded="false">
           <span></span><span></span>
         </button>
       </div>
     </div>
+    <button type="button" class="nav__backdrop" id="nav-backdrop" aria-label="Κλείσιμο μενού" tabindex="-1"></button>
   </header>
 
   <!-- HERO -->

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyReels VSL — Πώς να μένεις ορατός χωρίς να είσαι στην κάμερα</title>
+  <meta name="description" content="Δες το σύντομο VSL του MyReels: Content Creation, AI Avatar και Google Maps Growth για μικρομεσαίες επιχειρήσεις." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="vsl.css" />
+</head>
+<body>
+  <header class="vsl-nav">
+    <div class="vsl-nav__inner">
+      <a href="/" class="vsl-nav__brand">MyReels</a>
+      <a href="#book" class="btn btn--sm">Κλείσε κλήση</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hook -->
+    <section class="vsl-hero">
+      <p class="vsl-eyebrow">Video Sales Letter · ~6 λεπτά</p>
+      <h1 class="vsl-title">
+        Αν η επιχείρησή σου αξίζει,<br />πρέπει να φαίνεται.
+      </h1>
+      <p class="vsl-sub">
+        Σε αυτό το σύντομο βίντεο θα δεις πώς μικρομεσαίες επιχειρήσεις αποκτούν σταθερή παρουσία στα Social και στο Google Maps — χωρίς ο ιδιοκτήτης να γίνεται creator.
+      </p>
+    </section>
+
+    <!-- Player -->
+    <section class="vsl-player-wrap" id="watch">
+      <div class="vsl-player" id="player">
+        <!-- Replace data-video-url with YouTube/Vimeo embed URL when ready -->
+        <div class="vsl-player__frame" id="video-frame" data-video-url="">
+          <button type="button" class="vsl-play" id="btn-play" aria-label="Play VSL">
+            <span class="vsl-play__icon" aria-hidden="true"></span>
+          </button>
+          <div class="vsl-player__meta">
+            <span>MyReels VSL</span>
+            <span>06:12</span>
+          </div>
+          <div class="vsl-player__progress" aria-hidden="true">
+            <div class="vsl-player__bar" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- On-screen script teleprompter while "playing" -->
+        <div class="vsl-tele" id="teleprompter" hidden>
+          <p class="vsl-tele__label" id="tele-label">Hook</p>
+          <p class="vsl-tele__line" id="tele-line"></p>
+        </div>
+      </div>
+
+      <div class="vsl-cta-under">
+        <a href="#book" class="btn btn--lg">Κλείσε Discovery Call — δωρεάν 20΄</a>
+        <p class="vsl-cta-note">Χωρίς δέσμευση. Βλέπουμε αν ταιριάζουμε.</p>
+      </div>
+    </section>
+
+    <!-- What you'll learn -->
+    <section class="vsl-learn">
+      <h2>Τι θα μάθεις στο βίντεο</h2>
+      <ol class="vsl-learn__list">
+        <li>
+          <strong>Διαχείριση Social Media</strong>
+          <span>Πλήρης διαχείριση + Content Creation (video) — από 300€/μήνα.</span>
+        </li>
+        <li>
+          <strong>AI Avatar Videos</strong>
+          <span>30 βίντεο/μήνα με ψηφιακό avatar — χωρίς εσένα στην κάμερα, από 400€/μήνα.</span>
+        </li>
+        <li>
+          <strong>Google My Business</strong>
+          <span>Setup + 15 posts (κείμενο &amp; φωτο) τον μήνα — 150€/μήνα.</span>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Chapters / Script outline for viewer + production -->
+    <section class="vsl-chapters" id="script">
+      <div class="vsl-chapters__head">
+        <h2>Δομή VSL</h2>
+        <p>Hormozi flow — έτοιμο σενάριο για γύρισμα</p>
+      </div>
+
+      <div class="chapters" id="chapters">
+        <!-- filled by JS from script data -->
+      </div>
+    </section>
+
+    <!-- Offer reminder -->
+    <section class="vsl-offer">
+      <h2>Η πρόταση σε μία πρόταση</h2>
+      <p>
+        Το MyReels χτίζει ορατότητα για την επιχείρησή σου με Content Creation, AI Avatar και Google Maps Growth — ώστε να κερδίζεις χρόνο, ενώ μένεις συνεχώς μπροστά στον πελάτη.
+      </p>
+    </section>
+
+    <!-- Book CTA -->
+    <section class="vsl-book" id="book">
+      <h2>Έτοιμος/η να το δεις στην πράξη;</h2>
+      <p>Κλείσε Discovery Call. Σε 20 λεπτά καταλαβαίνουμε ποια υπηρεσία (ή συνδυασμός) σου ταιριάζει.</p>
+
+      <form class="vsl-form" id="vsl-form">
+        <input type="text" name="name" placeholder="Όνομα" required autocomplete="name" />
+        <input type="text" name="business" placeholder="Επιχείρηση" required />
+        <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+        <input type="tel" name="phone" placeholder="Τηλέφωνο" autocomplete="tel" />
+
+        <fieldset class="vsl-interest">
+          <legend>Με ενδιαφέρει</legend>
+          <label><input type="checkbox" name="interest" value="content" /> Social Media — 300€/μ.</label>
+          <label><input type="checkbox" name="interest" value="videos" /> AI Avatar Videos — 400€/μ.</label>
+          <label><input type="checkbox" name="interest" value="maps" /> Google My Business — 150€/μ.</label>
+          <label class="vsl-interest__all"><input type="checkbox" name="interest" value="all" id="vsl-all" /> Όλες</label>
+        </fieldset>
+
+        <button type="submit" class="btn btn--lg btn--full">Κλείσε Discovery Call</button>
+      </form>
+      <p class="vsl-cta-note">Θα εμφανιστείς στο pipeline ως νέο Lead.</p>
+    </section>
+  </main>
+
+  <footer class="vsl-footer">
+    <a href="/">← Επιστροφή στη σελίδα</a>
+    <span>MyReels</span>
+  </footer>
+
+  <script src="vsl.js"></script>
+</body>
+</html>

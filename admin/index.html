@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyReels Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <a href="/" class="sidebar__brand">MyReels</a>
+    <nav class="sidebar__nav">
+      <button type="button" class="sidebar__link is-active" data-tab="pipeline">
+        <span class="sidebar__icon" aria-hidden="true">◇</span>
+        Pipeline
+      </button>
+      <button type="button" class="sidebar__link" data-tab="services">
+        <span class="sidebar__icon" aria-hidden="true">▣</span>
+        Υπηρεσίες
+      </button>
+      <button type="button" class="sidebar__link" data-tab="sequences">
+        <span class="sidebar__icon" aria-hidden="true">✉</span>
+        Sequences
+      </button>
+      <a href="/vsl.html" class="sidebar__link">
+        <span class="sidebar__icon" aria-hidden="true">▶</span>
+        VSL
+      </a>
+      <a href="/" class="sidebar__link">
+        <span class="sidebar__icon" aria-hidden="true">↗</span>
+        Landing
+      </a>
+    </nav>
+    <p class="sidebar__meta">Admin</p>
+  </aside>
+
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Admin tabs">
+    <button type="button" class="mobile-nav__btn is-active" data-tab="pipeline">
+      <span>◇</span>Pipeline
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="services">
+      <span>▣</span>Υπηρεσίες
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="sequences">
+      <span>✉</span>Sequences
+    </button>
+  </nav>
+
+  <div class="main">
+    <!-- PIPELINE TAB -->
+    <section class="view is-active" id="view-pipeline" data-view="pipeline">
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Pipeline</h1>
+          <p class="topbar__sub">Διαχείριση leads από Discovery Call μέχρι πληρωμή</p>
+        </div>
+        <div class="topbar__actions">
+          <input
+            type="search"
+            id="search"
+            class="search"
+            placeholder="Αναζήτηση…"
+            autocomplete="off"
+          />
+          <button type="button" class="btn" id="btn-new">Νέο Lead</button>
+        </div>
+      </header>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" aria-label="Pipeline board"></div>
+      </div>
+    </section>
+
+    <!-- SERVICES TAB -->
+    <section class="view" id="view-services" data-view="services" hidden>
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Υπηρεσίες</h1>
+          <p class="topbar__sub">Κατάλογος προϊόντων MyReels — αντιστοίχιση με leads</p>
+        </div>
+        <div class="topbar__actions">
+          <div class="stats stats--inline" id="service-stats"></div>
+        </div>
+      </header>
+      <div class="svc-catalog" id="svc-catalog"></div>
+    </section>
+
+    <!-- SEQUENCES TAB -->
+    <section class="view" id="view-sequences" data-view="sequences" hidden>
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Email Sequences</h1>
+          <p class="topbar__sub">Αυτόματα emails ανά στάδιο του pipeline — {{name}}, {{business}}, {{value}}</p>
+        </div>
+        <div class="topbar__actions">
+          <button type="button" class="btn btn--ghost" id="btn-reset-seq">Επαναφορά defaults</button>
+          <button type="button" class="btn" id="btn-add-email">+ Email</button>
+        </div>
+      </header>
+
+      <div class="seq-layout">
+        <aside class="seq-stages" id="seq-stages" aria-label="Στάδια sequence"></aside>
+        <div class="seq-main">
+          <div class="seq-toolbar" id="seq-toolbar"></div>
+          <div class="seq-emails" id="seq-emails"></div>
+        </div>
+        <aside class="seq-leads" id="seq-leads" aria-label="Leads στο στάδιο"></aside>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal: Create / Edit Lead -->
+  <dialog class="modal" id="modal">
+    <form method="dialog" class="modal__form" id="lead-form">
+      <header class="modal__header">
+        <h2 id="modal-title">Νέο Lead</h2>
+        <button type="submit" class="modal__close" value="cancel" aria-label="Κλείσιμο">×</button>
+      </header>
+
+      <div class="modal__body">
+        <input type="hidden" id="lead-id" />
+
+        <label class="field">
+          <span>Όνομα *</span>
+          <input type="text" id="lead-name" required autocomplete="name" />
+        </label>
+
+        <label class="field">
+          <span>Επιχείρηση *</span>
+          <input type="text" id="lead-business" required />
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="lead-email" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Τηλέφωνο</span>
+            <input type="tel" id="lead-phone" autocomplete="tel" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Στάδιο</span>
+          <select id="lead-stage"></select>
+        </label>
+
+        <fieldset class="field field--services">
+          <legend>Ενδιαφέρον / Υπηρεσίες</legend>
+          <div class="svc-checks" id="lead-services"></div>
+        </fieldset>
+
+        <label class="field">
+          <span>Αξία προσφοράς (€)</span>
+          <input type="number" id="lead-value" min="0" step="50" placeholder="π.χ. 990" />
+        </label>
+
+        <label class="field">
+          <span>Σημειώσεις</span>
+          <textarea id="lead-notes" rows="3" placeholder="Discovery call notes…"></textarea>
+        </label>
+      </div>
+
+      <footer class="modal__footer">
+        <button type="button" class="btn btn--danger btn--ghost" id="btn-delete" hidden>Διαγραφή</button>
+        <div class="modal__footer-right">
+          <button type="submit" class="btn btn--ghost" value="cancel">Ακύρωση</button>
+          <button type="submit" class="btn" id="btn-save" value="save">Αποθήκευση</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Modal: Preview / Send email -->
+  <dialog class="modal modal--wide" id="email-modal">
+    <form method="dialog" class="modal__form" id="email-preview-form">
+      <header class="modal__header">
+        <h2 id="email-modal-title">Preview email</h2>
+        <button type="submit" class="modal__close" value="cancel" aria-label="Κλείσιμο">×</button>
+      </header>
+      <div class="modal__body">
+        <p class="email-preview__to" id="email-preview-to"></p>
+        <label class="field">
+          <span>Θέμα</span>
+          <input type="text" id="email-preview-subject" readonly />
+        </label>
+        <label class="field">
+          <span>Σώμα</span>
+          <textarea id="email-preview-body" rows="12" readonly></textarea>
+        </label>
+      </div>
+      <footer class="modal__footer">
+        <div class="modal__footer-right">
+          <button type="submit" class="btn btn--ghost" value="cancel">Κλείσιμο</button>
+          <button type="button" class="btn btn--ghost" id="btn-copy-email">Αντιγραφή</button>
+          <a class="btn" id="btn-mailto" href="#" target="_blank" rel="noopener">Άνοιγμα στο email</a>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <script src="/services-data.js"></script>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

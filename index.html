@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyReels — Μείνε ορατός. Χωρίς να είσαι στην κάμερα.</title>
+  <meta name="description" content="Διαχείριση Social Media από 300€/μήνα, AI Avatar Videos (30/μήνα) από 400€/μήνα, Google My Business 150€/μήνα. Τιμές χωρίς ΦΠΑ." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#" class="nav__brand">MyReels</a>
+      <nav class="nav__links" id="nav-links" aria-label="Κύρια πλοήγηση">
+        <a href="#problem">Γιατί χάνεις πελάτες</a>
+        <a href="#services">Υπηρεσίες</a>
+        <a href="/vsl.html">VSL</a>
+        <a href="#cta" class="nav__links-cta">Ξεκίνα τώρα</a>
+      </nav>
+      <div class="nav__right">
+        <a href="#cta" class="btn btn--sm nav__cta-desktop">Ξεκίνα τώρα</a>
+        <button type="button" class="nav__burger" id="nav-burger" aria-label="Μενού" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero__atmosphere" aria-hidden="true">
+      <div class="hero__orb hero__orb--a"></div>
+      <div class="hero__orb hero__orb--b"></div>
+      <div class="hero__grid"></div>
+    </div>
+
+    <!-- Playful floating social stickers -->
+    <div class="floaties" aria-hidden="true">
+      <span class="floaty floaty--ig floaty--a" title="Instagram">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>
+      </span>
+      <span class="floaty floaty--fb floaty--b" title="Facebook">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg>
+      </span>
+      <span class="floaty floaty--tt floaty--c" title="TikTok">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg>
+      </span>
+      <span class="floaty floaty--yt floaty--d" title="YouTube">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg>
+      </span>
+      <span class="floaty floaty--gm floaty--e" title="Google">
+        <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 11v3.6h5.1c-.2 1.3-1.6 3.7-5.1 3.7A5.9 5.9 0 1 1 12 6.1c1.7 0 2.8.7 3.4 1.3l2.3-2.2A9.5 9.5 0 0 0 12 2.5 9.5 9.5 0 1 0 12 21.5c5.5 0 9.1-3.8 9.1-9.2 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+      </span>
+      <span class="floaty floaty--thumb floaty--f">👍</span>
+      <span class="floaty floaty--heart floaty--g">❤️</span>
+      <span class="floaty floaty--fire floaty--h">🔥</span>
+      <span class="floaty floaty--clap floaty--i">👏</span>
+      <span class="floaty floaty--star floaty--j">⭐</span>
+      <span class="floaty floaty--rocket floaty--k">🚀</span>
+      <span class="floaty floaty--cam floaty--l">🎬</span>
+    </div>
+
+    <div class="hero__inner">
+      <div class="hero__platforms reveal" aria-hidden="true">
+        <span class="plat plat--ig" title="Instagram">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>
+        </span>
+        <span class="plat plat--fb" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg>
+        </span>
+        <span class="plat plat--tt" title="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg>
+        </span>
+        <span class="plat plat--yt" title="YouTube Shorts">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg>
+        </span>
+        <span class="plat plat--gm" title="Google Business">
+          <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 11v3.6h5.1c-.2 1.3-1.6 3.7-5.1 3.7A5.9 5.9 0 1 1 12 6.1c1.7 0 2.8.7 3.4 1.3l2.3-2.2A9.5 9.5 0 0 0 12 2.5 9.5 9.5 0 1 0 12 21.5c5.5 0 9.1-3.8 9.1-9.2 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+        </span>
+      </div>
+      <p class="hero__brand reveal">MyReels</p>
+      <h1 class="hero__title reveal reveal--delay-1">
+        Οι πελάτες σου<br />
+        <span class="hero__title-accent">σε ψάχνουν τώρα.</span><br />
+        Είσαι εκεί;
+      </h1>
+      <p class="hero__sub reveal reveal--delay-2">
+        Διαχείριση Social, AI Avatar Videos και Google My Business — ώστε η επιχείρησή σου να φαίνεται κάθε μέρα, χωρίς εσένα μπροστά στην κάμερα.
+      </p>
+      <div class="hero__cta reveal reveal--delay-3">
+        <a href="#cta" class="btn btn--lg">Θέλω περισσότερους πελάτες</a>
+        <a href="/vsl.html" class="btn btn--ghost btn--lg">
+          <span class="play-mini" aria-hidden="true"></span>
+          Δες το βίντεο (6΄)
+        </a>
+      </div>
+      <p class="hero__trust reveal reveal--delay-3">
+        20΄ Discovery Call · Χωρίς δέσμευση · Αποτελέσματα σε εβδομάδες, όχι μήνες
+      </p>
+    </div>
+
+    <div class="hero__showcase reveal reveal--delay-2" aria-hidden="true">
+      <div class="showcase">
+        <div class="showcase__phone">
+          <div class="showcase__notch"></div>
+          <div class="showcase__feed">
+            <div class="feed-card feed-card--1">
+              <div class="feed-card__bar"></div>
+              <p>Νέο Reel · μόλις ανέβηκε</p>
+            </div>
+            <div class="feed-card feed-card--2">
+              <div class="feed-card__bar feed-card__bar--short"></div>
+              <p>AI Avatar · 30 videos</p>
+            </div>
+            <div class="feed-card feed-card--3">
+              <div class="feed-card__bar"></div>
+              <p>«Κοντά μου» · #1 στο Maps</p>
+            </div>
+          </div>
+        </div>
+        <div class="showcase__float showcase__float--maps">
+          <span class="pin"></span>
+          <strong>Google Maps</strong>
+          <small>Εμφανίζεσαι ψηλά</small>
+        </div>
+        <div class="showcase__float showcase__float--live">
+          <span class="pulse"></span>
+          Live παρουσία
+        </div>
+        <div class="showcase__react showcase__react--1">👍 128</div>
+        <div class="showcase__react showcase__react--2">❤️ 2.4k</div>
+        <div class="showcase__react showcase__react--3">🔥 Viral</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF STRIP -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span class="marquee__icon marquee__icon--ig"></span><span>Instagram</span>
+      <span class="marquee__icon marquee__icon--fb"></span><span>Facebook</span>
+      <span class="marquee__icon marquee__icon--tt"></span><span>TikTok</span>
+      <span class="marquee__icon marquee__icon--yt"></span><span>YouTube Shorts</span>
+      <span class="marquee__icon marquee__icon--gm"></span><span>Google Maps</span>
+      <span>👍 Likes</span>
+      <span>❤️ Saves</span>
+      <span>🔥 Reels</span>
+      <span>⭐ Reviews</span>
+      <span>🚀 Growth</span>
+      <span class="marquee__icon marquee__icon--ig"></span><span>Instagram</span>
+      <span class="marquee__icon marquee__icon--fb"></span><span>Facebook</span>
+      <span class="marquee__icon marquee__icon--tt"></span><span>TikTok</span>
+      <span class="marquee__icon marquee__icon--yt"></span><span>YouTube Shorts</span>
+      <span class="marquee__icon marquee__icon--gm"></span><span>Google Maps</span>
+      <span>👍 Likes</span>
+      <span>❤️ Saves</span>
+      <span>🔥 Reels</span>
+      <span>⭐ Reviews</span>
+      <span>🚀 Growth</span>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section class="section" id="problem">
+    <div class="container">
+      <p class="eyebrow reveal">Η σκληρή αλήθεια</p>
+      <h2 class="section__title reveal">
+        Δεν χάνεις πελάτες επειδή δεν αξίζεις.<br />
+        <em>Τους χάνεις επειδή δεν σε βλέπουν.</em>
+      </h2>
+    </div>
+
+    <div class="pain-grid container">
+      <div class="pain reveal">
+        <span class="pain__num">01</span>
+        <h3>Χωρίς χρόνο</h3>
+        <p>Τρέχεις την επιχείρηση. Το content μένει «για αύριο» — και το αύριο δεν έρχεται ποτέ.</p>
+      </div>
+      <div class="pain reveal reveal--delay-1">
+        <span class="pain__num">02</span>
+        <h3>Χωρίς κάμερα</h3>
+        <p>Ξέρεις ότι τα Reels δουλεύουν. Αλλά δεν θες — ή δεν μπορείς — να είσαι εσύ κάθε μέρα στο φακό.</p>
+      </div>
+      <div class="pain reveal reveal--delay-2">
+        <span class="pain__num">03</span>
+        <h3>Χωρίς Maps</h3>
+        <p>Ο πελάτης ανοίγει Google Maps. Βλέπει τον ανταγωνιστή. Εσύ μένεις αόρατος — ακόμα κι αν είσαι καλύτερος.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COST -->
+  <section class="blast" id="cost">
+    <div class="blast__inner">
+      <p class="eyebrow eyebrow--light reveal">Κόστος αδράνειας</p>
+      <h2 class="blast__title reveal">
+        Κάθε μέρα offline<br />είναι δώρο στον ανταγωνιστή.
+      </h2>
+      <div class="blast__stats reveal">
+        <div>
+          <strong>80%</strong>
+          <span>ψάχνει στο Maps πριν αποφασίσει</span>
+        </div>
+        <div>
+          <strong>0</strong>
+          <span>posts αυτή την εβδομάδα = 0 νέες εντυπώσεις</span>
+        </div>
+        <div>
+          <strong>∞</strong>
+          <span>ευκαιρίες που δεν μαθαίνεις ποτέ ότι έχασες</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUTION BRIDGE -->
+  <section class="section section--bridge" id="solution">
+    <div class="container container--narrow" style="text-align:center">
+      <p class="eyebrow reveal">Η λύση</p>
+      <h2 class="section__title reveal">
+        Μία ομάδα. Τρία όπλα.<br />Εσύ εστιάζεις στην επιχείρηση.
+      </h2>
+      <p class="section__lead reveal" style="margin-inline:auto">
+        Δεν πουλάμε «likes». Χτίζουμε μηχανή ορατότητας: Social Media, AI Avatar Videos και Google My Business — μαζί ή ξεχωριστά.
+      </p>
+      <a href="#cta" class="btn reveal">Κλείσε Discovery Call</a>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section section--alt" id="services">
+    <div class="container">
+      <p class="eyebrow reveal">Υπηρεσίες &amp; τιμές</p>
+      <h2 class="section__title reveal">Διάλεξε το όπλο σου.<br />Ή πάρε και τα τρία.</h2>
+      <p class="price-vat reveal">Οι τιμές δεν περιλαμβάνουν ΦΠΑ.</p>
+    </div>
+
+    <div class="svc-stack">
+      <article class="svc reveal" id="service-content">
+        <div class="svc__visual svc__visual--content" aria-hidden="true">
+          <div class="social-mock">
+            <div class="social-mock__phone">
+              <div class="social-mock__notch"></div>
+              <div class="social-mock__screen">
+                <div class="social-mock__story">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <div class="social-mock__post">
+                  <div class="social-mock__post-img"></div>
+                  <div class="social-mock__post-meta">
+                    <i></i><i></i><i class="social-mock__post-wide"></i>
+                  </div>
+                </div>
+                <div class="social-mock__chip">Scheduled · σήμερα 18:00</div>
+              </div>
+            </div>
+            <div class="social-mock__apps">
+              <span class="app app--ig">IG</span>
+              <span class="app app--fb">FB</span>
+              <span class="app app--tt">TT</span>
+            </div>
+          </div>
+        </div>
+        <div class="svc__copy">
+          <p class="svc__tag">01 · Social Media</p>
+          <h3>Διαχείριση Social Media</h3>
+          <p class="svc__pitch">
+            <strong>Διαχείριση όλων των Social Media σου</strong> + <strong>Content Creation</strong> — δημιουργία video για Facebook, Instagram και TikTok. Εσύ εγκρίνεις. Εμείς τα κάνουμε όλα.
+          </p>
+          <ul>
+            <li>Πλήρης διαχείριση λογαριασμών Social</li>
+            <li>Δημιουργία video για Social Media</li>
+            <li>Captions, hashtags &amp; προγραμματισμός δημοσιεύσεων</li>
+          </ul>
+          <div class="svc__pricing">
+            <div class="price">
+              <strong>300€</strong><span>/μήνα</span>
+            </div>
+            <div class="price price--deal">
+              <em>Super προσφορά</em>
+              <strong>600€</strong><span>/3 μήνες</span>
+            </div>
+          </div>
+          <p class="svc__win">→ Σταθερή παρουσία. Μηδέν άγχος creator.</p>
+          <a href="#cta" class="text-link">Θέλω Social Media →</a>
+        </div>
+      </article>
+
+      <article class="svc svc--flip reveal" id="service-videos">
+        <div class="svc__visual svc__visual--avatar" aria-hidden="true">
+          <div class="avatar-mock">
+            <div class="avatar-mock__ring"></div>
+            <div class="avatar-mock__face">
+              <div class="avatar-mock__silhouette"></div>
+              <span class="avatar-mock__badge">AI</span>
+            </div>
+            <div class="avatar-mock__clips">
+              <div class="avatar-mock__clip">Reel 01</div>
+              <div class="avatar-mock__clip avatar-mock__clip--on">Reel 02</div>
+              <div class="avatar-mock__clip">Reel 03</div>
+            </div>
+            <p class="avatar-mock__count">30 videos / μήνα</p>
+          </div>
+        </div>
+        <div class="svc__copy">
+          <p class="svc__tag">02 · AI Avatar</p>
+          <h3>AI Avatar Videos</h3>
+          <p class="svc__pitch">
+            <strong>30 βίντεο τον μήνα με AI Avatar</strong> — ψηφιακό αντίγραφό σου με φυσική εικόνα και φωνή, χωρίς να είσαι στην κάμερα. Υψηλός όγκος ώστε το brand να φαίνεται καθημερινά.
+          </p>
+          <ul>
+            <li>30 AI Avatar videos τον μήνα</li>
+            <li>Avatar με τη δική σου εικόνα &amp; κλωνοποίηση φωνής</li>
+            <li>Έτοιμα για Reels / Shorts / TikTok</li>
+          </ul>
+          <div class="svc__pricing">
+            <div class="price">
+              <strong>400€</strong><span>/μήνα</span>
+            </div>
+            <div class="price price--deal">
+              <em>Super προσφορά</em>
+              <strong>900€</strong><span>/3 μήνες</span>
+            </div>
+          </div>
+          <p class="svc__win">→ Το brand μιλάει. Εσύ δεν πιάνεις κάμερα.</p>
+          <a href="#cta" class="text-link">Θέλω AI Avatar Videos →</a>
+        </div>
+      </article>
+
+      <article class="svc reveal" id="service-maps">
+        <div class="svc__visual svc__visual--maps" aria-hidden="true">
+          <div class="gmaps">
+            <div class="gmaps__canvas">
+              <div class="gmaps__road gmaps__road--h"></div>
+              <div class="gmaps__road gmaps__road--v"></div>
+              <div class="gmaps__road gmaps__road--h2"></div>
+              <span class="gmaps__pin gmaps__pin--you"></span>
+              <span class="gmaps__pin gmaps__pin--other gmaps__pin--a"></span>
+              <span class="gmaps__pin gmaps__pin--other gmaps__pin--b"></span>
+            </div>
+            <div class="gmaps__card">
+              <div class="gmaps__badge">#1 · Κοντά μου</div>
+              <strong>Η επιχείρησή σου</strong>
+              <div class="gmaps__stars">★★★★★ <em>4.9</em></div>
+              <small>15 posts / μήνα</small>
+            </div>
+          </div>
+        </div>
+        <div class="svc__copy">
+          <p class="svc__tag">03 · Google My Business</p>
+          <h3>Google My Business</h3>
+          <p class="svc__pitch">
+            Φτιάχνουμε το <strong>Google Business Profile</strong> όπως πρέπει. Μετά ανεβάζουμε <strong>15 posts τον μήνα</strong> — κείμενο και φωτογραφία — για να μένεις ορατός εκεί που σε ψάχνουν.
+          </p>
+          <ul>
+            <li>Πλήρες στήσιμο &amp; βελτίωση Google My Business</li>
+            <li>15 posts / μήνα (κείμενο + φωτο)</li>
+            <li>Συνεχής παρουσία στο Maps &amp; τοπική αναζήτηση</li>
+          </ul>
+          <div class="svc__pricing">
+            <div class="price">
+              <strong>150€</strong><span>/μήνα</span>
+            </div>
+          </div>
+          <p class="svc__win">→ Περισσότεροι πελάτες από το «κοντά μου».</p>
+          <a href="#cta" class="text-link">Θέλω Google My Business →</a>
+        </div>
+      </article>
+    </div>
+    <p class="price-vat price-vat--center reveal">* Όλες οι τιμές δεν περιλαμβάνουν ΦΠΑ.</p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section section--process" id="process">
+    <div class="container">
+      <div class="process-head reveal">
+        <p class="eyebrow">Πώς δουλεύει</p>
+        <h2 class="section__title">Από την κλήση…<br />στα αποτελέσματα.</h2>
+        <p class="process-head__sub">Τέσσερα απλά βήματα. Εσύ εστιάζεις στην επιχείρηση — εμείς στην ορατότητα.</p>
+      </div>
+
+      <ol class="journey">
+        <li class="journey__step reveal">
+          <div class="journey__rail" aria-hidden="true">
+            <span class="journey__node">01</span>
+            <span class="journey__line"></span>
+          </div>
+          <div class="journey__panel journey__panel--1">
+            <div class="journey__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="1.5"/><path d="M16 24h16M24 16v16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Discovery Call</h3>
+            <p>20 λεπτά. Καταλαβαίνουμε τους στόχους σου και διαλέγουμε Social, AI Avatar ή Google My Business.</p>
+          </div>
+        </li>
+
+        <li class="journey__step reveal reveal--delay-1">
+          <div class="journey__rail" aria-hidden="true">
+            <span class="journey__node">02</span>
+            <span class="journey__line"></span>
+          </div>
+          <div class="journey__panel journey__panel--2">
+            <div class="journey__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="24" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M16 20h16M16 26h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Setup</h3>
+            <p>Onboarding, υλικό brand, avatar ή Google My Business — ό,τι χρειάζεται για να ξεκινήσουμε σωστά.</p>
+          </div>
+        </li>
+
+        <li class="journey__step reveal reveal--delay-2">
+          <div class="journey__rail" aria-hidden="true">
+            <span class="journey__node">03</span>
+            <span class="journey__line"></span>
+          </div>
+          <div class="journey__panel journey__panel--3">
+            <div class="journey__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none"><path d="M14 32l10-20 10 20H14z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="24" cy="28" r="2" fill="currentColor"/></svg>
+            </div>
+            <h3>Παραγωγή</h3>
+            <p>Εσύ εγκρίνεις. Εμείς παράγουμε, γράφουμε και δημοσιεύουμε — χωρίς να γίνεσαι creator.</p>
+          </div>
+        </li>
+
+        <li class="journey__step reveal reveal--delay-3">
+          <div class="journey__rail" aria-hidden="true">
+            <span class="journey__node">04</span>
+          </div>
+          <div class="journey__panel journey__panel--4">
+            <div class="journey__icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none"><path d="M12 32l8-8 6 6 10-14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 16h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Ανάπτυξη</h3>
+            <p>Μετράμε αποτελέσματα, βελτιώνουμε τη στρατηγική — και ανεβαίνεις σταθερά.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="process-cta reveal">
+        <a href="#cta" class="btn btn--lg">Ξεκίνα με Discovery Call</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section class="section section--alt" id="reviews">
+    <div class="container">
+      <p class="eyebrow reveal">Κριτικές</p>
+      <h2 class="section__title reveal">Το λένε όσοι σταμάτησαν να είναι αόρατοι.</h2>
+    </div>
+
+    <div class="reviews container">
+      <article class="review reveal">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Σε έναν μήνα είχαμε σταθερά Reels χωρίς να πιάσω ποτέ κάμερα. Οι κρατήσεις από Instagram ανέβηκαν αισθητά.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Μ</span>
+          <div>
+            <strong>Μαρία Κ.</strong>
+            <span>Ιδιοκτήτρια · κέντρο αισθητικής</span>
+          </div>
+        </footer>
+        <span class="review__service">Social Media</span>
+      </article>
+
+      <article class="review reveal reveal--delay-1">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Τα 30 AI Avatar videos τον μήνα άλλαξαν το παιχνίδι. Το ιατρείο φαίνεται κάθε εβδομάδα χωρίς να πιάσω κάμερα.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Γ</span>
+          <div>
+            <strong>Γιώργος Ν.</strong>
+            <span>Οδοντίατρος · Αθήνα</span>
+          </div>
+        </footer>
+        <span class="review__service">AI Avatar</span>
+      </article>
+
+      <article class="review reveal reveal--delay-2">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Φτιάξανε το Google My Business σωστά και ανεβάζουν 15 posts τον μήνα. Οι παραγγελίες από Maps ανέβηκαν.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Ε</span>
+          <div>
+            <strong>Ελένη Π.</strong>
+            <span>Καφετέρια · Θεσσαλονίκη</span>
+          </div>
+        </footer>
+        <span class="review__service">Google My Business</span>
+      </article>
+
+      <article class="review reveal">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Πήραμε Content + Maps μαζί. Το ξενοδοχείο φαίνεται στα Social και στο Google. Οι απευθείας κρατήσεις ανέβηκαν χωρίς έξτρα ads.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Α</span>
+          <div>
+            <strong>Αντώνης Β.</strong>
+            <span>Boutique Hotel · Κρήτη</span>
+          </div>
+        </footer>
+        <span class="review__service">Social + GMB</span>
+      </article>
+
+      <article class="review reveal reveal--delay-1">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Δούλευα 12ωρα στο μαγαζί. Δεν προλάβαινα stories. Τώρα η ομάδα MyReels διαχειρίζεται τα πάντα — εγώ απλώς εγκρίνω.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Δ</span>
+          <div>
+            <strong>Δήμητρα Σ.</strong>
+            <span>Εστιατόριο · Πάτρα</span>
+          </div>
+        </footer>
+        <span class="review__service">Social Media</span>
+      </article>
+
+      <article class="review reveal reveal--delay-2">
+        <div class="review__stars" aria-label="5 στα αστέρια">★★★★★</div>
+        <p class="review__text">«Με AI Avatar videos το γυμναστήριο φαίνεται παντού. Εξοικονόμησα ώρες — και φαίνομαι επαγγελματίας.»</p>
+        <footer class="review__author">
+          <span class="review__avatar" aria-hidden="true">Ν</span>
+          <div>
+            <strong>Νίκος Λ.</strong>
+            <span>Personal trainer · γυμναστήριο</span>
+          </div>
+        </footer>
+        <span class="review__service">AI Avatar</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- WHO -->
+  <section class="section" id="audience">
+    <div class="container container--narrow" style="text-align:center">
+      <p class="eyebrow reveal">Για ποιον</p>
+      <h2 class="section__title reveal">Για επιχειρηματίες που θέλουν πελάτες — όχι άλλο ένα hobby στο TikTok.</h2>
+      <p class="audience-line reveal">
+        Εστίαση · Καφέ · Ξενοδοχεία · Υγεία · Ομορφιά · Fitness · Retail · Επαγγελματίες υπηρεσιών
+      </p>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section section--cta" id="cta">
+    <div class="cta-panel reveal">
+      <p class="cta-panel__brand">MyReels</p>
+      <h2>Σταμάτα να χάνεις πελάτες<br />που ήδη σε ψάχνουν.</h2>
+      <p class="cta-panel__lead">
+        Επίλεξε υπηρεσία. Κλείσε 20΄. Φεύγεις με καθαρό πλάνο — ακόμα κι αν δεν συνεργαστούμε.
+      </p>
+
+      <form class="cta-form" id="cta-form" action="#" method="post">
+        <div class="cta-form__row">
+          <input type="text" id="name" name="name" placeholder="Όνομα" required autocomplete="name" />
+          <input type="text" id="business" name="business" placeholder="Επιχείρηση" required />
+        </div>
+        <div class="cta-form__row">
+          <input type="email" id="email" name="email" placeholder="Email" required autocomplete="email" />
+          <input type="tel" id="phone" name="phone" placeholder="Τηλέφωνο" autocomplete="tel" />
+        </div>
+
+        <fieldset class="cta-services">
+          <legend>Τι σε ενδιαφέρει;</legend>
+          <label class="cta-check">
+            <input type="checkbox" name="interest" value="content" />
+            <span>Social Media — 300€/μ.</span>
+          </label>
+          <label class="cta-check">
+            <input type="checkbox" name="interest" value="videos" />
+            <span>AI Avatar Videos — 400€/μ.</span>
+          </label>
+          <label class="cta-check">
+            <input type="checkbox" name="interest" value="maps" />
+            <span>Google My Business — 150€/μ.</span>
+          </label>
+          <label class="cta-check cta-check--all">
+            <input type="checkbox" name="interest" value="all" id="interest-all" />
+            <span>Όλες</span>
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn btn--lg btn--full">Κλείσε Discovery Call</button>
+      </form>
+      <p class="cta-note">Χωρίς δέσμευση · Απάντηση εντός 24 ωρών · Τιμές χωρίς ΦΠΑ</p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__brand">MyReels</span>
+      <p>Ορατότητα για επιχειρήσεις που αξίζουν να φαίνονται.</p>
+      <div class="footer__links">
+        <a href="/vsl.html">VSL</a>
+        <a href="/admin/">Admin</a>
+      </div>
+      <p class="footer__copy">&copy; <span id="year"></span> MyReels</p>
+    </div>
+  </footer>
+
+  <div class="sticky-cta" id="sticky-cta" hidden>
+    <span>Έτοιμος για περισσότερους πελάτες;</span>
+    <a href="#cta" class="btn btn--sm">Κλείσε κλήση</a>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

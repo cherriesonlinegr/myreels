@@ -1,0 +1,12 @@
+{
+  "name": "myreels",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MyReels — myreels.gr landing + admin (isolated from other projects)",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "resend": "^4.0.0"
+  }
+}

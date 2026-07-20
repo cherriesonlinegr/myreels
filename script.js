@@ -138,8 +138,10 @@
       }
 
       // Email via Resend (Vercel API — myreels project only)
+      let emailOk = false;
+      let emailError = "";
       try {
-        await fetch("/api/lead", {
+        const resApi = await fetch("/api/lead", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -152,14 +154,27 @@
             notes: interestNote,
           }),
         });
-      } catch {
-        /* form still succeeds locally if email fails */
+        const payload = await resApi.json().catch(() => ({}));
+        emailOk = resApi.ok && payload.ok;
+        if (!emailOk) {
+          emailError = payload.error || `HTTP ${resApi.status}`;
+          console.error("[MyReels] lead email failed:", emailError);
+        }
+      } catch (err) {
+        emailError = err?.message || "network error";
+        console.error("[MyReels] lead email failed:", emailError);
       }
 
       form.classList.add("is-success");
-      form.innerHTML = name
-        ? `Ευχαριστούμε, ${name}. Θα επικοινωνήσουμε εντός 24 ωρών.`
-        : "Ευχαριστούμε. Θα επικοινωνήσουμε σύντομα.";
+      if (emailOk) {
+        form.innerHTML = name
+          ? `Ευχαριστούμε, ${name}. Θα επικοινωνήσουμε εντός 24 ωρών.`
+          : "Ευχαριστούμε. Θα επικοινωνήσουμε σύντομα.";
+      } else {
+        form.innerHTML = name
+          ? `Ευχαριστούμε, ${name}. Η αίτηση καταχωρήθηκε — αν δεν επικοινωνήσουμε σύντομα, στείλε μας απευθείας email.`
+          : "Ευχαριστούμε. Η αίτηση καταχωρήθηκε.";
+      }
     });
   }
 })();

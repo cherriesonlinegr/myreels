@@ -59,10 +59,10 @@ export default async function handler(req, res) {
   const resend = new Resend(apiKey);
 
   try {
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from,
       to: [to],
-      reply_to: email,
+      replyTo: email,
       subject: `[MyReels Lead] ${name} — ${business}`,
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;color:#1d1d1f">
@@ -79,11 +79,16 @@ export default async function handler(req, res) {
     });
 
     if (error) {
-      return res.status(502).json({ ok: false, error: error.message || "Resend error" });
+      console.error("[myreels/api/lead] Resend error:", error);
+      return res.status(502).json({
+        ok: false,
+        error: error.message || "Resend error",
+      });
     }
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, id: data?.id || null });
   } catch (err) {
+    console.error("[myreels/api/lead] Send failed:", err);
     return res.status(500).json({ ok: false, error: err?.message || "Send failed" });
   }
 }

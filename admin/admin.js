@@ -5,13 +5,47 @@
   const AUTH_USER = "Thereelproject";
   const AUTH_PASS = "reels4YOU";
 
+  // PWA: register the service worker so the admin can be installed as an app.
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+
   const loginGate = document.getElementById("login-gate");
   const adminApp = document.getElementById("admin-app");
   const loginForm = document.getElementById("login-form");
   const loginError = document.getElementById("login-error");
   const btnLogout = document.getElementById("btn-logout");
+  const loginUserInput = document.getElementById("login-user");
+  const loginPassInput = document.getElementById("login-pass");
+  const loginRememberInput = document.getElementById("login-remember");
 
   const isAuthed = () => sessionStorage.getItem(AUTH_KEY) === "1";
+
+  const COOKIE_USER = "myreels_admin_user";
+  const COOKIE_PASS = "myreels_admin_pass";
+  const COOKIE_DAYS = 30;
+
+  const getCookie = (name) => {
+    const target = `${encodeURIComponent(name)}=`;
+    const parts = document.cookie ? document.cookie.split("; ") : [];
+    for (const p of parts) {
+      if (p.startsWith(target)) return decodeURIComponent(p.slice(target.length));
+    }
+    return null;
+  };
+
+  const setCookie = (name, value, days) => {
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+    const secure = location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(
+      value
+    )}; expires=${expires}; path=/admin; samesite=lax${secure}`;
+  };
+
+  const deleteCookie = (name) => {
+    // Setting an expiry in the past removes the cookie.
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/admin; samesite=lax`;
+  };
 
   const showAdmin = () => {
     document.body.classList.remove("is-login");
@@ -31,16 +65,41 @@
     showLogin();
   };
 
+  // Restore saved login inputs (and optionally auto-login).
+  // Note: This is convenience-only. The admin credentials are also hardcoded in this JS.
+  (function restoreLoginCookies() {
+    const savedUser = getCookie(COOKIE_USER);
+    const savedPass = getCookie(COOKIE_PASS);
+
+    if (loginUserInput && savedUser) loginUserInput.value = savedUser;
+    if (loginPassInput && savedPass) loginPassInput.value = savedPass;
+    if (loginRememberInput && (savedUser || savedPass)) loginRememberInput.checked = true;
+
+    // Auto-login if cookies match the expected credentials.
+    if (savedUser === AUTH_USER && savedPass === AUTH_PASS) {
+      sessionStorage.setItem(AUTH_KEY, "1");
+    }
+  })();
+
   if (loginForm) {
     loginForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const user = String(document.getElementById("login-user")?.value || "").trim();
-      const pass = String(document.getElementById("login-pass")?.value || "");
+      const user = String(loginUserInput?.value || "").trim();
+      const pass = String(loginPassInput?.value || "");
       if (user === AUTH_USER && pass === AUTH_PASS) {
         sessionStorage.setItem(AUTH_KEY, "1");
         if (loginError) loginError.hidden = true;
         showAdmin();
         initAdmin();
+
+        const remember = loginRememberInput ? loginRememberInput.checked : true;
+        if (remember) {
+          setCookie(COOKIE_USER, user, COOKIE_DAYS);
+          setCookie(COOKIE_PASS, pass, COOKIE_DAYS);
+        } else {
+          deleteCookie(COOKIE_USER);
+          deleteCookie(COOKIE_PASS);
+        }
         return;
       }
       if (loginError) loginError.hidden = false;

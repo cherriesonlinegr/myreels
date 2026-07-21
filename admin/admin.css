@@ -129,6 +129,27 @@ body.is-login {
   margin: 0;
 }
 
+.login-card__remember {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.login-card__remember label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-card__remember input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.login-card__remember span {
+  font-weight: 500;
+}
+
 .login-card__btn {
   margin-top: 6px;
   width: 100%;

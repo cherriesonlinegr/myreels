@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/admin/admin.css" />
+  <meta name="theme-color" content="#0071e3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="/admin.webmanifest" />
 </head>
 <body class="is-login">
   <div class="login-gate" id="login-gate">
@@ -26,6 +31,12 @@
         <span>Password</span>
         <input type="password" id="login-pass" name="password" required autocomplete="current-password" />
       </label>
+      <div class="login-card__remember">
+        <label>
+          <input type="checkbox" id="login-remember" checked />
+          <span>Να με θυμάσαι</span>
+        </label>
+      </div>
       <p class="login-card__error" id="login-error" hidden>Λάθος username ή password.</p>
       <button type="submit" class="btn login-card__btn">Είσοδος</button>
     </form>

@@ -169,13 +169,12 @@ MyReels`,
 
 Χαιρόμαστε που προχωράμε με την {{business}}!
 
-Επόμενα βήματα (Onboarding):
-1. Συλλογή φωτογραφιών / βίντεο
-2. Δημιουργία AI Avatar
-3. Θεματολόγιο μήνα
-4. Πρώτη παρτίδα Reels προς έγκριση
+Επόμενο βήμα: συμπλήρωσε τη φόρμα onboarding (≈10–15΄).
+Με αυτές τις πληροφορίες γράφουμε scripts και ετοιμάζουμε λήψεις / AI Avatar / GMB.
 
-Θα σου στείλω το onboarding checklist μέσα στις επόμενες ώρες.
+{{onboarding_url}}
+
+Μόλις τη στείλεις, ξεκινάμε.
 
 MyReels`,
         enabled: true,
@@ -183,16 +182,17 @@ MyReels`,
       {
         id: "accept-1",
         day: 1,
-        subject: "Onboarding checklist — {{business}}",
+        subject: "Υπενθύμιση onboarding — {{business}}",
         body: `Γεια σου {{name}},
 
-Για να ξεκινήσουμε σωστά, χρειαζόμαστε:
-• 5–10 φωτογραφίες υψηλής ανάλυσης
-• 1–2 λεπτά βίντεο (για avatar / φωνή)
-• Logo & χρώματα brand (αν υπάρχουν)
-• Links λογαριασμών Social
+Ένα γρήγορο check-in για τη φόρμα onboarding της {{business}}.
 
-Μόλις τα έχεις, απάντησε σε αυτό το email.
+Χρειαζόμαστε στοιχεία brand, social, θεματολόγιο και links υλικού για να ξεκινήσουμε παραγωγή.
+
+Συμπλήρωσε εδώ:
+{{onboarding_url}}
+
+Αν κολλήσεις κάπου, απάντησε σε αυτό το email.
 
 MyReels`,
         enabled: true,
@@ -388,7 +388,7 @@ MyReels`,
             sequences[s.id] = cloneDefaults()[s.id] || [];
           }
         });
-        // Refresh offer template pricing (GMB Super 300€ / 3 μήνες κ.λπ.)
+        // Refresh offer + accepted onboarding templates when outdated
         const defaults = cloneDefaults();
         const offer0 = (sequences.send_offer || []).find((m) => m.id === "offer-0");
         const defaultOffer0 = (defaults.send_offer || []).find((m) => m.id === "offer-0");
@@ -399,6 +399,16 @@ MyReels`,
         ) {
           offer0.body = defaultOffer0.body;
           offer0.subject = defaultOffer0.subject;
+          saveSequences();
+        }
+        const accept0 = (sequences.accepted || []).find((m) => m.id === "accept-0");
+        const defaultAccept0 = (defaults.accepted || []).find((m) => m.id === "accept-0");
+        if (
+          accept0 &&
+          defaultAccept0 &&
+          !String(accept0.body || "").includes("{{onboarding_url}}")
+        ) {
+          sequences.accepted = defaults.accepted;
           saveSequences();
         }
       } else {
@@ -446,18 +456,43 @@ MyReels`,
       .replace(/"/g, "&quot;");
   }
 
+  function buildOnboardingUrl(lead) {
+    const url = new URL("/onboarding.html", window.location.origin);
+    if (!lead) return url.toString();
+    if (lead.id) url.searchParams.set("lead", lead.id);
+    if (lead.name) url.searchParams.set("name", lead.name);
+    if (lead.business) url.searchParams.set("business", lead.business);
+    if (lead.email) url.searchParams.set("email", lead.email);
+    if (lead.phone) url.searchParams.set("phone", lead.phone);
+    if (Array.isArray(lead.services) && lead.services.length) {
+      url.searchParams.set("services", lead.services.join(","));
+    }
+    return url.toString();
+  }
+
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function personalize(text, lead) {
     const money = formatMoney(lead.value);
     const valueLine = money
       ? `Επένδυση: ${money} (χωρίς ΦΠΑ)`
       : "Τα οικονομικά στοιχεία βρίσκονται στην πρόταση.";
+    const onboardingUrl = buildOnboardingUrl(lead);
     return String(text || "")
       .replaceAll("{{name}}", lead.name || "")
       .replaceAll("{{business}}", lead.business || "")
       .replaceAll("{{value}}", money || "")
       .replaceAll("{{value_line}}", valueLine)
       .replaceAll("{{email}}", lead.email || "")
-      .replaceAll("{{phone}}", lead.phone || "");
+      .replaceAll("{{phone}}", lead.phone || "")
+      .replaceAll("{{onboarding_url}}", onboardingUrl);
   }
 
   function filtered() {
@@ -488,6 +523,7 @@ MyReels`,
     if (tab === "sequences") renderSequences();
     if (tab === "pipeline") renderBoard();
     if (tab === "services") renderServicesCatalog();
+    if (tab === "onboarding") renderOnboardingTab();
   }
 
   document.querySelectorAll("[data-tab]").forEach((btn) => {
@@ -546,6 +582,11 @@ MyReels`,
           <span class="card__date">${formatDate(lead.updatedAt || lead.createdAt)}</span>
         </div>
         ${contact ? `<div class="card__contact">${escapeHtml(contact)}</div>` : ""}
+        ${
+          lead.stage === "accepted" || lead.stage === "payment"
+            ? `<button type="button" class="card__onboard" data-onboard="${lead.id}">Onboarding link</button>`
+            : ""
+        }
       </article>
     `;
   }
@@ -580,7 +621,22 @@ MyReels`,
 
   function bindCards() {
     board.querySelectorAll(".card").forEach((el) => {
-      el.addEventListener("click", () => openEdit(el.dataset.id));
+      el.addEventListener("click", (e) => {
+        const onboardBtn = e.target.closest("[data-onboard]");
+        if (onboardBtn) {
+          e.stopPropagation();
+          const lead = leads.find((l) => l.id === onboardBtn.dataset.onboard);
+          if (!lead) return;
+          copyText(buildOnboardingUrl(lead)).then((ok) => {
+            onboardBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+            setTimeout(() => {
+              onboardBtn.textContent = "Onboarding link";
+            }, 1600);
+          });
+          return;
+        }
+        openEdit(el.dataset.id);
+      });
       el.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -1075,6 +1131,7 @@ MyReels`,
       load();
       renderBoard();
       if (activeTab === "sequences") renderSequences();
+      if (activeTab === "onboarding") renderOnboardingTab();
     }
     if (e.key === SEQ_KEY) {
       load();
@@ -1082,10 +1139,67 @@ MyReels`,
     }
   });
 
+  function renderOnboardingTab() {
+    const select = document.getElementById("onboard-lead-select");
+    const preview = document.getElementById("onboard-link-preview");
+    if (!select || !preview) return;
+
+    const candidates = leads
+      .filter((l) => ["accepted", "payment", "send_offer", "waiting"].includes(l.stage))
+      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+    const current = select.value;
+    select.innerHTML =
+      `<option value="">— Generic link —</option>` +
+      candidates
+        .map(
+          (l) =>
+            `<option value="${l.id}">${escapeHtml(l.name)} · ${escapeHtml(l.business)}</option>`
+        )
+        .join("");
+    if ([...select.options].some((o) => o.value === current)) select.value = current;
+    updateOnboardingPreview();
+  }
+
+  function updateOnboardingPreview() {
+    const select = document.getElementById("onboard-lead-select");
+    const preview = document.getElementById("onboard-link-preview");
+    if (!select || !preview) return;
+    const lead = leads.find((l) => l.id === select.value);
+    preview.value = buildOnboardingUrl(lead || null);
+  }
+
+  function setupOnboardingTab() {
+    const select = document.getElementById("onboard-lead-select");
+    const btnGeneric = document.getElementById("btn-copy-onboarding");
+    const btnLead = document.getElementById("btn-copy-onboarding-lead");
+
+    select?.addEventListener("change", updateOnboardingPreview);
+
+    btnGeneric?.addEventListener("click", async () => {
+      const ok = await copyText(buildOnboardingUrl(null));
+      btnGeneric.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+      setTimeout(() => {
+        btnGeneric.textContent = "Αντιγραφή link";
+      }, 1600);
+    });
+
+    btnLead?.addEventListener("click", async () => {
+      updateOnboardingPreview();
+      const preview = document.getElementById("onboard-link-preview");
+      const ok = await copyText(preview?.value || buildOnboardingUrl(null));
+      btnLead.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+      setTimeout(() => {
+        btnLead.textContent = "Αντιγραφή personalized link";
+      }, 1600);
+    });
+  }
+
   // Init
   fillStageSelect("lead");
   fillServiceChecks([]);
   load();
   renderBoard();
+  setupOnboardingTab();
   }
 })();

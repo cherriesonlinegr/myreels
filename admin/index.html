@@ -44,6 +44,10 @@
         <span class="sidebar__icon" aria-hidden="true">✉</span>
         Sequences
       </button>
+      <button type="button" class="sidebar__link" data-tab="onboarding">
+        <span class="sidebar__icon" aria-hidden="true">☰</span>
+        Onboarding
+      </button>
       <a href="/" class="sidebar__link">
         <span class="sidebar__icon" aria-hidden="true">↗</span>
         Landing
@@ -62,6 +66,9 @@
     </button>
     <button type="button" class="mobile-nav__btn" data-tab="sequences">
       <span>✉</span>Sequences
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="onboarding">
+      <span>☰</span>Onboard
     </button>
   </nav>
 
@@ -111,7 +118,7 @@
       <header class="topbar">
         <div>
           <h1 class="topbar__title">Email Sequences</h1>
-          <p class="topbar__sub">Αυτόματα emails ανά στάδιο του pipeline — {{name}}, {{business}}, {{value}}</p>
+          <p class="topbar__sub">Αυτόματα emails ανά στάδιο — {{name}}, {{business}}, {{value}}, {{onboarding_url}}</p>
         </div>
         <div class="topbar__actions">
           <button type="button" class="btn btn--ghost" id="btn-reset-seq">Επαναφορά defaults</button>
@@ -126,6 +133,85 @@
           <div class="seq-emails" id="seq-emails"></div>
         </div>
         <aside class="seq-leads" id="seq-leads" aria-label="Leads στο στάδιο"></aside>
+      </div>
+    </section>
+
+    <!-- ONBOARDING TAB -->
+    <section class="view" id="view-onboarding" data-view="onboarding" hidden>
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Onboarding</h1>
+          <p class="topbar__sub">Φόρμα για πελάτες που έχουν συμφωνήσει — scripts, λήψεις, brand &amp; πρόσβαση</p>
+        </div>
+        <div class="topbar__actions">
+          <a class="btn btn--ghost" href="/onboarding.html" target="_blank" rel="noopener">Άνοιγμα φόρμας</a>
+          <button type="button" class="btn" id="btn-copy-onboarding">Αντιγραφή link</button>
+        </div>
+      </header>
+
+      <div class="onboard-admin">
+        <article class="onboard-admin__card">
+          <h2>Πώς το χρησιμοποιείς</h2>
+          <ol class="onboard-admin__steps">
+            <li>Όταν ο πελάτης είναι σε <strong>Αποδοχή</strong> ή <strong>Πληρωμή</strong>, στείλε του το onboarding link.</li>
+            <li>Μπορείς να αντιγράψεις generic link ή personalized (με προ-συμπληρωμένα στοιχεία).</li>
+            <li>Η συμπλήρωση έρχεται με email στο <code>LEAD_NOTIFY_EMAIL</code> (Resend).</li>
+            <li>Μην ζητάς κωδικούς στη φόρμα — μόνο τρόπος πρόσβασης.</li>
+          </ol>
+        </article>
+
+        <article class="onboard-admin__card">
+          <h2>Personalized link από lead</h2>
+          <label class="field">
+            <span>Επίλεξε lead</span>
+            <select id="onboard-lead-select">
+              <option value="">— Generic link —</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Link</span>
+            <input type="text" id="onboard-link-preview" readonly />
+          </label>
+          <button type="button" class="btn" id="btn-copy-onboarding-lead">Αντιγραφή personalized link</button>
+        </article>
+
+        <article class="onboard-admin__card onboard-admin__card--wide">
+          <h2>Τι ρωτάει η φόρμα</h2>
+          <div class="onboard-admin__grid">
+            <div>
+              <h3>Επικοινωνία &amp; υπηρεσίες</h3>
+              <ul>
+                <li>Στοιχεία, εγκριτής περιεχομένου</li>
+                <li>Social / Avatar / GMB</li>
+                <li>Ημερομηνία έναρξης</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Brand &amp; κοινό</h3>
+              <ul>
+                <li>Κλάδος, USP, ανταγωνιστές</li>
+                <li>Τόνος, χρώματα, taboo</li>
+                <li>Ιδανικός πελάτης</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Scripts &amp; Social</h3>
+              <ul>
+                <li>Focus 1ου μήνα, FAQs, CTAs</li>
+                <li>Must / avoid topics</li>
+                <li>Accounts + τρόπος πρόσβασης</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Λήψεις / GMB / ροή</h3>
+              <ul>
+                <li>Assets URL, avatar, διαθεσιμότητα</li>
+                <li>GMB link, ωράριο, υπηρεσίες</li>
+                <li>Ταχύτητα έγκρισης &amp; κανάλι</li>
+              </ul>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
   </div>

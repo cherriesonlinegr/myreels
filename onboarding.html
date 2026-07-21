@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyReels — Onboarding</title>
+  <meta name="description" content="Φόρμα onboarding MyReels — στοιχεία για scripts, λήψεις και παραγωγή περιεχομένου." />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/onboarding.css" />
+</head>
+<body>
+  <header class="ob-nav">
+    <a href="/" class="ob-nav__brand">MyReels</a>
+    <span class="ob-nav__tag">Onboarding</span>
+  </header>
+
+  <main class="ob">
+    <div class="ob__intro">
+      <p class="ob__eyebrow">Καλώς ήρθες στην ομάδα</p>
+      <h1>Onboarding form</h1>
+      <p class="ob__lead">
+        Συμπλήρωσε όσα περισσότερα μπορείς. Με αυτές τις πληροφορίες γράφουμε scripts,
+        σχεδιάζουμε λήψεις / AI Avatar και ξεκινάμε παραγωγή χωρίς καθυστερήσεις.
+      </p>
+      <p class="ob__time">≈ 10–15 λεπτά · Αποθήκευσε links (Drive / Dropbox) για φωτό &amp; βίντεο</p>
+    </div>
+
+    <form class="ob-form" id="onboarding-form">
+      <input type="hidden" name="leadId" id="leadId" />
+
+      <section class="ob-card">
+        <h2>1. Στοιχεία επικοινωνίας</h2>
+        <div class="ob-grid">
+          <label class="ob-field">
+            <span>Ονοματεπώνυμο *</span>
+            <input type="text" name="contactName" id="contactName" required autocomplete="name" />
+          </label>
+          <label class="ob-field">
+            <span>Επωνυμία επιχείρησης *</span>
+            <input type="text" name="businessName" id="businessName" required />
+          </label>
+          <label class="ob-field">
+            <span>Email *</span>
+            <input type="email" name="contactEmail" id="contactEmail" required autocomplete="email" />
+          </label>
+          <label class="ob-field">
+            <span>Τηλέφωνο / Viber / WhatsApp</span>
+            <input type="tel" name="contactPhone" id="contactPhone" autocomplete="tel" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Ποιος εγκρίνει το περιεχόμενο; (όνομα + email/τηλ.)</span>
+            <input type="text" name="approver" placeholder="π.χ. Μαρία — maria@… / 69…" />
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>2. Υπηρεσίες που ξεκινάμε</h2>
+        <p class="ob-hint">Επίλεξε όσα ισχύουν για τη συνεργασία.</p>
+        <div class="ob-checks">
+          <label><input type="checkbox" name="services" value="content" /> Social Media + Content</label>
+          <label><input type="checkbox" name="services" value="videos" /> AI Avatar Videos</label>
+          <label><input type="checkbox" name="services" value="maps" /> Google My Business</label>
+        </div>
+        <label class="ob-field ob-field--full">
+          <span>Ημερομηνία έναρξης / προθεσμία πρώτου περιεχομένου</span>
+          <input type="text" name="startDate" placeholder="π.χ. Από 1η του μήνα / ASAP" />
+        </label>
+      </section>
+
+      <section class="ob-card">
+        <h2>3. Η επιχείρηση &amp; το κοινό</h2>
+        <div class="ob-grid">
+          <label class="ob-field">
+            <span>Κλάδος / δραστηριότητα *</span>
+            <input type="text" name="industry" required placeholder="π.χ. εστιατόριο, οδοντιατρείο, hotel" />
+          </label>
+          <label class="ob-field">
+            <span>Πόλη / περιοχή</span>
+            <input type="text" name="location" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Website</span>
+            <input type="url" name="website" placeholder="https://" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Περιέγραψε σε 2–3 γραμμές τι πουλάτε / τι κάνετε *</span>
+            <textarea name="businessAbout" rows="3" required></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Ιδανικός πελάτης (ηλικία, ανάγκες, πού μένει)</span>
+            <textarea name="audience" rows="3" placeholder="π.χ. οικογένειες 30–45, τουρίστες, B2B…"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Τι σε κάνει διαφορετικό από τον ανταγωνισμό; (USP)</span>
+            <textarea name="usp" rows="3"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>3 ανταγωνιστές ή σελίδες που σου αρέσουν (links)</span>
+            <textarea name="competitors" rows="2" placeholder="Instagram / site links"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>4. Brand &amp; ύφος</h2>
+        <div class="ob-grid">
+          <label class="ob-field ob-field--full">
+            <span>Τόνος επικοινωνίας</span>
+            <div class="ob-checks ob-checks--wrap">
+              <label><input type="checkbox" name="tone" value="φιλικός" /> Φιλικός</label>
+              <label><input type="checkbox" name="tone" value="επαγγελματικός" /> Επαγγελματικός</label>
+              <label><input type="checkbox" name="tone" value="χιουμοριστικός" /> Χιουμοριστικός</label>
+              <label><input type="checkbox" name="tone" value="premium" /> Premium / πολυτελής</label>
+              <label><input type="checkbox" name="tone" value="εκπαιδευτικός" /> Εκπαιδευτικός</label>
+              <label><input type="checkbox" name="tone" value="ενεργητικός" /> Ενεργητικός / salesy</label>
+            </div>
+          </label>
+          <label class="ob-field">
+            <span>Χρώματα brand</span>
+            <input type="text" name="brandColors" placeholder="π.χ. #1d1d1f, κόκκινο κερασιού" />
+          </label>
+          <label class="ob-field">
+            <span>Γλώσσα περιεχομένου</span>
+            <select name="language">
+              <option value="el">Ελληνικά</option>
+              <option value="en">English</option>
+              <option value="both">Και τα δύο</option>
+            </select>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Link για logo / brand kit / οδηγίες</span>
+            <input type="url" name="brandKitUrl" placeholder="https://drive.google.com/…" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Λέξεις / θέματα που ΔΕΝ θέλουμε να χρησιμοποιούμε</span>
+            <textarea name="taboo" rows="2" placeholder="Ανταγωνιστές, πολιτικά, συγκεκριμένες λέξεις…"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>5. Social accounts</h2>
+        <div class="ob-grid">
+          <label class="ob-field">
+            <span>Instagram</span>
+            <input type="text" name="ig" placeholder="@username ή URL" />
+          </label>
+          <label class="ob-field">
+            <span>Facebook Page</span>
+            <input type="text" name="fb" placeholder="URL σελίδας" />
+          </label>
+          <label class="ob-field">
+            <span>TikTok</span>
+            <input type="text" name="tiktok" placeholder="@username" />
+          </label>
+          <label class="ob-field">
+            <span>YouTube / άλλο</span>
+            <input type="text" name="otherSocial" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Πώς θα μας δώσετε πρόσβαση; *</span>
+            <select name="accessMethod" required>
+              <option value="">— Επίλεξε —</option>
+              <option value="meta_partner">Meta Business Suite / Partner access</option>
+              <option value="admin_invite">Προσθήκη ως Admin / Editor</option>
+              <option value="shared_login">Shared login (θα το κανονίσουμε με ασφάλεια)</option>
+              <option value="later">Θα το κανονίσουμε σε call</option>
+            </select>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Τι έχει δουλέψει ήδη στο περιεχόμενό σας; (links ή περιγραφή)</span>
+            <textarea name="whatWorks" rows="3"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>6. Scripts &amp; θεματολόγιο</h2>
+        <p class="ob-hint">Όσο πιο συγκεκριμένα, τόσο καλύτερα τα πρώτα Reels.</p>
+        <div class="ob-grid">
+          <label class="ob-field ob-field--full">
+            <span>Κύρια προϊόντα / υπηρεσίες που θέλουμε να προωθήσουμε τον 1ο μήνα *</span>
+            <textarea name="monthFocus" rows="3" required></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Συχνές ερωτήσεις πελατών (τουλάχιστον 5)</span>
+            <textarea name="faqs" rows="4" placeholder="1. …&#10;2. …"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Προσφορές / CTA που μπορούμε να λέμε στα videos</span>
+            <textarea name="offers" rows="3" placeholder="π.χ. κλείσε ραντεβού, παραγγελία online, κωδικός MYREELS10"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Ιδέες θεμάτων που ΘΕΛΕΙΣ οπωσδήποτε</span>
+            <textarea name="mustTopics" rows="3"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Ιδέες / θέματα που να αποφύγουμε</span>
+            <textarea name="avoidTopics" rows="2"></textarea>
+          </label>
+          <label class="ob-field">
+            <span>Hashtags που χρησιμοποιείτε</span>
+            <input type="text" name="hashtags" placeholder="#edessa #…" />
+          </label>
+          <label class="ob-field">
+            <span>Location tags</span>
+            <input type="text" name="geoTags" />
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>7. Λήψεις &amp; AI Avatar</h2>
+        <p class="ob-hint">Για AI Avatar / φωνή χρειάζόμαστε καθαρό υλικό. Αν δεν ισχύει, άφησε κενό.</p>
+        <div class="ob-grid">
+          <label class="ob-field ob-field--full">
+            <span>Χρειάζεται AI Avatar με το πρόσωπό σας;</span>
+            <select name="needAvatar">
+              <option value="yes">Ναι</option>
+              <option value="no">Όχι</option>
+              <option value="unsure">Δεν είμαι σίγουρος/η</option>
+            </select>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Link φακέλου με φωτό / βίντεο για avatar ή b-roll</span>
+            <input type="url" name="assetsUrl" placeholder="Google Drive / Dropbox / WeTransfer" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Οδηγίες εμφάνισης (ρούχα, φόντο, μαλλιά, αξεσουάρ)</span>
+            <textarea name="appearance" rows="2"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Διαθεσιμότητα για live λήψη (αν χρειαστεί)</span>
+            <textarea name="shootAvailability" rows="2" placeholder="Ημέρες/ώρες ή «μόνο remote / AI»"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Υπάρχει χώρος / προϊόντα για γυρίσματα on-site;</span>
+            <textarea name="shootLocation" rows="2"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>8. Google My Business</h2>
+        <p class="ob-hint">Συμπλήρωσε αν έχεις GMB στο πακέτο.</p>
+        <div class="ob-grid">
+          <label class="ob-field ob-field--full">
+            <span>Link Google Maps / Business Profile</span>
+            <input type="url" name="gmbUrl" placeholder="https://maps.google.com/…" />
+          </label>
+          <label class="ob-field">
+            <span>Έχουμε ήδη πρόσβαση owner/manager;</span>
+            <select name="gmbAccess">
+              <option value="">—</option>
+              <option value="yes">Ναι</option>
+              <option value="no">Όχι ακόμα</option>
+              <option value="na">Δεν ισχύει</option>
+            </select>
+          </label>
+          <label class="ob-field">
+            <span>Κατηγορία επιχείρησης στο Google</span>
+            <input type="text" name="gmbCategory" />
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Ωράριο λειτουργίας</span>
+            <textarea name="gmbHours" rows="2"></textarea>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Υπηρεσίες / μενού προς ανάδειξη στα posts</span>
+            <textarea name="gmbServices" rows="3"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="ob-card">
+        <h2>9. Ροή έγκρισης &amp; σημειώσεις</h2>
+        <div class="ob-grid">
+          <label class="ob-field">
+            <span>Πόσο γρήγορα εγκρίνετε συνήθως;</span>
+            <select name="approvalSpeed">
+              <option value="24h">Εντός 24 ωρών</option>
+              <option value="48h">Εντός 48 ωρών</option>
+              <option value="weekly">1 φορά / εβδομάδα</option>
+              <option value="flexible">Ευέλικτα</option>
+            </select>
+          </label>
+          <label class="ob-field">
+            <span>Προτιμώμενο κανάλι επικοινωνίας</span>
+            <select name="commChannel">
+              <option value="email">Email</option>
+              <option value="viber">Viber</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="messenger">Messenger</option>
+              <option value="phone">Τηλέφωνο</option>
+            </select>
+          </label>
+          <label class="ob-field ob-field--full">
+            <span>Οτιδήποτε άλλο πρέπει να ξέρουμε πριν ξεκινήσουμε</span>
+            <textarea name="extraNotes" rows="4"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <div class="ob-submit">
+        <button type="submit" class="ob-btn" id="ob-submit">Υποβολή onboarding</button>
+        <p class="ob-fine">Τα στοιχεία στέλνονται στην ομάδα MyReels. Μην βάζεις κωδικούς σε αυτή τη φόρμα.</p>
+      </div>
+    </form>
+  </main>
+
+  <script src="/onboarding.js"></script>
+</body>
+</html>

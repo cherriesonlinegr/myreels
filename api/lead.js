@@ -10,7 +10,16 @@ const SERVICE_LABELS = {
   videos: "AI Avatar Videos",
   maps: "Google My Business",
   avatar: "AI Avatar Videos",
+  stay: "Reel καταλύματος",
 };
+
+function esc(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -56,6 +65,17 @@ export default async function handler(req, res) {
     ? services.map((id) => SERVICE_LABELS[id] || id).join(", ")
     : "Δεν επιλέχθηκε";
 
+  const priceNet = Number(String(body.priceNet ?? "").replace(",", "."));
+  const reelNet =
+    Number.isFinite(priceNet) && priceNet > 0 && priceNet <= 100000
+      ? Math.round(priceNet * 100) / 100
+      : 60;
+  const reelGross = Math.round(reelNet * 1.24 * 100) / 100;
+  const reelPriceLabel = new Intl.NumberFormat("el-GR", {
+    minimumFractionDigits: Math.round(reelGross * 100) % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(reelGross) + "€";
+
   const resend = new Resend(apiKey);
 
   try {
@@ -63,17 +83,20 @@ export default async function handler(req, res) {
       from,
       to: [to],
       replyTo: email,
-      subject: `[MyReels Lead] ${name} — ${business}`,
+      subject:
+        source === "reel"
+          ? `[MyReels Παραγγελία] ${name} — ${business} — ${reelPriceLabel}`
+          : `[MyReels Lead] ${name} — ${business}`,
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;color:#1d1d1f">
-          <h2 style="margin:0 0 12px">Νέο lead — MyReels</h2>
-          <p style="margin:0 0 16px;color:#6e6e73">Πηγή: <strong>${source}</strong> · myreels.gr</p>
-          <p><strong>Όνομα:</strong> ${name}</p>
-          <p><strong>Επιχείρηση:</strong> ${business}</p>
-          <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-          <p><strong>Τηλέφωνο:</strong> ${phone || "—"}</p>
-          <p><strong>Υπηρεσίες:</strong> ${serviceLine}</p>
-          <p><strong>Σημειώσεις:</strong> ${notes || "—"}</p>
+          <h2 style="margin:0 0 12px">${source === "reel" ? "Παραγγελία Reel καταλύματος" : "Νέο lead — MyReels"}</h2>
+          <p style="margin:0 0 16px;color:#6e6e73">Πηγή: <strong>${esc(source)}</strong> · myreels.gr</p>
+          <p><strong>Όνομα:</strong> ${esc(name)}</p>
+          <p><strong>Επιχείρηση:</strong> ${esc(business)}</p>
+          <p><strong>Email:</strong> <a href="mailto:${esc(email)}">${esc(email)}</a></p>
+          <p><strong>Τηλέφωνο:</strong> ${esc(phone) || "—"}</p>
+          <p><strong>Υπηρεσίες:</strong> ${esc(serviceLine)}</p>
+          <p><strong>Σημειώσεις:</strong> ${esc(notes) || "—"}</p>
         </div>
       `,
     });

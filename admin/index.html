@@ -22,7 +22,7 @@
     <form class="login-card" id="login-form" autocomplete="on">
       <p class="login-card__brand">MyReels</p>
       <h1 class="login-card__title">Admin</h1>
-      <p class="login-card__sub">Συνδέσου για να διαχειριστείς leads και sequences.</p>
+      <p class="login-card__sub">Συνδέσου για leads, sequences και Reels καταλυμάτων.</p>
       <label class="field">
         <span>Username</span>
         <input type="text" id="login-user" name="username" required autocomplete="username" />
@@ -50,6 +50,10 @@
         <span class="sidebar__icon" aria-hidden="true">◇</span>
         Pipeline
       </button>
+      <button type="button" class="sidebar__link" data-tab="stays">
+        <span class="sidebar__icon" aria-hidden="true">▶</span>
+        Καταλύματα
+      </button>
       <button type="button" class="sidebar__link" data-tab="services">
         <span class="sidebar__icon" aria-hidden="true">▣</span>
         Υπηρεσίες
@@ -74,6 +78,9 @@
   <nav class="mobile-nav" id="mobile-nav" aria-label="Admin tabs">
     <button type="button" class="mobile-nav__btn is-active" data-tab="pipeline">
       <span>◇</span>Pipeline
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="stays">
+      <span>▶</span>Καταλύματα
     </button>
     <button type="button" class="mobile-nav__btn" data-tab="services">
       <span>▣</span>Υπηρεσίες
@@ -110,6 +117,66 @@
 
       <div class="board-wrap">
         <div class="board" id="board" aria-label="Pipeline board"></div>
+      </div>
+    </section>
+
+    <!-- STAYS TAB -->
+    <section class="view" id="view-stays" data-view="stays" hidden>
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Καταλύματα</h1>
+          <p class="topbar__sub">YouTube link, όνομα καταλύματος και τιμή. Default 60€ + ΦΠΑ 24%.</p>
+        </div>
+      </header>
+
+      <div class="onboard-admin">
+        <article class="onboard-admin__card">
+          <h2>Νέα landing</h2>
+          <ol class="onboard-admin__steps">
+            <li>Ανέβασε το Reel στο YouTube. Τίτλος = όνομα καταλύματος, π.χ. Ηλιοπετρόσπιτο.</li>
+            <li>Μπορεί να είναι unlisted. Στις ρυθμίσεις του βίντεο άφησε ανοιχτό το embedding.</li>
+            <li>Επικόλλησε το link, έλεγξε το όνομα και στείλε τη landing στον οικοδεσπότη.</li>
+          </ol>
+          <form id="stay-form">
+            <label class="field">
+              <span>YouTube link</span>
+              <input type="url" id="stay-youtube" required placeholder="https://youtu.be/…" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>Όνομα καταλύματος</span>
+              <input type="text" id="stay-name" required maxlength="80" placeholder="Ηλιοπετρόσπιτο" />
+            </label>
+            <label class="field">
+              <span>Τιμή χωρίς ΦΠΑ (€)</span>
+              <input type="number" id="stay-price" min="1" max="100000" step="0.01" value="60" required />
+            </label>
+            <p class="stay-hint" id="stay-price-preview">Με ΦΠΑ 24%: 74,40€</p>
+            <p class="stay-hint" id="stay-title-status"></p>
+            <p class="stay-hint stay-hint--error" id="stay-form-error" hidden></p>
+            <button type="submit" class="btn">Δημιουργία landing</button>
+          </form>
+        </article>
+
+        <article class="onboard-admin__card">
+          <h2>Link για αποστολή</h2>
+          <p class="stay-hint" id="stay-empty-result">Η landing εμφανίζεται εδώ μόλις τη δημιουργήσεις.</p>
+          <div id="stay-result" hidden>
+            <p class="stay-result__name" id="stay-result-name"></p>
+            <label class="field">
+              <span>Landing</span>
+              <input type="text" id="stay-result-url" readonly />
+            </label>
+            <div class="stay-result__actions">
+              <button type="button" class="btn" id="stay-copy">Αντιγραφή link</button>
+              <a class="btn btn--ghost" id="stay-open" href="#" target="_blank" rel="noopener">Άνοιγμα</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="onboard-admin__card onboard-admin__card--wide">
+          <h2>Πρόσφατες</h2>
+          <div class="stay-list" id="stay-list"></div>
+        </article>
       </div>
     </section>
 
@@ -322,6 +389,7 @@
   </dialog>
 
   <script src="/services-data.js"></script>
+  <script src="/stay-reel.js"></script>
   <script src="/admin/admin.js"></script>
 </div>
 </body>

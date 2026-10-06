@@ -583,6 +583,7 @@ MyReels`,
     if (tab === "pipeline") renderBoard();
     if (tab === "services") renderServicesCatalog();
     if (tab === "onboarding") renderOnboardingTab();
+    if (tab === "stays") renderStayList();
   }
 
   document.querySelectorAll("[data-tab]").forEach((btn) => {
@@ -1254,11 +1255,236 @@ MyReels`,
     });
   }
 
+  const STAY_KEY = "myreels_stay_reels";
+
+  function loadStays() {
+    try {
+      const raw = localStorage.getItem(STAY_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveStays(items) {
+    localStorage.setItem(STAY_KEY, JSON.stringify(items));
+  }
+
+  function renderStayList() {
+    const list = document.getElementById("stay-list");
+    if (!list || !window.MyReelsStay) return;
+    const items = loadStays();
+    if (!items.length) {
+      list.innerHTML = `<p class="stay-hint">Δεν έχεις δημιουργήσει landing ακόμα.</p>`;
+      return;
+    }
+    list.innerHTML = items
+      .map((item) => {
+        const net = window.MyReelsStay.parseNet(item.net) ?? window.MyReelsStay.NET;
+        const grossLabel = window.MyReelsStay.euro(window.MyReelsStay.grossOf(net));
+        const url = window.MyReelsStay.buildLandingUrl(
+          window.location.origin,
+          item.name,
+          item.videoId,
+          net
+        );
+        const when = new Date(item.createdAt).toLocaleString("el-GR", {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return `
+          <article class="stay-row">
+            <div>
+              <strong>${escapeHtml(item.name)}</strong>
+              <small>${escapeHtml(when)} · ${escapeHtml(grossLabel)}</small>
+            </div>
+            <div class="stay-row__actions">
+              <button type="button" class="btn btn--ghost btn--sm" data-stay-copy="${escapeHtml(url)}">Αντιγραφή</button>
+              <a class="btn btn--ghost btn--sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">Άνοιγμα</a>
+              <button type="button" class="btn btn--ghost btn--sm" data-stay-delete="${escapeHtml(item.id)}">Διαγραφή</button>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  function showStayResult(item) {
+    const stay = window.MyReelsStay;
+    const box = document.getElementById("stay-result");
+    const empty = document.getElementById("stay-empty-result");
+    const nameEl = document.getElementById("stay-result-name");
+    const urlEl = document.getElementById("stay-result-url");
+    const openEl = document.getElementById("stay-open");
+    if (!box || !stay) return;
+    const net = stay.parseNet(item.net) ?? stay.NET;
+    const url = stay.buildLandingUrl(window.location.origin, item.name, item.videoId, net);
+    if (empty) empty.hidden = true;
+    box.hidden = false;
+    if (nameEl) nameEl.textContent = `${item.name} · ${stay.euro(stay.grossOf(net))}`;
+    if (urlEl) urlEl.value = url;
+    if (openEl) openEl.href = url;
+  }
+
+  function setupStayTab() {
+    const stay = window.MyReelsStay;
+    const form = document.getElementById("stay-form");
+    const youtubeInput = document.getElementById("stay-youtube");
+    const nameInput = document.getElementById("stay-name");
+    const priceInput = document.getElementById("stay-price");
+    const pricePreview = document.getElementById("stay-price-preview");
+    const statusEl = document.getElementById("stay-title-status");
+    const errorEl = document.getElementById("stay-form-error");
+    const copyBtn = document.getElementById("stay-copy");
+    const list = document.getElementById("stay-list");
+    if (!form || !stay) return;
+
+    const refreshPricePreview = () => {
+      const net = stay.parseNet(priceInput?.value);
+      if (!pricePreview) return;
+      if (net == null) {
+        pricePreview.textContent = "Βάλε την τιμή χωρίς ΦΠΑ. Ο ΦΠΑ είναι 24%.";
+        return;
+      }
+      pricePreview.textContent = `Με ΦΠΑ 24%: ${stay.euro(stay.grossOf(net))}`;
+    };
+
+    priceInput?.addEventListener("input", refreshPricePreview);
+    refreshPricePreview();
+
+    let lookupToken = 0;
+
+    const lookupTitle = async () => {
+      const videoId = stay.parseYouTubeId(youtubeInput.value);
+      if (!videoId || nameInput.value.trim()) {
+        if (statusEl && !nameInput.value.trim() && youtubeInput.value.trim() && !videoId) {
+          statusEl.textContent = "Αυτό δεν μοιάζει με YouTube link.";
+        }
+        return;
+      }
+      const token = ++lookupToken;
+      if (statusEl) statusEl.textContent = "Διαβάζω τον τίτλο από το YouTube…";
+      try {
+        const response = await fetch(`/api/youtube-title?url=${encodeURIComponent(youtubeInput.value.trim())}`);
+        const data = await response.json().catch(() => ({}));
+        if (token !== lookupToken || nameInput.value.trim()) return;
+        if (data.ok && data.title) {
+          nameInput.value = stay.cleanName(data.title);
+          if (statusEl) statusEl.textContent = "Ο τίτλος ήρθε από το YouTube. Άλλαξέ τον αν χρειάζεται.";
+          return;
+        }
+      } catch {
+        /* unlisted videos and offline admin keep the manual name */
+      }
+      if (token !== lookupToken) return;
+      if (statusEl) {
+        statusEl.textContent =
+          "Δεν διαβάστηκε τίτλος. Γράψε το όνομα του καταλύματος — στα unlisted το YouTube δεν τον δίνει.";
+      }
+    };
+
+    youtubeInput.addEventListener("change", lookupTitle);
+    youtubeInput.addEventListener("paste", () => {
+      setTimeout(lookupTitle, 0);
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (errorEl) errorEl.hidden = true;
+      const name = stay.cleanName(nameInput.value);
+      const videoId = stay.parseYouTubeId(youtubeInput.value);
+      const net = stay.parseNet(priceInput?.value);
+      if (!videoId) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "Βάλε ένα έγκυρο YouTube link (watch, youtu.be ή Shorts).";
+        }
+        return;
+      }
+      if (name.length < 2) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "Γράψε το όνομα του καταλύματος.";
+        }
+        return;
+      }
+
+      if (net == null) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "Βάλε την τιμή χωρίς ΦΠΑ. Default είναι 60€.";
+        }
+        return;
+      }
+
+      const items = loadStays().filter(
+        (item) =>
+          !(
+            item.videoId === videoId &&
+            stay.cleanName(item.name).toLowerCase() === name.toLowerCase() &&
+            (stay.parseNet(item.net) ?? stay.NET) === net
+          )
+      );
+      const item = {
+        id: `stay-${Date.now()}`,
+        name,
+        videoId,
+        net,
+        youtubeUrl: youtubeInput.value.trim(),
+        createdAt: Date.now(),
+      };
+      items.unshift(item);
+      saveStays(items.slice(0, 40));
+      showStayResult(item);
+      renderStayList();
+
+      const url = stay.buildLandingUrl(window.location.origin, name, videoId, net);
+      const ok = await copyText(url);
+      if (copyBtn) {
+        copyBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αντιγραφή link";
+        setTimeout(() => {
+          copyBtn.textContent = "Αντιγραφή link";
+        }, 1600);
+      }
+    });
+
+    copyBtn?.addEventListener("click", async () => {
+      const urlEl = document.getElementById("stay-result-url");
+      const ok = await copyText(urlEl?.value || "");
+      copyBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+      setTimeout(() => {
+        copyBtn.textContent = "Αντιγραφή link";
+      }, 1600);
+    });
+
+    list?.addEventListener("click", async (event) => {
+      const copy = event.target.closest("[data-stay-copy]");
+      const remove = event.target.closest("[data-stay-delete]");
+      if (copy) {
+        const ok = await copyText(copy.getAttribute("data-stay-copy") || "");
+        const previous = copy.textContent;
+        copy.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+        setTimeout(() => {
+          copy.textContent = previous;
+        }, 1400);
+      }
+      if (remove) {
+        const id = remove.getAttribute("data-stay-delete");
+        saveStays(loadStays().filter((item) => item.id !== id));
+        renderStayList();
+      }
+    });
+  }
+
   // Init
   fillStageSelect("lead");
   fillServiceChecks([]);
   load();
   renderBoard();
   setupOnboardingTab();
+  setupStayTab();
   }
 })();

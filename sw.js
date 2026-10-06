@@ -1,12 +1,13 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v1";
+const CACHE_VERSION = "myreels-admin-cache-v4";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
   "/admin/admin.css",
   "/admin/admin.js",
   "/services-data.js",
+  "/stay-reel.js",
   "/favicon.svg",
   "/favicon.png",
   "/assets/favicon-512.png",
@@ -49,6 +50,16 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (!sameOrigin(url)) return;
+
+  // Public reel pages stay fresh. Never cache the worker itself, or updates get stuck.
+  if (
+    url.pathname === "/sw.js" ||
+    url.pathname === "/stay-reel.js" ||
+    url.pathname === "/reel" ||
+    url.pathname.startsWith("/reel.")
+  ) {
+    return;
+  }
 
   const cachePromise = (async () => {
     const cache = await caches.open(CACHE_VERSION);

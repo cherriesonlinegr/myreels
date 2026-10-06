@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Το Reel του καταλύματός σου — MyReels</title>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Κάθετο Reel από τις φωτογραφίες του καταλύματος, με μοντέλο που κινείται στον χώρο. 74,40€ (60€ + ΦΠΑ)." />
+  <meta property="og:title" content="Το Reel του καταλύματός σου είναι έτοιμο" />
+  <meta property="og:description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη ανεβάσει. 74,40€ (60€ + ΦΠΑ)." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/reel.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">MyReels</a>
+    <a class="top__buy" href="#order">Αγόρασε · <span data-stay-gross>74,40€</span></a>
+  </header>
+
+  <main class="layout" id="ready" hidden>
+    <div class="stage">
+      <div class="phone">
+        <div id="player"></div>
+        <button type="button" class="sound" id="sound-btn" aria-label="Άνοιξε τον ήχο">
+          <svg class="sound__icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path id="sound-path" fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4zm11.5 3a3.5 3.5 0 0 0-2-3.15v6.3a3.5 3.5 0 0 0 2-3.15zM14 4.23v2.06a6 6 0 0 1 0 11.42v2.06a8 8 0 0 0 0-15.54z"/>
+          </svg>
+          <span class="sound__label">Άνοιξε τον ήχο</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="offer">
+      <p class="eyebrow">Reel καταλύματος</p>
+      <h1>Το <span data-stay-name></span> σε κίνηση.</h1>
+      <p class="lead">
+        Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη ανεβάσει. Ένα μοντέλο περπατάει στον χώρο,
+        ώστε όποιος το βλέπει να νιώθει ότι είναι ήδη εκεί — πριν κλείσει.
+      </p>
+
+      <ul class="points">
+        <li>Κάθετο Reel για Instagram, TikTok και Facebook</li>
+        <li>Από τις υπάρχουσες φωτογραφίες του καταλύματος</li>
+        <li>Μοντέλο που κινείται μέσα στον χώρο</li>
+        <li>Το αρχείο είναι δικό σου μετά την πληρωμή</li>
+      </ul>
+
+      <div class="price">
+        <strong data-stay-gross>74,40€</strong>
+        <span><span data-stay-net>60€</span> + ΦΠΑ 24%</span>
+      </div>
+
+      <form class="order" id="order">
+        <h2>Αγόρασε το βίντεο</h2>
+        <p class="order__sub">Για το <span data-stay-name></span>. Σου στέλνουμε οδηγίες πληρωμής και, μόλις εξοφληθεί, το αρχείο.</p>
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <label>
+          <span>Όνομα</span>
+          <input type="text" id="buyer-name" name="name" required autocomplete="name" />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" id="buyer-email" name="email" required autocomplete="email" />
+        </label>
+        <label>
+          <span>Τηλέφωνο</span>
+          <input type="tel" id="buyer-phone" name="phone" autocomplete="tel" />
+        </label>
+        <button type="submit" class="buy" id="buy-btn">Αγόρασε το βίντεο — <span data-stay-gross>74,40€</span></button>
+        <p class="fine">Η τιμή είναι <span data-stay-net>60€</span> καθαρά, <span data-stay-gross>74,40€</span> με ΦΠΑ.</p>
+        <p class="form-error" id="form-error" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <main class="missing" id="missing" hidden>
+    <p class="eyebrow">MyReels</p>
+    <h1>Αυτό το link δεν είναι πλήρες.</h1>
+    <p>Χρειάζεται το όνομα του καταλύματος και το βίντεο. Ζήτα ένα νέο link από την MyReels.</p>
+  </main>
+
+  <script src="/stay-reel.js"></script>
+  <script src="/reel.js"></script>
+</body>
+</html>

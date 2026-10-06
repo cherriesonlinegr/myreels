@@ -335,6 +335,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
   height: 36px;
   padding: 0 18px;
   border-radius: 980px;
@@ -755,6 +756,78 @@ textarea {
 
   .onboard-admin {
     padding-inline: 16px;
+  }
+}
+
+.stay-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 4px 0 12px;
+}
+
+.stay-hint--error {
+  color: var(--red);
+}
+
+#stay-form {
+  margin-top: 16px;
+}
+
+#stay-form .btn {
+  margin-top: 4px;
+}
+
+.stay-result__name {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.stay-result__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stay-list {
+  display: grid;
+  gap: 8px;
+}
+
+.stay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.stay-row strong {
+  display: block;
+  font-size: 15px;
+}
+
+.stay-row small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.stay-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .stay-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 

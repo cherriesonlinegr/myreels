@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Συνέχεια — MyReels</title>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Ευχαριστούμε. 5 ή 10 έτοιμα Reels, και τα προγραμματίζουμε εμείς." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/upsell.css" />
+</head>
+<body>
+  <main class="sheet" id="ready" hidden>
+    <header class="thanks">
+      <p class="mark">MyReels</p>
+      <p class="kicker"><span class="tick" aria-hidden="true">✓</span> Η παραγγελία μπήκε</p>
+      <h1>Ευχαριστούμε.</h1>
+      <p class="owned" id="owned-line"></p>
+      <p class="lead" id="thanks-lead">Η παραγγελία του πρώτου Reel στάλθηκε. Σου στέλνουμε το αρχείο.</p>
+    </header>
+
+    <section class="next">
+      <h2>Θες να μην ξανασχοληθείς για λίγο;</h2>
+      <p>Σου ετοιμάζουμε 5 ή 10 Reels ακόμα, και τα προγραμματίζουμε εμείς σε Instagram, Facebook και TikTok.</p>
+
+      <p class="form-error" id="form-error" hidden></p>
+      <div class="packs">
+        <article class="pack pack--best">
+          <p class="badge">Καλύτερη αξία</p>
+          <h3>10 Reels</h3>
+          <p class="pack__gross" id="price-10">300€</p>
+          <p class="pack__net" id="net-10">372€ με ΦΠΑ</p>
+          <p class="pack__each" id="each-10">30€ / Reel</p>
+          <ul class="perks">
+            <li>10 έτοιμα Reels για το κατάλυμά σου</li>
+            <li>Προγραμματισμός σε Instagram, Facebook και TikTok</li>
+          </ul>
+          <button type="button" class="buy" id="choose-10" data-choose="10">Θέλω τα 10 — 300€</button>
+        </article>
+
+        <article class="pack">
+          <h3>5 Reels</h3>
+          <p class="pack__gross" id="price-5">170€</p>
+          <p class="pack__net" id="net-5">210,80€ με ΦΠΑ</p>
+          <p class="pack__each" id="each-5">34€ / Reel</p>
+          <ul class="perks">
+            <li>5 έτοιμα Reels για το κατάλυμά σου</li>
+            <li>Προγραμματισμός σε Instagram, Facebook και TikTok</li>
+          </ul>
+          <button type="button" class="buy buy--quiet" id="choose-5" data-choose="5">Θέλω τα 5 — 170€</button>
+        </article>
+      </div>
+      <p class="compare" id="compare-line"></p>
+    </section>
+
+    <p class="skip-wrap"><button type="button" class="skip" id="skip">Όχι, μένω στο ένα βίντεο.</button></p>
+  </main>
+
+  <main class="sheet done" id="done" hidden>
+    <p class="mark">MyReels</p>
+    <h1 id="done-title"></h1>
+    <p id="done-text"></p>
+  </main>
+
+  <main class="sheet missing" id="missing" hidden>
+    <p class="mark">MyReels</p>
+    <h1>Αυτό το link δεν είναι πλήρες.</h1>
+    <p>Χρειάζεται το όνομα του καταλύματος.</p>
+  </main>
+
+  <script src="/stay-reel.js"></script>
+  <script src="/upsell.js"></script>
+</body>
+</html>

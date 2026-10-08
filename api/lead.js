@@ -11,6 +11,8 @@ const SERVICE_LABELS = {
   maps: "Google My Business",
   avatar: "AI Avatar Videos",
   stay: "Reel καταλύματος",
+  stay5: "Πακέτο 5 Reels + προγραμματισμός",
+  stay10: "Πακέτο 10 Reels + προγραμματισμός",
 };
 
 function esc(value) {
@@ -69,12 +71,26 @@ export default async function handler(req, res) {
   const reelNet =
     Number.isFinite(priceNet) && priceNet > 0 && priceNet <= 100000
       ? Math.round(priceNet * 100) / 100
-      : 60;
+      : source === "upsell"
+        ? 170
+        : 40;
   const reelGross = Math.round(reelNet * 1.24 * 100) / 100;
   const reelPriceLabel = new Intl.NumberFormat("el-GR", {
     minimumFractionDigits: Math.round(reelGross * 100) % 100 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(reelGross) + "€";
+  const pack = Number(body.pack);
+  const packLabel = pack === 5 || pack === 10 ? `${pack} Reels` : "";
+  let driveUrl = "";
+  try {
+    const parsed = new URL(String(body.driveUrl || "").trim());
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (parsed.protocol === "https:" && (host === "drive.google.com" || host === "docs.google.com")) {
+      driveUrl = parsed.toString();
+    }
+  } catch {
+    driveUrl = "";
+  }
 
   const resend = new Resend(apiKey);
 
@@ -84,12 +100,20 @@ export default async function handler(req, res) {
       to: [to],
       replyTo: email,
       subject:
-        source === "reel"
-          ? `[MyReels Παραγγελία] ${name} — ${business} — ${reelPriceLabel}`
-          : `[MyReels Lead] ${name} — ${business}`,
+        source === "upsell"
+          ? `[MyReels Upsell] ${name} — ${business} — ${packLabel || "πακέτο"} — ${reelPriceLabel}`
+          : source === "reel"
+            ? `[MyReels Παραγγελία] ${name} — ${business} — ${reelPriceLabel}`
+            : `[MyReels Lead] ${name} — ${business}`,
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;color:#1d1d1f">
-          <h2 style="margin:0 0 12px">${source === "reel" ? "Παραγγελία Reel καταλύματος" : "Νέο lead — MyReels"}</h2>
+          <h2 style="margin:0 0 12px">${
+            source === "upsell"
+              ? "Upsell Reels καταλύματος"
+              : source === "reel"
+                ? "Παραγγελία Reel καταλύματος"
+                : "Νέο lead — MyReels"
+          }</h2>
           <p style="margin:0 0 16px;color:#6e6e73">Πηγή: <strong>${esc(source)}</strong> · myreels.gr</p>
           <p><strong>Όνομα:</strong> ${esc(name)}</p>
           <p><strong>Επιχείρηση:</strong> ${esc(business)}</p>
@@ -97,6 +121,7 @@ export default async function handler(req, res) {
           <p><strong>Τηλέφωνο:</strong> ${esc(phone) || "—"}</p>
           <p><strong>Υπηρεσίες:</strong> ${esc(serviceLine)}</p>
           <p><strong>Σημειώσεις:</strong> ${esc(notes) || "—"}</p>
+          <p><strong>Αρχείο για τον αγοραστή:</strong> ${driveUrl ? `<a href="${esc(driveUrl)}">${esc(driveUrl)}</a>` : "—"}</p>
         </div>
       `,
     });

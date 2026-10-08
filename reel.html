@@ -5,25 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Το Reel του καταλύματός σου — MyReels</title>
   <meta name="robots" content="noindex" />
-  <meta name="description" content="Κάθετο Reel από τις φωτογραφίες του καταλύματος, με μοντέλο που κινείται στον χώρο. 74,40€ (60€ + ΦΠΑ)." />
-  <meta property="og:title" content="Το Reel του καταλύματός σου είναι έτοιμο" />
-  <meta property="og:description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη ανεβάσει. 74,40€ (60€ + ΦΠΑ)." />
+  <meta name="description" content="Το Reel του καταλύματός σου είναι ήδη έτοιμο. 40€ χωρίς ΦΠΑ (49,60€ με ΦΠΑ)." />
+  <meta property="og:title" content="Το Reel του καταλύματός σου είναι ήδη έτοιμο" />
+  <meta property="og:description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online. 40€ χωρίς ΦΠΑ." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/reel.css" />
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="/">MyReels</a>
-    <a class="top__buy" href="#order">Αγόρασε · <span data-stay-gross>74,40€</span></a>
-  </header>
+  <main class="page" id="ready" hidden>
+    <header class="intro">
+      <p class="mark">MyReels</p>
+      <p class="kicker" data-copy="label">Για το κατάλυμα</p>
+      <h1 data-copy="headline">Το Reel είναι ήδη έτοιμο.</h1>
+      <p class="sub" data-copy="sub">
+        Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online.
+        Δεν χρειάστηκε γύρισμα. Δεν χρειάστηκε να κάνεις τίποτα.
+      </p>
+    </header>
 
-  <main class="layout" id="ready" hidden>
     <div class="stage">
-      <div class="phone">
+      <div class="frame">
         <div id="player"></div>
         <button type="button" class="sound" id="sound-btn" aria-label="Άνοιξε τον ήχο">
           <svg class="sound__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -34,53 +39,54 @@
       </div>
     </div>
 
-    <section class="offer">
-      <p class="eyebrow">Reel καταλύματος</p>
-      <h1>Το <span data-stay-name></span> σε κίνηση.</h1>
-      <p class="lead">
-        Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη ανεβάσει. Ένα μοντέλο περπατάει στον χώρο,
-        ώστε όποιος το βλέπει να νιώθει ότι είναι ήδη εκεί — πριν κλείσει.
+    <section class="sell">
+      <h2 data-copy="pitchTitle">Και το καλύτερο; Δεν χρειάστηκε να το τραβήξουμε.</h2>
+      <p data-copy="pitch">
+        Πήραμε τις φωτογραφίες του καταλύματός σου και δημιουργήσαμε ένα Reel όπου ένα μοντέλο κινείται μέσα στον χώρο.
+        Εσύ δεν χρειάστηκε να κανονίσεις γύρισμα, να εμφανιστείς στην κάμερα ή να τραβήξεις καινούργιο υλικό.
       </p>
 
-      <ul class="points">
-        <li>Κάθετο Reel για Instagram, TikTok και Facebook</li>
-        <li>Από τις υπάρχουσες φωτογραφίες του καταλύματος</li>
-        <li>Μοντέλο που κινείται μέσα στον χώρο</li>
-        <li>Το αρχείο είναι δικό σου μετά την πληρωμή</li>
-      </ul>
-
-      <div class="price">
-        <strong data-stay-gross>74,40€</strong>
-        <span><span data-stay-net>60€</span> + ΦΠΑ 24%</span>
-      </div>
+      <h2 class="ask" data-copy="priceTitle">Και πόσο;</h2>
+      <p class="amount" data-stay-net>40€</p>
+      <p class="breakdown"><span data-stay-gross>49,60€</span> με ΦΠΑ</p>
+      <p class="yes" data-copy="priceYes">Ναι. Για ολόκληρο το Reel.</p>
+      <p class="honest" data-copy="priceNote">
+        Δεν είναι έκπτωση από κάποια «αρχική τιμή».
+        Δεν υπάρχει κάποιο κόλπο.
+        Το φτιάξαμε ήδη για το κατάλυμά σου και θέλουμε να δεις στην πράξη τι μπορούμε να κάνουμε.
+        Οπότε ναι, το δίνουμε φτηνά. Επίτηδες.
+      </p>
 
       <form class="order" id="order">
-        <h2>Αγόρασε το βίντεο</h2>
-        <p class="order__sub">Για το <span data-stay-name></span>. Σου στέλνουμε οδηγίες πληρωμής και, μόλις εξοφληθεί, το αρχείο.</p>
+        <h2 data-copy="formTitle">Το θέλεις; Πάρε το.</h2>
+        <p class="order__sub" data-copy="formSub">Συμπλήρωσε τα στοιχεία σου. Μόλις λάβουμε την παραγγελία, σου στέλνουμε το τελικό αρχείο.</p>
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <label>
-          <span>Όνομα</span>
-          <input type="text" id="buyer-name" name="name" required autocomplete="name" />
+          <span>Ονοματεπώνυμο</span>
+          <input type="text" id="buyer-name" name="name" required autocomplete="name" maxlength="80" />
+        </label>
+        <label>
+          <span>Όνομα καταλύματος</span>
+          <input type="text" id="buyer-property" name="property" required maxlength="80" />
         </label>
         <label>
           <span>Email</span>
           <input type="email" id="buyer-email" name="email" required autocomplete="email" />
         </label>
-        <label>
-          <span>Τηλέφωνο</span>
-          <input type="tel" id="buyer-phone" name="phone" autocomplete="tel" />
-        </label>
-        <button type="submit" class="buy" id="buy-btn">Αγόρασε το βίντεο — <span data-stay-gross>74,40€</span></button>
-        <p class="fine">Η τιμή είναι <span data-stay-net>60€</span> καθαρά, <span data-stay-gross>74,40€</span> με ΦΠΑ.</p>
+        <button type="submit" class="buy" id="buy-btn">Θέλω το Reel — 40€</button>
+        <p class="pay-note">Η παραγγελία έρχεται σε εμάς και σου στέλνουμε το αρχείο.</p>
         <p class="form-error" id="form-error" hidden></p>
       </form>
+
+      <p class="micro" data-copy="micro">Χωρίς ραντεβού. Χωρίς γύρισμα. Χωρίς μπλέξιμο.</p>
+      <p class="ps" data-copy="ps">Υ.Γ. Ειλικρινά, αυτό το βίντεο δεν έπρεπε να στο δίνουμε σε αυτή την τιμή. Αν δεν το θέλεις, κάνε πως δεν το είδες. Θα κάνουμε το ίδιο.</p>
     </section>
   </main>
 
   <main class="missing" id="missing" hidden>
-    <p class="eyebrow">MyReels</p>
+    <p class="mark">MyReels</p>
     <h1>Αυτό το link δεν είναι πλήρες.</h1>
-    <p>Χρειάζεται το όνομα του καταλύματος και το βίντεο. Ζήτα ένα νέο link από την MyReels.</p>
+    <p>Χρειάζεται το όνομα του καταλύματος και το βίντεο.</p>
   </main>
 
   <script src="/stay-reel.js"></script>

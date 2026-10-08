@@ -778,6 +778,18 @@ textarea {
   margin-top: 4px;
 }
 
+.stay-prices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.stay-prices .stay-hint {
+  display: block;
+  margin: 6px 0 0;
+}
+
 .stay-result__name {
   font-size: 20px;
   font-weight: 650;
@@ -789,6 +801,37 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+#view-stays {
+  overflow-y: auto;
+}
+
+.stay-copy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+#stay-copy-fields .field textarea {
+  min-height: 88px;
+}
+
+#stay-copy-fields .field:nth-child(5) textarea,
+#stay-copy-fields .field:nth-child(8) textarea {
+  min-height: 120px;
+}
+
+.stay-copy__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+#stay-copy-card code {
+  font-family: inherit;
+  font-weight: 700;
 }
 
 .stay-list {
@@ -817,6 +860,28 @@ textarea {
   font-size: 12px;
 }
 
+.stay-row__links {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.stay-row__links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.stay-row__links svg {
+  width: 16px;
+  height: 16px;
+}
+
 .stay-row__actions {
   display: flex;
   flex-wrap: wrap;
@@ -828,6 +893,11 @@ textarea {
   .stay-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .stay-copy,
+  .stay-prices {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1087,6 +1157,28 @@ textarea {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
+}
+
+.field__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field__name em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.field__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
 }
 
 .field input,

@@ -1256,6 +1256,59 @@ MyReels`,
   }
 
   const STAY_KEY = "myreels_stay_reels";
+  const STAY_COPY_KEY = "myreels_stay_copy_default";
+
+  function loadDefaultCopy() {
+    const stay = window.MyReelsStay;
+    try {
+      const raw = localStorage.getItem(STAY_COPY_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === "object") return stay.normalizeCopy(parsed);
+    } catch {
+      /* keep the factory text */
+    }
+    return stay.normalizeCopy(null);
+  }
+
+  function readStayCopyForm() {
+    const stay = window.MyReelsStay;
+    const input = {};
+    stay.COPY_FIELDS.forEach((field) => {
+      const el = document.getElementById(`stay-copy-${field.key}`);
+      input[field.key] = el ? el.value : "";
+    });
+    return stay.normalizeCopy(input);
+  }
+
+  function fillStayCopyForm(copy) {
+    const stay = window.MyReelsStay;
+    const normalized = stay.normalizeCopy(copy);
+    stay.COPY_FIELDS.forEach((field) => {
+      const el = document.getElementById(`stay-copy-${field.key}`);
+      if (el) el.value = normalized[field.key];
+    });
+  }
+
+  function stayPacks(item) {
+    const stay = window.MyReelsStay;
+    return {
+      p5: stay.parseNet(item?.pack5) ?? stay.PACK_5,
+      p10: stay.parseNet(item?.pack10) ?? stay.PACK_10,
+    };
+  }
+
+  function stayLandingUrl(item) {
+    const stay = window.MyReelsStay;
+    const net = stay.parseNet(item.net) ?? stay.NET;
+    return stay.buildLandingUrl(
+      window.location.origin,
+      item.name,
+      item.videoId,
+      net,
+      item.copy,
+      { ...stayPacks(item), drive: item.driveId }
+    );
+  }
 
   function loadStays() {
     try {
@@ -1282,13 +1335,13 @@ MyReels`,
     list.innerHTML = items
       .map((item) => {
         const net = window.MyReelsStay.parseNet(item.net) ?? window.MyReelsStay.NET;
+        const packs = stayPacks(item);
         const grossLabel = window.MyReelsStay.euro(window.MyReelsStay.grossOf(net));
-        const url = window.MyReelsStay.buildLandingUrl(
-          window.location.origin,
-          item.name,
-          item.videoId,
-          net
-        );
+        const gross5 = window.MyReelsStay.euro(window.MyReelsStay.grossOf(packs.p5));
+        const gross10 = window.MyReelsStay.euro(window.MyReelsStay.grossOf(packs.p10));
+        const url = stayLandingUrl(item);
+        const driveHref = window.MyReelsStay.driveFileUrl(item.driveId);
+        const youtubeHref = item.youtubeUrl || `https://youtu.be/${item.videoId}`;
         const when = new Date(item.createdAt).toLocaleString("el-GR", {
           day: "2-digit",
           month: "short",
@@ -1299,9 +1352,22 @@ MyReels`,
           <article class="stay-row">
             <div>
               <strong>${escapeHtml(item.name)}</strong>
-              <small>${escapeHtml(when)} · ${escapeHtml(grossLabel)}</small>
+              <small>${escapeHtml(when)} · 1: ${escapeHtml(grossLabel)} · 5: ${escapeHtml(gross5)} · 10: ${escapeHtml(gross10)}</small>
+              <span class="stay-row__links">
+                <a href="${escapeHtml(youtubeHref)}" target="_blank" rel="noopener" title="YouTube — στη landing" aria-label="YouTube, στη landing">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FF0000"/><path fill="#fff" d="M10 8.2v7.6l6.4-3.8L10 8.2z"/></svg>
+                </a>
+                ${
+                  driveHref
+                    ? `<a href="${escapeHtml(driveHref)}" target="_blank" rel="noopener" title="Google Drive — στον αγοραστή" aria-label="Google Drive, στον αγοραστή">
+                  <svg viewBox="0 0 87.3 78" aria-hidden="true"><path fill="#0066da" d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L27.5 53H0c0 1.55.4 3.1 1.2 4.5z"/><path fill="#00ac47" d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0-1.2 4.5h27.5z"/><path fill="#ea4335" d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.85 11.5z"/><path fill="#00832d" d="M43.65 25 57.4 1.2c-1.35-.8-2.9-1.2-4.5-1.2H34.4c-1.6 0-3.15.45-4.5 1.2z"/><path fill="#2684fc" d="M59.8 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"/><path fill="#ffba00" d="M73.4 26.5 60.7 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53h27.45c0-1.55-.4-3.1-1.2-4.5z"/></svg>
+                </a>`
+                    : ""
+                }
+              </span>
             </div>
             <div class="stay-row__actions">
+              <button type="button" class="btn btn--ghost btn--sm" data-stay-edit="${escapeHtml(item.id)}">Επεξεργασία</button>
               <button type="button" class="btn btn--ghost btn--sm" data-stay-copy="${escapeHtml(url)}">Αντιγραφή</button>
               <a class="btn btn--ghost btn--sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">Άνοιγμα</a>
               <button type="button" class="btn btn--ghost btn--sm" data-stay-delete="${escapeHtml(item.id)}">Διαγραφή</button>
@@ -1318,14 +1384,16 @@ MyReels`,
     const empty = document.getElementById("stay-empty-result");
     const nameEl = document.getElementById("stay-result-name");
     const urlEl = document.getElementById("stay-result-url");
+    const driveEl = document.getElementById("stay-result-drive");
     const openEl = document.getElementById("stay-open");
     if (!box || !stay) return;
     const net = stay.parseNet(item.net) ?? stay.NET;
-    const url = stay.buildLandingUrl(window.location.origin, item.name, item.videoId, net);
+    const url = stayLandingUrl(item);
     if (empty) empty.hidden = true;
     box.hidden = false;
     if (nameEl) nameEl.textContent = `${item.name} · ${stay.euro(stay.grossOf(net))}`;
     if (urlEl) urlEl.value = url;
+    if (driveEl) driveEl.value = stay.driveFileUrl(item.driveId);
     if (openEl) openEl.href = url;
   }
 
@@ -1333,27 +1401,68 @@ MyReels`,
     const stay = window.MyReelsStay;
     const form = document.getElementById("stay-form");
     const youtubeInput = document.getElementById("stay-youtube");
+    const driveInput = document.getElementById("stay-drive");
     const nameInput = document.getElementById("stay-name");
     const priceInput = document.getElementById("stay-price");
+    const pack5Input = document.getElementById("stay-pack5");
+    const pack10Input = document.getElementById("stay-pack10");
     const pricePreview = document.getElementById("stay-price-preview");
+    const pack5Preview = document.getElementById("stay-pack5-preview");
+    const pack10Preview = document.getElementById("stay-pack10-preview");
     const statusEl = document.getElementById("stay-title-status");
     const errorEl = document.getElementById("stay-form-error");
     const copyBtn = document.getElementById("stay-copy");
     const list = document.getElementById("stay-list");
     if (!form || !stay) return;
 
-    const refreshPricePreview = () => {
-      const net = stay.parseNet(priceInput?.value);
-      if (!pricePreview) return;
-      if (net == null) {
-        pricePreview.textContent = "Βάλε την τιμή χωρίς ΦΠΑ. Ο ΦΠΑ είναι 24%.";
-        return;
-      }
-      pricePreview.textContent = `Με ΦΠΑ 24%: ${stay.euro(stay.grossOf(net))}`;
+    const fieldsRoot = document.getElementById("stay-copy-fields");
+    const copyStatus = document.getElementById("stay-copy-status");
+    if (fieldsRoot && !fieldsRoot.childElementCount) {
+      fieldsRoot.innerHTML = stay.COPY_FIELDS.map(
+        (field) => `
+          <label class="field">
+            <span>${escapeHtml(field.label)}</span>
+            <textarea id="stay-copy-${field.key}" rows="${field.rows}" maxlength="${field.max}"></textarea>
+          </label>
+        `
+      ).join("");
+    }
+    fillStayCopyForm(loadDefaultCopy());
+
+    const setCopyStatus = (message) => {
+      if (copyStatus) copyStatus.textContent = message;
     };
 
-    priceInput?.addEventListener("input", refreshPricePreview);
-    refreshPricePreview();
+    document.getElementById("stay-copy-save-default")?.addEventListener("click", () => {
+      const copy = readStayCopyForm();
+      localStorage.setItem(STAY_COPY_KEY, JSON.stringify(copy));
+      setCopyStatus("Αυτό είναι πλέον το default. Οι επόμενες landings ανοίγουν με αυτό το κείμενο.");
+    });
+
+    document.getElementById("stay-copy-load-default")?.addEventListener("click", () => {
+      fillStayCopyForm(loadDefaultCopy());
+      setCopyStatus("Φορτώθηκε το default.");
+    });
+
+    document.getElementById("stay-copy-factory")?.addEventListener("click", () => {
+      fillStayCopyForm(null);
+      setCopyStatus("Φορτώθηκε το εργοστασιακό κείμενο. Πάτα «Κράτα ως default» αν θέλεις να μείνει.");
+    });
+
+    const bindPricePreview = (input, preview) => {
+      const paint = () => {
+        if (!preview) return;
+        const net = stay.parseNet(input?.value);
+        preview.textContent =
+          net == null ? "Βάλε τιμή χωρίς ΦΠΑ." : `Με ΦΠΑ: ${stay.euro(stay.grossOf(net))}`;
+      };
+      input?.addEventListener("input", paint);
+      paint();
+    };
+
+    bindPricePreview(priceInput, pricePreview);
+    bindPricePreview(pack5Input, pack5Preview);
+    bindPricePreview(pack10Input, pack10Preview);
 
     let lookupToken = 0;
 
@@ -1396,11 +1505,21 @@ MyReels`,
       if (errorEl) errorEl.hidden = true;
       const name = stay.cleanName(nameInput.value);
       const videoId = stay.parseYouTubeId(youtubeInput.value);
+      const driveId = stay.parseDriveId(driveInput?.value);
       const net = stay.parseNet(priceInput?.value);
+      const pack5 = stay.parseNet(pack5Input?.value);
+      const pack10 = stay.parseNet(pack10Input?.value);
       if (!videoId) {
         if (errorEl) {
           errorEl.hidden = false;
           errorEl.textContent = "Βάλε ένα έγκυρο YouTube link (watch, youtu.be ή Shorts).";
+        }
+        return;
+      }
+      if (!driveId) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "Βάλε το link του αρχείου από το Google Drive.";
         }
         return;
       }
@@ -1415,7 +1534,30 @@ MyReels`,
       if (net == null) {
         if (errorEl) {
           errorEl.hidden = false;
-          errorEl.textContent = "Βάλε την τιμή χωρίς ΦΠΑ. Default είναι 60€.";
+          errorEl.textContent = "Βάλε την τιμή του πρώτου βίντεο χωρίς ΦΠΑ. Default είναι 40€.";
+        }
+        return;
+      }
+
+      if (pack5 == null || pack10 == null) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent =
+            "Βάλε τις τιμές των πακέτων χωρίς ΦΠΑ. Default είναι 170€ για τα 5 και 300€ για τα 10.";
+        }
+        return;
+      }
+
+      const copy = readStayCopyForm();
+      const url = stay.buildLandingUrl(window.location.origin, name, videoId, net, copy, {
+        p5: pack5,
+        p10: pack10,
+        drive: driveId,
+      });
+      if (url.length > 7500) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "Το κείμενο είναι πολύ μεγάλο για link. Σύντομεψέ το.";
         }
         return;
       }
@@ -1433,15 +1575,18 @@ MyReels`,
         name,
         videoId,
         net,
+        pack5,
+        pack10,
         youtubeUrl: youtubeInput.value.trim(),
+        driveId,
+        driveUrl: stay.driveFileUrl(driveId),
+        copy,
         createdAt: Date.now(),
       };
       items.unshift(item);
       saveStays(items.slice(0, 40));
       showStayResult(item);
       renderStayList();
-
-      const url = stay.buildLandingUrl(window.location.origin, name, videoId, net);
       const ok = await copyText(url);
       if (copyBtn) {
         copyBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αντιγραφή link";
@@ -1461,8 +1606,27 @@ MyReels`,
     });
 
     list?.addEventListener("click", async (event) => {
+      const edit = event.target.closest("[data-stay-edit]");
       const copy = event.target.closest("[data-stay-copy]");
       const remove = event.target.closest("[data-stay-delete]");
+      if (edit) {
+        const item = loadStays().find((row) => row.id === edit.getAttribute("data-stay-edit"));
+        if (!item) return;
+        youtubeInput.value = item.youtubeUrl || `https://youtu.be/${item.videoId}`;
+        if (driveInput) driveInput.value = item.driveUrl || stay.driveFileUrl(item.driveId);
+        nameInput.value = item.name;
+        if (priceInput) priceInput.value = String(stay.parseNet(item.net) ?? stay.NET);
+        if (pack5Input) pack5Input.value = String(stay.parseNet(item.pack5) ?? stay.PACK_5);
+        if (pack10Input) pack10Input.value = String(stay.parseNet(item.pack10) ?? stay.PACK_10);
+        priceInput?.dispatchEvent(new Event("input"));
+        pack5Input?.dispatchEvent(new Event("input"));
+        pack10Input?.dispatchEvent(new Event("input"));
+        fillStayCopyForm(item.copy || null);
+        setCopyStatus("Φορτώθηκε αυτή η landing. Άλλαξε το κείμενο και πάτα Δημιουργία.");
+        const copyCard = document.getElementById("stay-copy-card");
+        copyCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById("stay-copy-headline")?.focus();
+      }
       if (copy) {
         const ok = await copyText(copy.getAttribute("data-stay-copy") || "");
         const previous = copy.textContent;

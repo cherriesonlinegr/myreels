@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v4";
+const CACHE_VERSION = "myreels-admin-cache-v10";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
@@ -56,7 +56,11 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/sw.js" ||
     url.pathname === "/stay-reel.js" ||
     url.pathname === "/reel" ||
-    url.pathname.startsWith("/reel.")
+    url.pathname.startsWith("/reel.") ||
+    url.pathname === "/upsell" ||
+    url.pathname === "/upsell.js" ||
+    url.pathname === "/upsell.css" ||
+    url.pathname.startsWith("/upsell.")
   ) {
     return;
   }

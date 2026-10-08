@@ -1,7 +1,15 @@
 (() => {
   const stay = window.MyReelsStay;
   const params = new URLSearchParams(window.location.search);
-  const name = stay.cleanName(params.get("name"));
+  const pathStay = (() => {
+    try {
+      const match = decodeURIComponent(window.location.pathname).match(/^\/myairbnbreels\/(.+?)\/?$/);
+      return match ? match[1] : "";
+    } catch {
+      return "";
+    }
+  })();
+  const name = stay.cleanName(pathStay || params.get("name"));
   const videoId = stay.parseYouTubeId(params.get("v"));
   const driveId = stay.parseDriveId(params.get("g"));
   const net = stay.parseNet(params.get("p")) ?? stay.NET;
@@ -29,7 +37,7 @@
   const ctaLabel = textOf("cta") || stay.fillTokens(stay.COPY.cta, tokens);
   const buyBtn = document.getElementById("buy-btn");
   if (buyBtn) buyBtn.textContent = ctaLabel;
-  document.title = `${textOf("headline") || name} · MyReels`;
+  document.title = `${textOf("headline") || name} · myairbnbreels`;
   document.querySelectorAll("[data-stay-gross]").forEach((node) => {
     node.textContent = grossLabel;
   });

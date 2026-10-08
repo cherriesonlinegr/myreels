@@ -71,9 +71,13 @@ export default function handler(req, res) {
     .trim();
   const params = new URLSearchParams();
   Object.entries(req.query || {}).forEach(([key, value]) => {
-    if (typeof value === "string") params.set(key, value);
+    if (key === "name" || typeof value !== "string") return;
+    params.set(key, value);
   });
-  const pageUrl = `${proto}://${host}/reel${params.toString() ? `?${params}` : ""}`;
+  const query = params.toString();
+  const pageUrl = name
+    ? `${proto}://${host}/myairbnbreels/${encodeURIComponent(name)}${query ? `?${query}` : ""}`
+    : `${proto}://${host}/reel${query ? `?${query}` : ""}`;
   const image = videoId
     ? `${proto}://${host}/api/reel-thumb?v=${videoId}`
     : `${proto}://${host}/favicon.png`;

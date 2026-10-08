@@ -56,6 +56,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/sw.js" ||
     url.pathname === "/stay-reel.js" ||
     url.pathname === "/reel" ||
+    url.pathname.startsWith("/myairbnbreels/") ||
     url.pathname.startsWith("/reel.") ||
     url.pathname === "/api/reel-page" ||
     url.pathname === "/api/reel-thumb" ||

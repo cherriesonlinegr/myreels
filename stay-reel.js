@@ -200,9 +200,11 @@ window.MyReelsStay = (() => {
 
   const packNet = (value, fallback) => parseNet(value) ?? fallback;
 
+  const stayPathName = (value) => cleanName(value).replace(/[\\/]/g, "");
+
   const buildLandingUrl = (origin, name, videoId, net, copy, packs) => {
-    const url = new URL("/reel", origin);
-    url.searchParams.set("name", cleanName(name));
+    const url = new URL(origin);
+    url.pathname = `/myairbnbreels/${stayPathName(name)}`;
     url.searchParams.set("v", videoId);
     url.searchParams.set("p", String(parseNet(net) ?? NET));
     url.searchParams.set("p5", String(packNet(packs?.p5, PACK_5)));

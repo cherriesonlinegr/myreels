@@ -393,6 +393,10 @@ form input:focus {
   filter: drop-shadow(0 8px 14px rgba(0, 113, 227, 0.28));
 }
 
+.sheet.is-five .banner__brand {
+  color: var(--blue);
+}
+
 .sheet.is-five .banner__mark rect,
 .sheet.is-five .banner__mark path:last-of-type {
   fill: var(--blue);

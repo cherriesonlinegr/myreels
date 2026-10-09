@@ -673,6 +673,15 @@ MyReels`,
     });
   }
 
+  function mailAddress(value) {
+    const match = String(value || "").match(/[^\s<>]+@[^\s<>]+/);
+    return match ? match[0] : "";
+  }
+
+  function conversationOf(message) {
+    return Array.isArray(message.thread) && message.thread.length ? message.thread : [message];
+  }
+
   function renderMailReader() {
     const reader = document.getElementById("mail-reader");
     const message = mailState.selected;
@@ -681,30 +690,43 @@ MyReels`,
       reader.innerHTML = `<p class="mail__empty">Επίλεξε ένα μήνυμα για προβολή ή απάντηση.</p>`;
       return;
     }
-    const canReply = message.direction === "inbound";
-    const body = message.bodyHtml
-      ? `<iframe class="mail__frame" sandbox="" referrerpolicy="no-referrer" id="mail-frame"></iframe>`
-      : `<div class="mail__body">${escapeHtml(message.bodyText || message.snippet || "")}</div>`;
+    const items = conversationOf(message);
+    const latestInbound = [...items].reverse().find((item) => item.direction === "inbound");
+    const replyTo = latestInbound
+      ? latestInbound.fromAddress
+      : mailAddress(message.toAddresses);
+    const baseSubject = items[0]?.subject || message.subject || "";
+    const replySubject = /^re:/i.test(baseSubject) ? baseSubject : `Re: ${baseSubject}`;
+    const bubbles = items
+      .map((item) => {
+        const mine = item.direction === "outbound";
+        const who = mine ? "Εσύ" : item.fromName || item.fromAddress || "Εκείνοι";
+        return `
+          <article class="mail__bubble ${mine ? "mail__bubble--out" : "mail__bubble--in"}">
+            <p class="mail__meta">${escapeHtml(who)} · ${escapeHtml(mailDate(item.receivedAt))}</p>
+            <div class="mail__text">${escapeHtml(item.bodyText || item.snippet || "Χωρίς κείμενο")}</div>
+          </article>`;
+      })
+      .join("");
     reader.innerHTML = `
       <div class="mail__head">
         <h3>${escapeHtml(message.subject)}</h3>
-        <p class="mail__meta">${escapeHtml(mailSender(message))}</p>
-        <p class="mail__meta">${escapeHtml(mailDate(message.receivedAt))}</p>
       </div>
-      ${body}
+      <div class="mail__thread" id="mail-thread">${bubbles}</div>
       ${
-        canReply
+        replyTo
           ? `<form class="mail__reply" id="mail-reply">
               <h4>Απάντηση</h4>
-              <input type="email" name="to" value="${escapeHtml(message.fromAddress)}" required />
-              <input type="text" name="subject" value="${escapeHtml(message.subject.startsWith("Re:") ? message.subject : `Re: ${message.subject}`)}" required />
+              <input type="email" name="to" value="${escapeHtml(replyTo)}" required />
+              <input type="text" name="subject" value="${escapeHtml(replySubject)}" required />
+              <input type="hidden" name="replyTo" value="${escapeHtml(latestInbound?.messageId || message.messageId || "")}" />
               <textarea name="text" placeholder="Γράψε την απάντησή σου…" required></textarea>
               <button type="submit" class="mail__send">Αποστολή</button>
             </form>`
           : ""
       }`;
-    const frame = document.getElementById("mail-frame");
-    if (frame) frame.srcdoc = message.bodyHtml;
+    const thread = document.getElementById("mail-thread");
+    if (thread) thread.scrollTop = thread.scrollHeight;
     document.getElementById("mail-reply")?.addEventListener("submit", sendMailReply);
   }
 
@@ -770,6 +792,8 @@ MyReels`,
 
   async function openMail(uid) {
     showMailProblem("");
+    const reader = document.getElementById("mail-reader");
+    if (reader) reader.innerHTML = `<p class="mail__empty">Φόρτωση συνομιλίας…</p>`;
     try {
       const payload = await mailRequest({ action: "read", folder: mailState.folder, uid });
       mailState.selected = payload.message;
@@ -795,14 +819,10 @@ MyReels`,
         to: form.to.value,
         subject: form.subject.value,
         text: form.text.value,
-        inReplyTo: mailState.selected?.messageId || "",
+        inReplyTo: form.replyTo?.value || mailState.selected?.messageId || "",
       });
-      form.text.value = "";
-      showMailProblem("");
-      form.insertAdjacentHTML(
-        "beforeend",
-        `<p class="mail__meta">Η απάντηση στάλθηκε από το contact@myreels.gr.</p>`
-      );
+      const uid = mailState.selected?.id;
+      if (uid) await openMail(uid);
     } catch (err) {
       showMailProblem(err?.message || "Η απάντηση δεν στάλθηκε.");
       if (button) button.disabled = false;

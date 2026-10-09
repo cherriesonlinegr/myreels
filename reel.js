@@ -26,8 +26,14 @@
     return;
   }
 
-  const copy = stay.resolveCopy(params.get("c"));
+  const pages = stay.resolvePages(params.get("c"));
+  const copy = pages.landing;
   const tokens = { name, net: netLabel, gross: grossLabel };
+  try {
+    sessionStorage.setItem("myreels_funnel_c", params.get("c") || "");
+  } catch {
+    /* the upsell still has the factory text */
+  }
   const textOf = (key) => stay.fillTokens(copy[key], tokens).trim();
   document.querySelectorAll("[data-copy]").forEach((node) => {
     const text = textOf(node.getAttribute("data-copy"));
@@ -115,6 +121,7 @@
   if (propertyInput && !propertyInput.value) propertyInput.value = name;
 
   ready.hidden = false;
+  stay.mountWork(document.getElementById("work"), "landing", pages.samples);
 
   const form = document.getElementById("order");
   const errorEl = document.getElementById("form-error");
@@ -162,13 +169,14 @@
       }
       sessionStorage.setItem(
         "myreels_reel_order",
-        JSON.stringify({ name: buyer, email, property })
+        JSON.stringify({ name: buyer, email, phone, property })
       );
       window.location.assign(
         stay.buildUpsellUrl(window.location.origin, property, videoId, {
           p: net,
           p5: pack5,
           p10: pack10,
+          copy: pages,
         })
       );
     } catch (err) {

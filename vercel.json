@@ -6,6 +6,7 @@
     "api/mail.js": { "includeFiles": "lib/*.mjs" },
     "api/lead.js": { "includeFiles": "lib/*.mjs" },
     "api/stay-board.js": { "includeFiles": "lib/*.mjs" },
+    "api/stay-skip.js": { "includeFiles": "lib/*.mjs" },
     "api/stay-sequence.js": { "includeFiles": "lib/*.mjs" }
   },
   "crons": [

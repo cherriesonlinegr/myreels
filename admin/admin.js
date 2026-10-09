@@ -624,8 +624,57 @@ MyReels`,
       renderStayList();
       loadStayBoard();
     }
+    if (tab === "payments") loadPayments();
     if (tab === "mail") loadMail();
   }
+
+  async function loadPayments() {
+    const list = document.getElementById("pay-list");
+    if (!list) return;
+    list.innerHTML = `<p class="stay-hint">Φόρτωση πληρωμών…</p>`;
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionCreds()),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || "Οι πληρωμές δεν φορτώθηκαν.");
+      }
+      const orders = Array.isArray(payload.orders) ? payload.orders : [];
+      if (!orders.length) {
+        list.innerHTML = `<p class="stay-hint">Δεν υπάρχει ολοκληρωμένη πληρωμή ακόμα.</p>`;
+        return;
+      }
+      list.innerHTML = orders
+        .map((order) => {
+          const when = order.created
+            ? new Date(order.created).toLocaleString("el-GR", {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "";
+          const who = [order.buyerName, order.property].filter(Boolean).join(" · ") || "Πληρωμή";
+          const detail = [when, order.email, order.phone, order.label, order.amountLabel].filter(Boolean).join(" · ");
+          return `
+            <article class="stay-row">
+              <div>
+                <strong>${escapeHtml(who)}</strong>
+                <small>${escapeHtml(detail)}</small>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    } catch (err) {
+      list.innerHTML = `<p class="stay-hint stay-hint--error">${escapeHtml(err?.message || "Κάτι πήγε στραβά.")}</p>`;
+    }
+  }
+
+  document.getElementById("pay-refresh")?.addEventListener("click", () => loadPayments());
 
   const mailState = { folder: "INBOX", folders: [], messages: [], selected: null, configured: false };
 
@@ -1577,29 +1626,34 @@ MyReels`,
     try {
       const raw = localStorage.getItem(STAY_COPY_KEY);
       const parsed = raw ? JSON.parse(raw) : null;
-      if (parsed && typeof parsed === "object") return stay.normalizeCopy(parsed);
+      if (parsed && typeof parsed === "object") return stay.normalizePages(parsed);
     } catch {
       /* keep the factory text */
     }
-    return stay.normalizeCopy(null);
+    return stay.normalizePages(null);
   }
 
   function readStayCopyForm() {
     const stay = window.MyReelsStay;
     const input = {};
-    stay.COPY_FIELDS.forEach((field) => {
-      const el = document.getElementById(`stay-copy-${field.key}`);
-      input[field.key] = el ? el.value : "";
+    stay.COPY_PAGES.forEach((page) => {
+      input[page.id] = {};
+      page.fields.forEach((field) => {
+        const el = document.getElementById(`stay-copy-${page.id}-${field.key}`);
+        input[page.id][field.key] = el ? el.value : "";
+      });
     });
-    return stay.normalizeCopy(input);
+    return stay.normalizePages(input);
   }
 
   function fillStayCopyForm(copy) {
     const stay = window.MyReelsStay;
-    const normalized = stay.normalizeCopy(copy);
-    stay.COPY_FIELDS.forEach((field) => {
-      const el = document.getElementById(`stay-copy-${field.key}`);
-      if (el) el.value = normalized[field.key];
+    const pages = stay.normalizePages(copy);
+    stay.COPY_PAGES.forEach((page) => {
+      page.fields.forEach((field) => {
+        const el = document.getElementById(`stay-copy-${page.id}-${field.key}`);
+        if (el) el.value = pages[page.id][field.key];
+      });
     });
   }
 
@@ -1714,8 +1768,8 @@ MyReels`,
   const STAY_STAGE_META = [
     { id: "landing", label: "Landing", hint: "Μόλις φτιάχνεται η σελίδα" },
     { id: "bought", label: "Αγόρασε το Reel", hint: "Μπαίνουν ονοματεπώνυμο, email και τηλέφωνο" },
-    { id: "pack5", label: "Πακέτο 5", hint: "Αγόρασε τα 5 βίντεο" },
-    { id: "pack10", label: "Πακέτο 10", hint: "Αγόρασε τα 10 βίντεο" },
+    { id: "pack5", label: "Πακέτο 5", hint: "5 Reels συνολικά, χωρίς scheduling" },
+    { id: "pack10", label: "Πακέτο 10", hint: "10 Reels και διαχείριση social για 2 μήνες" },
   ];
   let stayBoard = { deals: [], sequences: {} };
   let staySeqStage = "landing";
@@ -1760,6 +1814,7 @@ MyReels`,
           pack5: stay?.parseNet(item.pack5) ?? stay?.PACK_5,
           pack10: stay?.parseNet(item.pack10) ?? stay?.PACK_10,
           landingUrl: stayLandingUrl(item),
+          driveUrl: item.driveUrl || stay?.driveFileUrl(item.driveId),
           createdAt: new Date(item.createdAt).toISOString(),
         }));
       const seeded = await stayBoardRequest({ action: "seed", deals });
@@ -1783,6 +1838,7 @@ MyReels`,
                   <small>${escapeHtml(deal.buyerName || "Χωρίς ονοματεπώνυμο")}</small>
                   <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
                   <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
+                  ${deal.stage === "bought" && deal.skipped ? `<span class="stay-tag">Skip και στις 2</span>` : ""}
                 </article>`
             )
             .join("")
@@ -1850,7 +1906,8 @@ MyReels`,
             <tr><td><code>{phone}</code></td><td>Τηλέφωνο αγοραστή.</td><td>6900000000</td></tr>
             <tr><td><code>{net}</code></td><td>Τιμή του 1ου Reel, χωρίς ΦΠΑ.</td><td>40€</td></tr>
             <tr><td><code>{pack5}</code></td><td>Τιμή των 5 Reels, χωρίς ΦΠΑ.</td><td>170€</td></tr>
-            <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>300€</td></tr>
+            <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>350€</td></tr>
+            <tr><td><code>{drive}</code></td><td>Link του αρχείου στο Google Drive. Μπαίνει από τη landing.</td><td>https://drive.google.com/file/d/…/view</td></tr>
           </tbody>
         </table>
       </div>
@@ -1993,16 +2050,72 @@ MyReels`,
     if (!form || !stay) return;
 
     const fieldsRoot = document.getElementById("stay-copy-fields");
+    const copyTabs = document.getElementById("stay-copy-tabs");
+    const copyHint = document.getElementById("stay-copy-hint");
     const copyStatus = document.getElementById("stay-copy-status");
-    if (fieldsRoot && !fieldsRoot.childElementCount) {
-      fieldsRoot.innerHTML = stay.COPY_FIELDS.map(
-        (field) => `
-          <label class="field">
-            <span>${escapeHtml(field.label)}</span>
-            <textarea id="stay-copy-${field.key}" rows="${field.rows}" maxlength="${field.max}"></textarea>
-          </label>
-        `
+    const doneOpens = document.getElementById("stay-copy-done-opens");
+    const openCopyBtn = document.getElementById("stay-copy-open");
+    let copyPage = "landing";
+    const copyHints = {
+      landing:
+        "Πάτα μέσα σε ένα πεδίο και γράψε. Άδειο πεδίο δεν φαίνεται στη σελίδα. Τα {name}, {net} και {gross} μπαίνουν μόνα τους. Μετά πάτα «Δημιουργία landing».",
+      up10: "Σελίδα των 10. Τα {name}, {net}, {gross}, {pack}, {extra} και {extraGross} μπαίνουν μόνα τους. Στα σημεία, μία γραμμή είναι ένα bullet.",
+      up5: "Σελίδα των 5, αν πει όχι στα 10. Ίδια σύμβολα: {name}, {net}, {gross}, {pack}, {extra}, {extraGross}.",
+      done: "Οι τρεις επιβεβαιώσεις. Το {name} είναι το κατάλυμα. Άδειο πεδίο κρύβει τη γραμμή.",
+      samples:
+        "Τα ίδια 9 δείγματα μπαίνουν στο κάτω μέρος κάθε σελίδας, με άλλη σειρά. Άδειο YouTube μένει κάδρο μέχρι να βάλεις link.",
+    };
+    if (fieldsRoot && !fieldsRoot.childElementCount && copyTabs) {
+      copyTabs.innerHTML = stay.COPY_PAGES.map(
+        (page) =>
+          `<button type="button" class="stay-copy-tab${page.id === "landing" ? " is-active" : ""}" data-copy-tab="${page.id}">${escapeHtml(page.label)}</button>`
       ).join("");
+      fieldsRoot.innerHTML = stay.COPY_PAGES.map((page) => {
+        if (page.id === "samples") {
+          const title = page.fields.find((field) => field.key === "title");
+          const lead = page.fields.find((field) => field.key === "lead");
+          const rows = [];
+          for (let index = 1; index <= 9; index += 1) {
+            rows.push(`
+              <div class="stay-sample-row">
+                <span>${index}</span>
+                <input id="stay-copy-samples-n${index}" maxlength="80" placeholder="Όνομα καταλύματος" />
+                <input id="stay-copy-samples-v${index}" maxlength="200" placeholder="YouTube link" />
+              </div>
+            `);
+          }
+          return `
+            <div class="stay-copy-page" data-copy-page="samples" hidden>
+              <label class="field">
+                <span>${escapeHtml(title.label)}</span>
+                <textarea id="stay-copy-samples-title" rows="2" maxlength="${title.max}"></textarea>
+              </label>
+              <label class="field">
+                <span>${escapeHtml(lead.label)}</span>
+                <textarea id="stay-copy-samples-lead" rows="2" maxlength="${lead.max}"></textarea>
+              </label>
+              <div class="stay-samples">${rows.join("")}</div>
+            </div>
+          `;
+        }
+        let lastGroup = "";
+        const fields = page.fields
+          .map((field) => {
+            const group =
+              field.group && field.group !== lastGroup
+                ? `<p class="stay-copy-group">${escapeHtml((lastGroup = field.group))}</p>`
+                : "";
+            return `
+              ${group}
+              <label class="field">
+                <span>${escapeHtml(field.label)}</span>
+                <textarea id="stay-copy-${page.id}-${field.key}" rows="${field.rows}" maxlength="${field.max}"${field.tall ? ' class="is-tall"' : ""}></textarea>
+              </label>
+            `;
+          })
+          .join("");
+        return `<div class="stay-copy-page" data-copy-page="${page.id}"${page.id === "landing" ? "" : " hidden"}>${fields}</div>`;
+      }).join("");
     }
     fillStayCopyForm(loadDefaultCopy());
 
@@ -2010,10 +2123,59 @@ MyReels`,
       if (copyStatus) copyStatus.textContent = message;
     };
 
+    const showCopyPage = (id) => {
+      copyPage = id;
+      copyTabs?.querySelectorAll("[data-copy-tab]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.copyTab === id);
+      });
+      fieldsRoot?.querySelectorAll("[data-copy-page]").forEach((panel) => {
+        panel.hidden = panel.dataset.copyPage !== id;
+      });
+      if (copyHint) copyHint.textContent = copyHints[id] || copyHints.landing;
+      if (openCopyBtn) openCopyBtn.hidden = id === "done";
+      if (doneOpens) doneOpens.hidden = id !== "done";
+    };
+
+    copyTabs?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-copy-tab]");
+      if (!button) return;
+      showCopyPage(button.dataset.copyTab);
+    });
+
+    const openCopyPage = (kind) => {
+      const pages = readStayCopyForm();
+      const origin = window.location.origin;
+      const name = stay.cleanName(nameInput.value) || "Ηλιοπετρόσπιτο";
+      const videoId = stay.parseYouTubeId(youtubeInput.value) || "jNQXAC9IVRw";
+      const net = stay.parseNet(priceInput?.value) ?? stay.NET;
+      const pack5 = stay.parseNet(pack5Input?.value) ?? stay.PACK_5;
+      const pack10 = stay.parseNet(pack10Input?.value) ?? stay.PACK_10;
+      const packs = { p: net, p5: pack5, p10: pack10, drive: stay.parseDriveId(driveInput?.value), copy: pages };
+      let url = stay.buildLandingUrl(origin, name, videoId, net, pages, packs);
+      if (kind === "up10") url = stay.buildUpsellUrl(origin, name, videoId, packs);
+      if (kind === "up5") url = stay.buildUpsellUrl(origin, name, videoId, { ...packs, step: 5 });
+      if (kind === "done10" || kind === "done5" || kind === "done1") {
+        url = stay.buildUpsellUrl(origin, name, videoId, { ...packs, preview: kind.replace("done", "") });
+      }
+      window.open(url, "_blank", "noopener");
+    };
+
+    openCopyBtn?.addEventListener("click", () => {
+      if (copyPage === "up10") openCopyPage("up10");
+      else if (copyPage === "up5") openCopyPage("up5");
+      else if (copyPage === "samples") openCopyPage("landing");
+      else openCopyPage("landing");
+    });
+    doneOpens?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-done-open]");
+      if (!button) return;
+      openCopyPage(`done${button.dataset.doneOpen}`);
+    });
+
     document.getElementById("stay-copy-save-default")?.addEventListener("click", () => {
       const copy = readStayCopyForm();
       localStorage.setItem(STAY_COPY_KEY, JSON.stringify(copy));
-      setCopyStatus("Αυτό είναι πλέον το default. Οι επόμενες landings ανοίγουν με αυτό το κείμενο.");
+      setCopyStatus("Αυτό είναι πλέον το default για όλες τις σελίδες. Οι επόμενες landings το κουβαλούν στο link.");
     });
 
     document.getElementById("stay-copy-load-default")?.addEventListener("click", () => {
@@ -2120,7 +2282,7 @@ MyReels`,
         if (errorEl) {
           errorEl.hidden = false;
           errorEl.textContent =
-            "Βάλε τις τιμές των πακέτων χωρίς ΦΠΑ. Default είναι 170€ για τα 5 και 300€ για τα 10.";
+            "Βάλε τις τιμές των πακέτων χωρίς ΦΠΑ. Default είναι 170€ για τα 5 και 350€ για τα 10.";
         }
         return;
       }
@@ -2173,6 +2335,7 @@ MyReels`,
           pack5,
           pack10,
           landingUrl: url,
+          driveUrl: item.driveUrl,
           createdAt: new Date(item.createdAt).toISOString(),
         },
       })
@@ -2213,10 +2376,11 @@ MyReels`,
         pack5Input?.dispatchEvent(new Event("input"));
         pack10Input?.dispatchEvent(new Event("input"));
         fillStayCopyForm(item.copy || null);
+        showCopyPage("landing");
         setCopyStatus("Φορτώθηκε αυτή η landing. Άλλαξε το κείμενο και πάτα Δημιουργία.");
         const copyCard = document.getElementById("stay-copy-card");
         copyCard?.scrollIntoView({ behavior: "smooth", block: "start" });
-        document.getElementById("stay-copy-headline")?.focus();
+        document.getElementById("stay-copy-landing-headline")?.focus();
       }
       if (copy) {
         const ok = await copyText(copy.getAttribute("data-stay-copy") || "");

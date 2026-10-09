@@ -5,73 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Συνέχεια — MyReels</title>
   <meta name="robots" content="noindex" />
-  <meta name="description" content="Ευχαριστούμε. 5 ή 10 έτοιμα Reels, και τα προγραμματίζουμε εμείς." />
+  <meta name="description" content="Προαιρετική αναβάθμιση μετά το πρώτο Reel." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/upsell.css" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=3" />
 </head>
 <body>
+  <div class="spark" aria-hidden="true">
+    <div class="spark__orb spark__orb--a"></div>
+    <div class="spark__orb spark__orb--b"></div>
+    <div class="spark__grid"></div>
+    <div class="floaties">
+      <span class="floaty floaty--ig floaty--a"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span>
+      <span class="floaty floaty--fb floaty--b"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg></span>
+      <span class="floaty floaty--tt floaty--c"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg></span>
+      <span class="floaty floaty--yt floaty--d"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg></span>
+      <span class="floaty floaty--heart floaty--g">❤️</span>
+      <span class="floaty floaty--fire floaty--h">🔥</span>
+      <span class="floaty floaty--star floaty--j">⭐</span>
+      <span class="floaty floaty--cam floaty--l">🎬</span>
+    </div>
+  </div>
   <main class="sheet" id="ready" hidden>
+    <header class="banner">
+      <svg class="banner__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
+      <div>
+        <p class="banner__brand">myairbnbreels</p>
+        <p class="banner__line" id="kicker-text">Το πρώτο Reel είναι δικό σου</p>
+      </div>
+    </header>
+    <div class="spark-row" aria-hidden="true">
+      <span class="plat plat--ig"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span>
+      <span class="plat plat--fb"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg></span>
+      <span class="plat plat--tt"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg></span>
+      <span class="plat plat--yt"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg></span>
+      <span class="pip">❤️</span>
+      <span class="pip">🔥</span>
+      <span class="pip">⭐</span>
+    </div>
     <header class="thanks">
-      <p class="mark">MyReels</p>
-      <p class="kicker"><span class="tick" aria-hidden="true">✓</span> Η παραγγελία μπήκε</p>
-      <h1>Ευχαριστούμε.</h1>
+      <h1 id="offer-title">Αφού φτιάξαμε το πρώτο, γιατί να σταματήσουμε εκεί;</h1>
       <p class="owned" id="owned-line"></p>
-      <p class="lead" id="thanks-lead">Η παραγγελία του πρώτου Reel στάλθηκε. Σου στέλνουμε το αρχείο.</p>
+      <p class="lead" id="offer-lead"></p>
     </header>
 
-    <section class="next">
-      <h2>Θες να μην ξανασχοληθείς για λίγο;</h2>
-      <p>Σου ετοιμάζουμε 5 ή 10 Reels ακόμα, και τα προγραμματίζουμε εμείς σε Instagram, Facebook και TikTok.</p>
+    <p class="form-error" id="form-error" hidden></p>
 
-      <p class="form-error" id="form-error" hidden></p>
-      <div class="packs">
-        <article class="pack pack--best">
-          <p class="badge">Καλύτερη αξία</p>
-          <h3>10 Reels</h3>
-          <p class="pack__gross" id="price-10">300€</p>
-          <p class="pack__net" id="net-10">372€ με ΦΠΑ</p>
-          <p class="pack__each" id="each-10">30€ / Reel</p>
-          <ul class="perks">
-            <li>10 έτοιμα Reels για το κατάλυμά σου</li>
-            <li>Προγραμματισμός σε Instagram, Facebook και TikTok</li>
-          </ul>
-          <button type="button" class="buy" id="choose-10" data-choose="10">Θέλω τα 10 — 300€</button>
-        </article>
-
-        <article class="pack">
-          <h3>5 Reels</h3>
-          <p class="pack__gross" id="price-5">170€</p>
-          <p class="pack__net" id="net-5">210,80€ με ΦΠΑ</p>
-          <p class="pack__each" id="each-5">34€ / Reel</p>
-          <ul class="perks">
-            <li>5 έτοιμα Reels για το κατάλυμά σου</li>
-            <li>Προγραμματισμός σε Instagram, Facebook και TikTok</li>
-          </ul>
-          <button type="button" class="buy buy--quiet" id="choose-5" data-choose="5">Θέλω τα 5 — 170€</button>
-        </article>
-      </div>
-      <p class="compare" id="compare-line"></p>
+    <section class="offer">
+      <ul class="perks" id="offer-perks"></ul>
+      <p class="offer__context" id="offer-context"></p>
+      <p class="pack__gross" id="offer-net">310€</p>
+      <p class="pack__net" id="offer-gross">384,40€ με ΦΠΑ</p>
+      <button type="button" class="buy" id="offer-yes">Ναι, θέλω τα 10 και τη διαχείριση</button>
+      <button type="button" class="skip" id="offer-no">Όχι τώρα. Συνεχίζω μόνο με το Reel που αγόρασα.</button>
     </section>
-
-    <p class="skip-wrap"><button type="button" class="skip" id="skip">Όχι, μένω στο ένα βίντεο.</button></p>
   </main>
 
   <main class="sheet done" id="done" hidden>
-    <p class="mark">MyReels</p>
+    <header class="banner">
+      <svg class="banner__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
+      <div>
+        <p class="banner__brand">myairbnbreels</p>
+        <p class="banner__line">Η παραγγελία σου</p>
+      </div>
+    </header>
     <h1 id="done-title"></h1>
     <p id="done-text"></p>
   </main>
 
   <main class="sheet missing" id="missing" hidden>
-    <p class="mark">MyReels</p>
+    <header class="banner">
+      <svg class="banner__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
+      <div>
+        <p class="banner__brand">myairbnbreels</p>
+        <p class="banner__line">Συνέχεια παραγγελίας</p>
+      </div>
+    </header>
     <h1>Αυτό το link δεν είναι πλήρες.</h1>
     <p>Χρειάζεται το όνομα του καταλύματος.</p>
   </main>
 
+  <section class="work" id="work" hidden></section>
   <script src="/stay-reel.js"></script>
   <script src="/upsell.js"></script>
 </body>

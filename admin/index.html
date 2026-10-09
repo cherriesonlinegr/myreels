@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=20" />
+  <link rel="stylesheet" href="/admin/admin.css?v=24" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -54,6 +54,10 @@
         <svg class="stay-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
         MyAirBnBReels
       </button>
+      <button type="button" class="sidebar__link" data-tab="payments">
+        <span class="sidebar__icon" aria-hidden="true">€</span>
+        Πληρωμές
+      </button>
       <button type="button" class="sidebar__link" data-tab="mail">
         <span class="sidebar__icon" aria-hidden="true">✉</span>
         Email
@@ -87,6 +91,9 @@
     <button type="button" class="mobile-nav__btn mobile-nav__btn--brand" data-tab="stays">
       <svg class="stay-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
       MyAirBnBReels
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="payments">
+      <span>€</span>Πληρωμές
     </button>
     <button type="button" class="mobile-nav__btn" data-tab="mail">
       <span>✉</span>Email
@@ -190,11 +197,11 @@
               </label>
               <label class="field">
                 <span>10 βίντεο, χωρίς ΦΠΑ</span>
-                <input type="number" id="stay-pack10" min="1" max="100000" step="0.01" value="300" required />
-                <small class="stay-hint" id="stay-pack10-preview">Με ΦΠΑ: 372€</small>
+                <input type="number" id="stay-pack10" min="1" max="100000" step="0.01" value="350" required />
+                <small class="stay-hint" id="stay-pack10-preview">Με ΦΠΑ: 434€</small>
               </label>
             </div>
-            <p class="stay-hint">Μετά την αγορά ο οικοδεσπότης βλέπει τα 5 και τα 10. Τα προγραμματίζουμε εμείς σε Facebook, Instagram και TikTok.</p>
+            <p class="stay-hint">Μετά την αγορά βλέπει πρώτα τα 10, με διαχείριση social για 2 μήνες. Αν πει όχι, βλέπει τα 5, χωρίς διαχείριση. Πληρώνει μόνο τη διαφορά από το πρώτο Reel.</p>
             <p class="stay-hint" id="stay-title-status"></p>
             <p class="stay-hint stay-hint--error" id="stay-form-error" hidden></p>
             <button type="submit" class="btn">Δημιουργία landing</button>
@@ -227,9 +234,16 @@
 
         <article class="onboard-admin__card onboard-admin__card--wide" id="stay-copy-card">
           <h2>Κείμενο</h2>
-          <p class="stay-hint">Πάτα μέσα σε ένα πεδίο και γράψε. Άδειο πεδίο δεν φαίνεται στη σελίδα. Τα <code>{name}</code>, <code>{net}</code> και <code>{gross}</code> μπαίνουν μόνα τους. Μετά πάτα «Δημιουργία landing».</p>
+          <p class="stay-hint" id="stay-copy-hint">Πάτα μέσα σε ένα πεδίο και γράψε. Άδειο πεδίο δεν φαίνεται στη σελίδα. Τα <code>{name}</code>, <code>{net}</code> και <code>{gross}</code> μπαίνουν μόνα τους. Μετά πάτα «Δημιουργία landing».</p>
+          <div class="stay-copy-tabs" id="stay-copy-tabs"></div>
           <div class="stay-copy" id="stay-copy-fields"></div>
           <div class="stay-copy__actions">
+            <button type="button" class="btn btn--ghost" id="stay-copy-open">Άνοιγμα σελίδας</button>
+            <span id="stay-copy-done-opens" hidden>
+              <button type="button" class="btn btn--ghost" data-done-open="10">Άνοιγμα 10</button>
+              <button type="button" class="btn btn--ghost" data-done-open="5">Άνοιγμα 5</button>
+              <button type="button" class="btn btn--ghost" data-done-open="1">Άνοιγμα 1</button>
+            </span>
             <button type="button" class="btn btn--ghost" id="stay-copy-save-default">Κράτα ως default</button>
             <button type="button" class="btn btn--ghost" id="stay-copy-load-default">Γύρνα στο default</button>
             <button type="button" class="btn btn--ghost" id="stay-copy-factory">Εργοστασιακό</button>
@@ -254,6 +268,26 @@
           <aside class="stay-seq__stages" id="stay-seq-stages"></aside>
           <div class="stay-seq__main" id="stay-seq-editor"></div>
         </div>
+      </div>
+    </section>
+
+    <!-- PAYMENTS TAB -->
+    <section class="view" id="view-payments" data-view="payments" hidden>
+      <header class="topbar">
+        <div>
+          <h1 class="topbar__title">Πληρωμές</h1>
+          <p class="topbar__sub">Ονοματεπώνυμο, κατάλυμα, email και τι πληρώθηκε. Έρχονται από το Stripe.</p>
+        </div>
+        <div class="topbar__actions">
+          <button type="button" class="btn btn--ghost" id="pay-refresh">Ανανέωση</button>
+        </div>
+      </header>
+      <div class="onboard-admin">
+        <article class="onboard-admin__card onboard-admin__card--wide">
+          <div class="stay-list" id="pay-list">
+            <p class="stay-hint">Οι πληρωμές φορτώνουν όταν ανοίξεις αυτή την καρτέλα.</p>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -512,7 +546,7 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=20"></script>
+  <script src="/admin/admin.js?v=25"></script>
 </div>
 </body>
 </html>

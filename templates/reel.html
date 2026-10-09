@@ -14,8 +14,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/reel.css" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=3" />
 </head>
 <body>
+  <div class="spark" aria-hidden="true">
+    <div class="spark__orb spark__orb--a"></div>
+    <div class="spark__orb spark__orb--b"></div>
+    <div class="spark__grid"></div>
+  </div>
   <main class="page" id="ready" hidden>
     <header class="intro">
       <p class="logo">
@@ -26,6 +32,15 @@
         </svg>
         <span class="logo__word">myairbnbreels</span>
       </p>
+      <div class="spark-row" aria-hidden="true">
+        <span class="plat plat--ig"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span>
+        <span class="plat plat--fb"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg></span>
+        <span class="plat plat--tt"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg></span>
+        <span class="plat plat--yt"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg></span>
+        <span class="pip">❤️</span>
+        <span class="pip">🔥</span>
+        <span class="pip">⭐</span>
+      </div>
       <p class="kicker" data-copy="label">Για το κατάλυμα</p>
       <h1 data-copy="headline">Το Reel είναι ήδη έτοιμο.</h1>
       <p class="sub" data-copy="sub">
@@ -35,6 +50,16 @@
     </header>
 
     <div class="stage">
+      <div class="floaties" aria-hidden="true">
+        <span class="floaty floaty--ig floaty--a"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span>
+        <span class="floaty floaty--fb floaty--b"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg></span>
+        <span class="floaty floaty--tt floaty--c"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8.2A6.4 6.4 0 0 1 15 7V16a5 5 0 1 1-5-5v2.2a2.8 2.8 0 1 0 2.8 2.8V2h2.4A6.4 6.4 0 0 0 19 8.2z"/></svg></span>
+        <span class="floaty floaty--yt floaty--d"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5a3 3 0 0 0-2.1-2.1C18.9 4.4 12 4.4 12 4.4s-6.9 0-8.5.5A3 3 0 0 0 1.4 7C1 8.6 1 12 1 12s0 3.4.4 5a3 3 0 0 0 2.1 2.1c1.6.5 8.5.5 8.5.5s6.9 0 8.5-.5a3 3 0 0 0 2.1-2.1c.4-1.6.4-5 .4-5zM9.8 15.5v-7l6.2 3.5-6.2 3.5z"/></svg></span>
+        <span class="floaty floaty--heart floaty--g">❤️</span>
+        <span class="floaty floaty--fire floaty--h">🔥</span>
+        <span class="floaty floaty--star floaty--j">⭐</span>
+        <span class="floaty floaty--cam floaty--l">🎬</span>
+      </div>
       <div class="frame">
         <div id="player"></div>
         <button type="button" class="sound" id="sound-btn" aria-label="Άνοιξε τον ήχο">
@@ -66,7 +91,7 @@
 
       <form class="order" id="order">
         <h2 data-copy="formTitle">Το θέλεις; Πάρε το.</h2>
-        <p class="order__sub" data-copy="formSub">Συμπλήρωσε τα στοιχεία σου. Μόλις λάβουμε την παραγγελία, σου στέλνουμε το τελικό αρχείο.</p>
+        <p class="order__sub" data-copy="formSub">Συμπλήρωσε τα στοιχεία σου και πλήρωσε με κάρτα. Μόλις ολοκληρωθεί η πληρωμή, σου στέλνουμε το τελικό αρχείο.</p>
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <label>
           <span>Ονοματεπώνυμο</span>
@@ -85,13 +110,14 @@
           <input type="tel" id="buyer-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="69xxxxxxxx" />
         </label>
         <button type="submit" class="buy" id="buy-btn">Θέλω το Reel — 40€</button>
-        <p class="pay-note">Η παραγγελία έρχεται σε εμάς και σου στέλνουμε το αρχείο.</p>
+        <p class="pay-note">Η πληρωμή γίνεται με κάρτα, στο επόμενο βήμα.</p>
         <p class="form-error" id="form-error" hidden></p>
       </form>
 
       <p class="micro" data-copy="micro">Χωρίς ραντεβού. Χωρίς γύρισμα. Χωρίς μπλέξιμο.</p>
       <p class="ps" data-copy="ps">Υ.Γ. Ειλικρινά, αυτό το βίντεο δεν έπρεπε να στο δίνουμε σε αυτή την τιμή. Αν δεν το θέλεις, κάνε πως δεν το είδες. Θα κάνουμε το ίδιο.</p>
     </section>
+    <section class="work" id="work" hidden></section>
   </main>
 
   <main class="missing" id="missing" hidden>

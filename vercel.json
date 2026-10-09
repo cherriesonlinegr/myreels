@@ -3,10 +3,14 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/mail.js": {
-      "includeFiles": "lib/mailbox.mjs"
-    }
+    "api/mail.js": { "includeFiles": "lib/*.mjs" },
+    "api/lead.js": { "includeFiles": "lib/*.mjs" },
+    "api/stay-board.js": { "includeFiles": "lib/*.mjs" },
+    "api/stay-sequence.js": { "includeFiles": "lib/*.mjs" }
   },
+  "crons": [
+    { "path": "/api/stay-sequence", "schedule": "0 8 * * *" }
+  ],
   "rewrites": [
     { "source": "/admin", "destination": "/admin/index.html" },
     { "source": "/reel", "destination": "/api/reel-page" },

@@ -15,3 +15,6 @@ Thumbs.db
 
 # Vercel
 .vercel/
+
+# Local pipeline when the mailbox password is not on this PC
+data/

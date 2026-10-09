@@ -134,6 +134,25 @@ export default async function handler(req, res) {
       });
     }
 
+    if (source === "reel" || source === "upsell") {
+      const videoMatch = String(body.notes || "").match(/[?&]v=([\w-]{6,})/);
+      const packNumber = Number(body.pack);
+      try {
+        const { recordPurchase } = await import("../lib/stay-board.mjs");
+        await recordPurchase({
+          property: business,
+          buyerName: name,
+          email,
+          phone,
+          videoId: String(body.videoId || videoMatch?.[1] || ""),
+          pack: packNumber === 10 || services.includes("stay10") ? 10 : packNumber === 5 || services.includes("stay5") ? 5 : 0,
+          net: reelNet,
+        });
+      } catch (boardErr) {
+        console.error("[myreels/api/lead] board", boardErr?.message || boardErr);
+      }
+    }
+
     return res.status(200).json({ ok: true, id: data?.id || null });
   } catch (err) {
     console.error("[myreels/api/lead] Send failed:", err);

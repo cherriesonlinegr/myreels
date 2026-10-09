@@ -126,8 +126,15 @@
     const buyer = document.getElementById("buyer-name").value.trim();
     const property = propertyInput?.value.trim() || "";
     const email = document.getElementById("buyer-email").value.trim();
+    const phone = document.getElementById("buyer-phone").value.trim();
     const trap = form.querySelector(".hp")?.value.trim();
-    if (trap || !buyer || !property || !email) return;
+    if (trap || !buyer || !property || !email || phone.replace(/\D/g, "").length < 10) {
+      if (errorEl && phone.replace(/\D/g, "").length < 10) {
+        errorEl.hidden = false;
+        errorEl.textContent = "Γράψε ένα τηλέφωνο.";
+      }
+      return;
+    }
 
     buyBtn.disabled = true;
     buyBtn.textContent = "Στέλνουμε την παραγγελία…";
@@ -140,6 +147,8 @@
           name: buyer,
           business: property,
           email,
+          phone,
+          videoId,
           services: ["stay"],
           source: "reel",
           priceNet: net,

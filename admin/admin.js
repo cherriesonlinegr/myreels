@@ -2,8 +2,11 @@
   const STORAGE_KEY = "myreels_leads";
   const SEQ_KEY = "myreels_sequences";
   const AUTH_KEY = "myreels_admin_auth";
+  const ROLE_KEY = "myreels_admin_role";
   const AUTH_USER = "Thereelproject";
   const AUTH_PASS = "reels4YOU";
+  const STAY_USER = "Nakis";
+  const STAY_PASS = "Terminator";
 
   // PWA: register the service worker so the admin can be installed as an app.
   if ("serviceWorker" in navigator) {
@@ -19,7 +22,29 @@
   const loginPassInput = document.getElementById("login-pass");
   const loginRememberInput = document.getElementById("login-remember");
 
-  const isAuthed = () => sessionStorage.getItem(AUTH_KEY) === "1";
+  const roleOf = (user, pass) => {
+    if (user === AUTH_USER && pass === AUTH_PASS) return "admin";
+    if (user === STAY_USER && pass === STAY_PASS) return "stay";
+    return "";
+  };
+  const currentRole = () => {
+    const role = sessionStorage.getItem(ROLE_KEY);
+    if (role === "admin" || role === "stay") return role;
+    return sessionStorage.getItem(AUTH_KEY) === "1" ? "admin" : "";
+  };
+  const isStayUser = () => currentRole() === "stay";
+  const isAuthed = () => Boolean(currentRole());
+  const sessionCreds = () =>
+    isStayUser() ? { user: STAY_USER, pass: STAY_PASS } : { user: AUTH_USER, pass: AUTH_PASS };
+
+  const applyRole = () => {
+    const stay = isStayUser();
+    document.body.classList.toggle("is-viewer", stay);
+    const meta = document.querySelector(".sidebar__meta");
+    if (meta) meta.textContent = stay ? "Nakis" : "Admin";
+    const note = document.getElementById("viewer-note");
+    if (note) note.hidden = !stay;
+  };
 
   const COOKIE_USER = "myreels_admin_user";
   const COOKIE_PASS = "myreels_admin_pass";
@@ -62,6 +87,8 @@
 
   const logout = () => {
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
+    document.body.classList.remove("is-viewer");
     showLogin();
   };
 
@@ -76,8 +103,10 @@
     if (loginRememberInput && (savedUser || savedPass)) loginRememberInput.checked = true;
 
     // Auto-login if cookies match the expected credentials.
-    if (savedUser === AUTH_USER && savedPass === AUTH_PASS) {
+    const remembered = roleOf(savedUser, savedPass);
+    if (remembered) {
       sessionStorage.setItem(AUTH_KEY, "1");
+      sessionStorage.setItem(ROLE_KEY, remembered);
     }
   })();
 
@@ -86,8 +115,15 @@
       e.preventDefault();
       const user = String(loginUserInput?.value || "").trim();
       const pass = String(loginPassInput?.value || "");
-      if (user === AUTH_USER && pass === AUTH_PASS) {
+      const role = roleOf(user, pass);
+      if (role) {
         sessionStorage.setItem(AUTH_KEY, "1");
+        sessionStorage.setItem(ROLE_KEY, role);
+        if (window.__myreelsAdminReady) {
+          location.reload();
+          return;
+        }
+        applyRole();
         if (loginError) loginError.hidden = true;
         showAdmin();
         initAdmin();
@@ -113,6 +149,7 @@
     return;
   }
 
+  applyRole();
   showAdmin();
   initAdmin();
 
@@ -583,7 +620,10 @@ MyReels`,
     if (tab === "pipeline") renderBoard();
     if (tab === "services") renderServicesCatalog();
     if (tab === "onboarding") renderOnboardingTab();
-    if (tab === "stays") renderStayList();
+    if (tab === "stays") {
+      renderStayList();
+      loadStayBoard();
+    }
     if (tab === "mail") loadMail();
   }
 
@@ -593,7 +633,7 @@ MyReels`,
     const response = await fetch("/api/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user: AUTH_USER, pass: AUTH_PASS, ...payload }),
+      body: JSON.stringify({ ...sessionCreds(), ...payload }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
@@ -714,7 +754,7 @@ MyReels`,
       </div>
       <div class="mail__thread" id="mail-thread">${bubbles}</div>
       ${
-        replyTo
+        replyTo && !isStayUser()
           ? `<form class="mail__reply" id="mail-reply">
               <h4>Απάντηση</h4>
               <input type="email" name="to" value="${escapeHtml(replyTo)}" required />
@@ -809,6 +849,7 @@ MyReels`,
 
   async function sendMailReply(event) {
     event.preventDefault();
+    if (isStayUser()) return;
     const form = event.currentTarget;
     const button = form.querySelector("button");
     if (button) button.disabled = true;
@@ -882,7 +923,7 @@ MyReels`,
       })
       .join("");
     return `
-      <article class="card" draggable="true" data-id="${lead.id}" tabindex="0">
+      <article class="card" draggable="${isStayUser() ? "false" : "true"}" data-id="${lead.id}" tabindex="0">
         <div class="card__name">${escapeHtml(lead.name)}</div>
         <div class="card__business">${escapeHtml(lead.business)}</div>
         ${svcs ? `<div class="card__chips">${svcs}</div>` : ""}
@@ -892,7 +933,7 @@ MyReels`,
         </div>
         ${contact ? `<div class="card__contact">${escapeHtml(contact)}</div>` : ""}
         ${
-          lead.stage === "accepted" || lead.stage === "payment"
+          !isStayUser() && (lead.stage === "accepted" || lead.stage === "payment")
             ? `<button type="button" class="card__onboard" data-onboard="${lead.id}">Onboarding link</button>`
             : ""
         }
@@ -956,6 +997,7 @@ MyReels`,
   }
 
   function bindDrag() {
+    if (isStayUser()) return;
     board.querySelectorAll(".card").forEach((card) => {
       card.addEventListener("dragstart", (e) => {
         dragId = card.dataset.id;
@@ -1049,13 +1091,24 @@ MyReels`,
     );
   }
 
+  function lockLeadForm(locked) {
+    form.querySelectorAll("input, textarea, select").forEach((el) => {
+      if (el.type === "hidden") return;
+      el.disabled = locked;
+    });
+    if (btnSave) btnSave.hidden = locked;
+    if (locked && btnDelete) btnDelete.hidden = true;
+  }
+
   function openNew() {
+    if (isStayUser()) return;
     modalTitle.textContent = "Νέο Lead";
     form.reset();
     document.getElementById("lead-id").value = "";
     fillStageSelect("lead");
     fillServiceChecks([]);
     btnDelete.hidden = true;
+    lockLeadForm(false);
     modal.showModal();
     document.getElementById("lead-name").focus();
   }
@@ -1063,7 +1116,7 @@ MyReels`,
   function openEdit(id) {
     const lead = leads.find((l) => l.id === id);
     if (!lead) return;
-    modalTitle.textContent = "Επεξεργασία Lead";
+    modalTitle.textContent = isStayUser() ? "Προβολή lead" : "Επεξεργασία Lead";
     document.getElementById("lead-id").value = lead.id;
     document.getElementById("lead-name").value = lead.name || "";
     document.getElementById("lead-business").value = lead.business || "";
@@ -1073,11 +1126,13 @@ MyReels`,
     document.getElementById("lead-notes").value = lead.notes || "";
     fillStageSelect(lead.stage);
     fillServiceChecks(lead.services || []);
-    btnDelete.hidden = false;
+    btnDelete.hidden = isStayUser();
+    lockLeadForm(isStayUser());
     modal.showModal();
   }
 
   function upsertFromForm() {
+    if (isStayUser()) return;
     const id = document.getElementById("lead-id").value;
     const payload = {
       name: document.getElementById("lead-name").value.trim(),
@@ -1114,6 +1169,7 @@ MyReels`,
   }
 
   function deleteLead() {
+    if (isStayUser()) return;
     const id = document.getElementById("lead-id").value;
     if (!id) return;
     if (!confirm("Διαγραφή αυτού του lead;")) return;
@@ -1199,6 +1255,7 @@ MyReels`,
   }
 
   function renderSequences() {
+    const viewOnly = isStayUser();
     const stageLeads = leads.filter((l) => l.stage === activeSeqStage);
     const emails = sortedEmails(activeSeqStage);
 
@@ -1240,22 +1297,22 @@ MyReels`,
           <header class="seq-card__header">
             <label class="seq-day">
               <span>Ημέρα</span>
-              <input type="number" min="0" max="365" value="${email.day}" data-field="day" />
+              <input type="number" min="0" max="365" value="${email.day}" data-field="day" ${viewOnly ? "disabled" : ""} />
             </label>
             <span class="seq-card__order">#${index + 1}</span>
             <label class="seq-toggle">
-              <input type="checkbox" data-field="enabled" ${email.enabled !== false ? "checked" : ""} />
+              <input type="checkbox" data-field="enabled" ${email.enabled !== false ? "checked" : ""} ${viewOnly ? "disabled" : ""} />
               Ενεργό
             </label>
-            <button type="button" class="btn btn--sm btn--danger btn--ghost" data-action="delete">Διαγραφή</button>
+            ${viewOnly ? "" : `<button type="button" class="btn btn--sm btn--danger btn--ghost" data-action="delete">Διαγραφή</button>`}
           </header>
           <label class="field">
             <span>Θέμα</span>
-            <input type="text" value="${escapeHtml(email.subject)}" data-field="subject" />
+            <input type="text" value="${escapeHtml(email.subject)}" data-field="subject" ${viewOnly ? "disabled" : ""} />
           </label>
           <label class="field">
             <span>Σώμα</span>
-            <textarea rows="8" data-field="body">${escapeHtml(email.body)}</textarea>
+            <textarea rows="8" data-field="body" ${viewOnly ? "disabled" : ""}>${escapeHtml(email.body)}</textarea>
           </label>
         </article>
       `
@@ -1308,16 +1365,20 @@ MyReels`,
                 <small>${escapeHtml(lead.business)}</small>
                 <small class="seq-lead__email">${escapeHtml(lead.email || "Χωρίς email")}</small>
               </div>
-              <button type="button" class="btn btn--sm" data-send="${lead.id}" ${
-                !lead.email || !firstEmail ? "disabled" : ""
-              }>Στείλε</button>
+              ${
+                viewOnly
+                  ? ""
+                  : `<button type="button" class="btn btn--sm" data-send="${lead.id}" ${
+                      !lead.email || !firstEmail ? "disabled" : ""
+                    }>Στείλε</button>`
+              }
             </div>
           `
             )
             .join("")}
         </div>
         ${
-          emails.length > 1
+          !viewOnly && emails.length > 1
             ? `<p class="seq-leads__hint">Το κουμπί «Στείλε» ανοίγει το 1ο ενεργό email της sequence, προσωποποιημένο.</p>`
             : ""
         }
@@ -1335,6 +1396,7 @@ MyReels`,
   }
 
   function updateEmailField(emailId, field, input) {
+    if (isStayUser()) return;
     const list = sequences[activeSeqStage] || [];
     const email = list.find((e) => e.id === emailId);
     if (!email) return;
@@ -1354,6 +1416,7 @@ MyReels`,
   }
 
   function addEmail() {
+    if (isStayUser()) return;
     if (!sequences[activeSeqStage]) sequences[activeSeqStage] = [];
     const maxDay = sequences[activeSeqStage].reduce(
       (m, e) => Math.max(m, Number(e.day) || 0),
@@ -1371,6 +1434,7 @@ MyReels`,
   }
 
   function resetSequences() {
+    if (isStayUser()) return;
     if (!confirm("Επαναφορά όλων των sequences στα default templates;")) return;
     sequences = cloneDefaults();
     saveSequences();
@@ -1378,6 +1442,7 @@ MyReels`,
   }
 
   function openEmailPreview(lead, email) {
+    if (isStayUser()) return;
     const subject = personalize(email.subject, lead);
     const body = personalize(email.body, lead);
     previewPayload = { lead, subject, body };
@@ -1646,6 +1711,269 @@ MyReels`,
     if (openEl) openEl.href = url;
   }
 
+  const STAY_STAGE_META = [
+    { id: "landing", label: "Landing", hint: "Μόλις φτιάχνεται η σελίδα" },
+    { id: "bought", label: "Αγόρασε το Reel", hint: "Μπαίνουν ονοματεπώνυμο, email και τηλέφωνο" },
+    { id: "pack5", label: "Πακέτο 5", hint: "Αγόρασε τα 5 βίντεο" },
+    { id: "pack10", label: "Πακέτο 10", hint: "Αγόρασε τα 10 βίντεο" },
+  ];
+  let stayBoard = { deals: [], sequences: {} };
+  let staySeqStage = "landing";
+
+  function setStayBoardStatus(message) {
+    const status = document.getElementById("stay-board-status");
+    if (status) status.textContent = message || "";
+    const seq = document.getElementById("stay-seq-status");
+    if (seq && message) seq.textContent = message;
+  }
+
+  async function stayBoardRequest(payload) {
+    const response = await fetch("/api/stay-board", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...sessionCreds(), ...payload }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) {
+      throw new Error(data.error || "Το pipeline δεν φορτώθηκε.");
+    }
+    return data;
+  }
+
+  function applyStayBoard(data) {
+    stayBoard = { deals: data.deals || [], sequences: data.sequences || {} };
+    renderStayPipeline();
+    renderStaySequences();
+  }
+
+  async function loadStayBoard() {
+    setStayBoardStatus("");
+    try {
+      await stayBoardRequest({ action: "load" });
+      const stay = window.MyReelsStay;
+      const deals = loadStays()
+        .filter((item) => item.videoId)
+        .map((item) => ({
+          videoId: item.videoId,
+          property: item.name,
+          net: stay?.parseNet(item.net) ?? stay?.NET,
+          pack5: stay?.parseNet(item.pack5) ?? stay?.PACK_5,
+          pack10: stay?.parseNet(item.pack10) ?? stay?.PACK_10,
+          landingUrl: stayLandingUrl(item),
+          createdAt: new Date(item.createdAt).toISOString(),
+        }));
+      const seeded = await stayBoardRequest({ action: "seed", deals });
+      applyStayBoard(seeded);
+    } catch (err) {
+      setStayBoardStatus(err?.message || "Το pipeline δεν φορτώθηκε.");
+    }
+  }
+
+  function renderStayPipeline() {
+    const board = document.getElementById("stay-board");
+    if (!board) return;
+    board.innerHTML = STAY_STAGE_META.map((stage) => {
+      const cards = (stayBoard.deals || []).filter((deal) => deal.stage === stage.id);
+      const body = cards.length
+        ? cards
+            .map(
+              (deal) => `
+                <article class="stay-card">
+                  <strong>${escapeHtml(deal.property || "Χωρίς όνομα")}</strong>
+                  <small>${escapeHtml(deal.buyerName || "Χωρίς ονοματεπώνυμο")}</small>
+                  <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
+                  <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
+                </article>`
+            )
+            .join("")
+        : `<p class="stay-hint">Κανένα ακόμα</p>`;
+      return `<section class="stay-col"><h2>${escapeHtml(stage.label)}</h2><p class="stay-hint">${escapeHtml(stage.hint)}</p>${body}</section>`;
+    }).join("");
+  }
+
+  function readSeqForm() {
+    if (!stayBoard.sequences) stayBoard.sequences = {};
+    const cards = document.querySelectorAll("#stay-seq-editor [data-seq-index]");
+    if (!cards.length && !(stayBoard.sequences[staySeqStage] || []).length) return;
+    const current = stayBoard.sequences[staySeqStage] || [];
+    const list = [];
+    cards.forEach((card, index) => {
+      list.push({
+        id: current[index]?.id || `mail-${Date.now()}-${index}`,
+        day: Number(card.querySelector("[data-seq-day]")?.value) || 0,
+        subject: card.querySelector("[data-seq-subject]")?.value || "",
+        body: card.querySelector("[data-seq-body]")?.value || "",
+        active: Boolean(card.querySelector("[data-seq-active]")?.checked),
+      });
+    });
+    if (cards.length) stayBoard.sequences[staySeqStage] = list;
+  }
+
+  function renderStaySequences() {
+    const stages = document.getElementById("stay-seq-stages");
+    const editor = document.getElementById("stay-seq-editor");
+    if (!stages || !editor) return;
+    stages.innerHTML = STAY_STAGE_META.map((stage) => {
+      const count = (stayBoard.sequences?.[stage.id] || []).length;
+      const active = stage.id === staySeqStage ? " is-active" : "";
+      return `<button type="button" class="stay-subtab${active}" data-seq-stage="${stage.id}">${escapeHtml(stage.label)} <small>${count}</small></button>`;
+    }).join("");
+    stages.querySelectorAll("[data-seq-stage]").forEach((button) => {
+      button.addEventListener("click", () => {
+        readSeqForm();
+        staySeqStage = button.dataset.seqStage;
+        renderStaySequences();
+      });
+    });
+    const emails = stayBoard.sequences?.[staySeqStage] || [];
+    editor.innerHTML = `
+      <div class="stay-seq__bar">
+        <button type="button" class="btn" id="stay-seq-add">+ Email</button>
+        <button type="button" class="btn" id="stay-seq-save">Αποθήκευση</button>
+        <button type="button" class="btn btn--ghost" id="stay-seq-reset">Επαναφορά</button>
+        <label class="field stay-seq__to">
+          <span>Δοκιμή στο</span>
+          <input type="email" id="stay-seq-test-email" placeholder="το email σου" autocomplete="email" value="${escapeHtml(sessionStorage.getItem("myreels_seq_test_to") || "")}" />
+        </label>
+      </div>
+      <p class="stay-hint" id="stay-seq-status">Ημέρα 0 φεύγει μόνη της μόλις το κατάλυμα μπει στο στάδιο και έχουμε email. Οι επόμενες μέρες φεύγουν μόνες τους.</p>
+      <div class="stay-tokens-wrap">
+        <table class="stay-tokens">
+          <thead>
+            <tr><th>Μεταβλητή</th><th>Τι μπαίνει</th><th>Παράδειγμα</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>{hello}</code></td><td>Χαιρετισμός. Με ονοματεπώνυμο γίνεται «Γεια σου» και το όνομα. Χωρίς όνομα μένει «Γεια σου».</td><td>Γεια σου Μαρία Γεωργίου</td></tr>
+            <tr><td><code>{name}</code></td><td>Ονοματεπώνυμο αγοραστή.</td><td>Μαρία Γεωργίου</td></tr>
+            <tr><td><code>{property}</code></td><td>Όνομα καταλύματος.</td><td>Ηλιοπετρόσπιτο</td></tr>
+            <tr><td><code>{email}</code></td><td>Email αγοραστή.</td><td>maria@example.com</td></tr>
+            <tr><td><code>{phone}</code></td><td>Τηλέφωνο αγοραστή.</td><td>6900000000</td></tr>
+            <tr><td><code>{net}</code></td><td>Τιμή του 1ου Reel, χωρίς ΦΠΑ.</td><td>40€</td></tr>
+            <tr><td><code>{pack5}</code></td><td>Τιμή των 5 Reels, χωρίς ΦΠΑ.</td><td>170€</td></tr>
+            <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>300€</td></tr>
+          </tbody>
+        </table>
+      </div>
+      ${
+        emails
+          .map(
+            (email, index) => `
+            <article class="stay-seq__card" data-seq-index="${index}">
+              <label class="field"><span>Ημέρα</span><input type="number" min="0" max="60" data-seq-day value="${Number(email.day) || 0}" /></label>
+              <label class="field"><span>Θέμα</span><input type="text" data-seq-subject value="${escapeHtml(email.subject)}" /></label>
+              <label class="field"><span>Κείμενο</span><textarea rows="7" data-seq-body>${escapeHtml(email.body)}</textarea></label>
+              <label class="stay-seq__active"><input type="checkbox" data-seq-active ${email.active !== false ? "checked" : ""} /> Ενεργό</label>
+              <div class="stay-result__actions">
+                <button type="button" class="btn btn--ghost" data-seq-test>Δοκιμή</button>
+                <button type="button" class="btn btn--ghost" data-seq-send="${escapeHtml(email.id)}">Στείλε σε όσους είναι εδώ</button>
+                <button type="button" class="btn btn--ghost" data-seq-delete>Διαγραφή</button>
+              </div>
+              <div class="stay-seq__preview" data-seq-preview hidden></div>
+            </article>`
+          )
+          .join("") || `<p class="stay-hint">Κανένα email σε αυτό το στάδιο.</p>`
+      }`;
+    document.getElementById("stay-seq-test-email")?.addEventListener("input", (event) => {
+      sessionStorage.setItem("myreels_seq_test_to", event.target.value.trim());
+    });
+    document.getElementById("stay-seq-add")?.addEventListener("click", () => {
+      readSeqForm();
+      stayBoard.sequences[staySeqStage] = stayBoard.sequences[staySeqStage] || [];
+      stayBoard.sequences[staySeqStage].push({
+        id: `mail-${Date.now()}`,
+        day: 0,
+        active: true,
+        subject: "Νέο email για το {property}",
+        body: "{hello},\n\n",
+      });
+      renderStaySequences();
+    });
+    document.getElementById("stay-seq-save")?.addEventListener("click", async () => {
+      readSeqForm();
+      setStayBoardStatus("Αποθήκευση…");
+      try {
+        applyStayBoard(await stayBoardRequest({ action: "sequences", sequences: stayBoard.sequences }));
+        setStayBoardStatus("Τα emails αποθηκεύτηκαν.");
+      } catch (err) {
+        setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκαν.");
+      }
+    });
+    document.getElementById("stay-seq-reset")?.addEventListener("click", async () => {
+      if (!confirm("Να γυρίσουν όλα τα emails στο έτοιμο κείμενο;")) return;
+      try {
+        applyStayBoard(await stayBoardRequest({ action: "resetSequences" }));
+        setStayBoardStatus("Γύρισαν τα έτοιμα emails.");
+      } catch (err) {
+        setStayBoardStatus(err?.message || "Δεν έγινε επαναφορά.");
+      }
+    });
+    editor.querySelectorAll("[data-seq-delete]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const card = button.closest("[data-seq-index]");
+        const index = Number(card?.dataset.seqIndex);
+        readSeqForm();
+        stayBoard.sequences[staySeqStage] = (stayBoard.sequences[staySeqStage] || []).filter((_, i) => i !== index);
+        renderStaySequences();
+      });
+    });
+    editor.querySelectorAll("[data-seq-test]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const card = button.closest("[data-seq-index]");
+        const to = document.getElementById("stay-seq-test-email")?.value.trim() || "";
+        sessionStorage.setItem("myreels_seq_test_to", to);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+          setStayBoardStatus("Γράψε το email που θα λάβει τη δοκιμή.");
+          return;
+        }
+        const subject = card?.querySelector("[data-seq-subject]")?.value || "";
+        const text = card?.querySelector("[data-seq-body]")?.value || "";
+        button.disabled = true;
+        try {
+          const result = await stayBoardRequest({ action: "test", to, subject, body: text });
+          const box = card?.querySelector("[data-seq-preview]");
+          if (box) {
+            box.hidden = false;
+            box.innerHTML = `<strong>${escapeHtml(result.subject || "")}</strong>${escapeHtml(result.text || "")}`;
+          }
+          setStayBoardStatus(result.sent ? `Έφυγε δοκιμή στο ${to}.` : "Η προεπισκόπηση είναι έτοιμη. Από εδώ δεν φεύγει email.");
+        } catch (err) {
+          setStayBoardStatus(err?.message || "Η δοκιμή δεν έφυγε.");
+        }
+        button.disabled = false;
+      });
+    });
+    editor.querySelectorAll("[data-seq-send]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        if (!confirm("Να σταλεί αυτό το email σε όσα καταλύματα είναι σε αυτό το στάδιο και δεν το έχουν πάρει;")) return;
+        readSeqForm();
+        button.disabled = true;
+        try {
+          await stayBoardRequest({ action: "sequences", sequences: stayBoard.sequences });
+          const result = await stayBoardRequest({
+            action: "send",
+            stage: staySeqStage,
+            emailId: button.getAttribute("data-seq-send"),
+          });
+          applyStayBoard(result);
+          setStayBoardStatus(result.sent ? `Έφυγαν ${result.sent}.` : "Κανένας σε αυτό το στάδιο δεν είχε email, ή το είχε ήδη πάρει.");
+        } catch (err) {
+          setStayBoardStatus(err?.message || "Δεν στάλθηκε.");
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  function showStayPanel(name) {
+    ["landings", "pipeline", "sequences"].forEach((id) => {
+      const panel = document.getElementById(`stay-panel-${id}`);
+      if (panel) panel.hidden = id !== name;
+    });
+    document.querySelectorAll("[data-stay-tab]").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.stayTab === name);
+    });
+  }
+
   function setupStayTab() {
     const stay = window.MyReelsStay;
     const form = document.getElementById("stay-form");
@@ -1836,6 +2164,20 @@ MyReels`,
       saveStays(items.slice(0, 40));
       showStayResult(item);
       renderStayList();
+      stayBoardRequest({
+        action: "upsert",
+        deal: {
+          videoId,
+          property: name,
+          net,
+          pack5,
+          pack10,
+          landingUrl: url,
+          createdAt: new Date(item.createdAt).toISOString(),
+        },
+      })
+        .then(applyStayBoard)
+        .catch((err) => setStayBoardStatus(err?.message || "Η landing δεν μπήκε στο pipeline."));
       const ok = await copyText(url);
       if (copyBtn) {
         copyBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αντιγραφή link";
@@ -1886,9 +2228,19 @@ MyReels`,
       }
       if (remove) {
         const id = remove.getAttribute("data-stay-delete");
+        const removed = loadStays().find((item) => item.id === id);
         saveStays(loadStays().filter((item) => item.id !== id));
         renderStayList();
+        if (removed?.videoId) {
+          stayBoardRequest({ action: "remove", videoId: removed.videoId })
+            .then(applyStayBoard)
+            .catch(() => {});
+        }
       }
+    });
+
+    document.querySelectorAll("[data-stay-tab]").forEach((button) => {
+      button.addEventListener("click", () => showStayPanel(button.dataset.stayTab));
     });
   }
 

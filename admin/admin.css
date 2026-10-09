@@ -264,6 +264,36 @@ textarea {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.sidebar__link--brand,
+.sidebar__link--brand.is-active,
+.sidebar__link--brand:hover {
+  color: #ff5a5f;
+}
+
+.sidebar__link--brand.is-active,
+.sidebar__link--brand:hover {
+  background: rgba(255, 90, 95, 0.16);
+}
+
+.stay-mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  display: block;
+}
+
+.stay-mark--lg {
+  width: 36px;
+  height: 36px;
+}
+
+.stay-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ff5a5f;
+}
+
 .sidebar__icon {
   font-size: 12px;
   opacity: 0.7;
@@ -273,6 +303,24 @@ textarea {
   font-size: 12px;
   color: #636366;
   padding: 8px;
+}
+
+.sidebar__note {
+  margin: 8px 12px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 90, 95, 0.16);
+  color: #ffd5d6;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+body.is-viewer #btn-new,
+body.is-viewer #btn-add-email,
+body.is-viewer #btn-reset-seq,
+body.is-viewer #btn-copy-onboarding,
+body.is-viewer #btn-copy-onboarding-lead {
+  display: none;
 }
 
 /* Main */
@@ -805,6 +853,180 @@ textarea {
 
 #view-stays {
   overflow-y: auto;
+}
+
+.stay-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 32px 16px;
+}
+
+.stay-subtab {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #6e6e73;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.stay-subtab.is-active {
+  background: rgba(255, 90, 95, 0.12);
+  color: #ff5a5f;
+  font-weight: 650;
+}
+
+.stay-board-status {
+  padding: 0 32px;
+}
+
+.stay-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 0 32px 32px;
+}
+
+.stay-col {
+  background: #f5f5f7;
+  border-radius: 16px;
+  padding: 12px;
+  min-height: 220px;
+}
+
+.stay-col h2 {
+  color: #ff5a5f;
+  font-size: 15px;
+}
+
+.stay-card {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.stay-card small {
+  color: #6e6e73;
+  font-size: 12px;
+}
+
+.stay-seq {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+  padding: 0 32px 32px;
+}
+
+.stay-seq__stages {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.stay-seq__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stay-seq__card {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 90, 95, 0.35);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.stay-seq__card textarea {
+  min-height: 140px;
+}
+
+.stay-seq__active {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.stay-seq__to {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.stay-seq__preview {
+  white-space: pre-wrap;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f5f5f7;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.stay-seq__preview strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stay-tokens-wrap {
+  overflow-x: auto;
+  margin: 8px 0 4px;
+  border: 1px solid rgba(255, 90, 95, 0.25);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.stay-tokens {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stay-tokens th,
+.stay-tokens td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.stay-tokens tr:last-child td {
+  border-bottom: 0;
+}
+
+.stay-tokens th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #6e6e73;
+  background: #f5f5f7;
+}
+
+.stay-tokens code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #ff5a5f;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .stay-board,
+  .stay-seq {
+    grid-template-columns: 1fr;
+    padding: 0 16px 24px;
+  }
+
+  .stay-subtabs {
+    padding: 0 16px 12px;
+  }
 }
 
 .stay-copy {
@@ -1568,6 +1790,17 @@ textarea {
   .mobile-nav__btn.is-active {
     color: #fff;
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .mobile-nav__btn--brand,
+  .mobile-nav__btn--brand.is-active {
+    color: #ff5a5f;
+    font-size: 8px;
+    letter-spacing: -0.04em;
+  }
+
+  .mobile-nav__btn--brand.is-active {
+    background: rgba(255, 90, 95, 0.16);
   }
 
   .main {

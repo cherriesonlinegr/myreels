@@ -733,7 +733,7 @@ MyReels`,
         if (setup) {
           setup.hidden = false;
           setup.textContent =
-            "Το contact@myreels.gr δεν έχει κωδικό ακόμα. Βάλε MAILBOX_PASSWORD, ADMIN_USER και ADMIN_PASS στο περιβάλλον του myreels και ξαναφόρτωσε.";
+            "Το contact@myreels.gr δεν έχει κωδικό mailbox στο Vercel. Βάλε MAILBOX_PASSWORD και ξαναφόρτωσε.";
         }
         if (grid) grid.hidden = true;
         return;

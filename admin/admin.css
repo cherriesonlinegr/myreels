@@ -928,6 +928,16 @@ body.is-viewer #btn-copy-onboarding-lead {
   letter-spacing: -0.01em;
 }
 
+.stay-tag--mid {
+  background: rgba(0, 113, 227, 0.12);
+  color: #0071e3;
+}
+
+.stay-tag--quiet {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6e6e73;
+}
+
 .stay-seq {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);

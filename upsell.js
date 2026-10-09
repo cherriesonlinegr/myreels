@@ -19,6 +19,7 @@
   let property = name;
   let reelSessionId = paidId && paidId.startsWith("cs_") ? paidId : "";
   let step = params.get("step") === "5" ? 5 : 10;
+  let funnelSent = "";
   let copyRaw = params.get("c") || "";
   if (!copyRaw) {
     try {
@@ -49,7 +50,7 @@
       return;
     }
     showDone(1);
-    markSkip();
+    markFunnel("1");
   });
 
   if (doneId) confirmDone(doneId);
@@ -137,6 +138,7 @@
     setText(owned, stay.fillTokens(page.owned, tokens));
     setText(lead, stay.fillTokens(page.lead, tokens));
     fillList(perks, page.perks, tokens);
+    if (!params.get("preview")) markFunnel(step === 5 ? "5" : "10");
 
     if (!extra) {
       if (context) {
@@ -289,12 +291,15 @@
     }
   }
 
-  function markSkip() {
+  function markFunnel(step) {
+    const rank = { 10: 1, 5: 2, 1: 3 };
+    if ((rank[funnelSent] || 0) >= rank[step]) return;
+    funnelSent = step;
     const videoId = stay.parseYouTubeId(params.get("v"));
     fetch("/api/stay-skip", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId, property }),
+      body: JSON.stringify({ videoId, property, step: String(step) }),
     }).catch(() => {});
   }
 

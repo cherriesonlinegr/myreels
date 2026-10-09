@@ -1767,7 +1767,7 @@ MyReels`,
 
   const STAY_STAGE_META = [
     { id: "landing", label: "Landing", hint: "Μόλις φτιάχνεται η σελίδα" },
-    { id: "bought", label: "Αγόρασε το Reel", hint: "Μπαίνουν ονοματεπώνυμο, email και τηλέφωνο" },
+    { id: "bought", label: "Αγόρασε το Reel", hint: "Κανένα βήμα, έφτασε στα 10, έφτασε στα 5, ή skip και στις 2" },
     { id: "pack5", label: "Πακέτο 5", hint: "5 Reels συνολικά, χωρίς scheduling" },
     { id: "pack10", label: "Πακέτο 10", hint: "10 Reels και διαχείριση social για 2 μήνες" },
   ];
@@ -1824,6 +1824,14 @@ MyReels`,
     }
   }
 
+  function funnelTag(deal) {
+    if (deal.stage !== "bought") return "";
+    if (deal.funnel === "1" || deal.skipped) return `<span class="stay-tag">Skip και στις 2</span>`;
+    if (deal.funnel === "5") return `<span class="stay-tag stay-tag--mid">Έφτασε στα 5</span>`;
+    if (deal.funnel === "10") return `<span class="stay-tag stay-tag--mid">Έφτασε στα 10</span>`;
+    return `<span class="stay-tag stay-tag--quiet">Κανένα βήμα</span>`;
+  }
+
   function renderStayPipeline() {
     const board = document.getElementById("stay-board");
     if (!board) return;
@@ -1838,7 +1846,7 @@ MyReels`,
                   <small>${escapeHtml(deal.buyerName || "Χωρίς ονοματεπώνυμο")}</small>
                   <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
                   <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
-                  ${deal.stage === "bought" && deal.skipped ? `<span class="stay-tag">Skip και στις 2</span>` : ""}
+                  ${funnelTag(deal)}
                 </article>`
             )
             .join("")

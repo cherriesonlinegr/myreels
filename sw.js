@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v26";
+const CACHE_VERSION = "myreels-admin-cache-v31";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
@@ -59,11 +59,18 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/myairbnbreels/") ||
     url.pathname.startsWith("/reel.") ||
     url.pathname === "/api/reel-page" ||
+    url.pathname === "/api/reel-config" ||
+    url.pathname === "/api/reel-copy" ||
     url.pathname === "/api/reel-thumb" ||
     url.pathname === "/upsell" ||
     url.pathname === "/upsell.js" ||
     url.pathname === "/upsell.css" ||
-    url.pathname.startsWith("/upsell.")
+    url.pathname.startsWith("/upsell.") ||
+    url.pathname === "/review" ||
+    url.pathname === "/review.css" ||
+    url.pathname === "/api/review" ||
+    url.pathname === "/api/reviews" ||
+    url.pathname === "/local-sample.mp4"
   ) {
     return;
   }

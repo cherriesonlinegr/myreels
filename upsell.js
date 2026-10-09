@@ -113,7 +113,7 @@
       if (work) work.hidden = true;
       return;
     }
-    stay.mountWork(work, pageKey, pages.samples);
+    stay.mountWork(work, pageKey, pages.samples, { live: !params.get("draft") });
   }
 
   function render() {
@@ -320,6 +320,101 @@
     setText(text, stay.fillTokens(pages.done[`${key}Text`], tokens));
     done.hidden = false;
     paintWork(count === 10 ? "done10" : count === 5 ? "done5" : "done1");
+    mountRate();
     window.scrollTo(0, 0);
+  }
+
+  function mountRate() {
+    const form = document.getElementById("rate-form");
+    const thanks = document.getElementById("rate-thanks");
+    if (!form) return;
+    const videoId = stay.parseYouTubeId(params.get("v"));
+    const nameInput = document.getElementById("rate-name");
+    const propertyInput = document.getElementById("rate-property");
+    if (propertyInput && !propertyInput.value) propertyInput.value = property;
+    try {
+      const order = JSON.parse(sessionStorage.getItem("myreels_reel_order") || "{}");
+      if (nameInput && !nameInput.value && order.name) nameInput.value = order.name;
+    } catch {
+      /* the confirmation still shows the property from the link */
+    }
+    const finish = (text) => {
+      form.hidden = true;
+      if (thanks) {
+        thanks.hidden = false;
+        thanks.textContent = text;
+      }
+    };
+    if (videoId || property) {
+      const query = new URLSearchParams();
+      if (videoId) query.set("v", videoId);
+      if (property) query.set("property", property);
+      fetch(`/api/review?${query}`, { cache: "no-store" })
+        .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok || !data?.ok) return;
+          if (nameInput && data.buyerName) nameInput.value = data.buyerName;
+          if (propertyInput && data.property) propertyInput.value = data.property;
+          if (data.reviewed) finish("Την έχουμε ήδη.");
+        })
+        .catch(() => {});
+    }
+    if (form.dataset.bound === "1") return;
+    form.dataset.bound = "1";
+    const paintStars = () => {
+      const picked = Number(form.querySelector("input[name='stars']:checked")?.value || 0);
+      form.querySelectorAll(".stars label").forEach((label) => {
+        label.classList.toggle("is-on", Number(label.dataset.star) <= picked);
+      });
+      const hint = form.querySelector("[data-star-hint]");
+      if (hint) hint.textContent = picked ? `${picked} από 5` : "Διάλεξε αστέρια";
+    };
+    form.addEventListener("change", paintStars);
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const error = document.getElementById("rate-error");
+      const stars = Number(form.querySelector("input[name='stars']:checked")?.value || 0);
+      const message = form.message.value.trim();
+      if (error) error.hidden = true;
+      if (!stars) {
+        if (error) {
+          error.hidden = false;
+          error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
+        }
+        return;
+      }
+      if (message.length < 8) {
+        if (error) {
+          error.hidden = false;
+          error.textContent = "Γράψε δυο λόγια.";
+        }
+        return;
+      }
+      const button = form.querySelector("button");
+      if (button) button.disabled = true;
+      try {
+        const response = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            videoId,
+            property: propertyInput?.value || property,
+            stars,
+            message,
+            hideName: form.hideName.checked,
+            website: form.website.value,
+          }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.error || "Δεν στάλθηκε.");
+        finish(payload.already ? "Την έχουμε ήδη." : "Την είδαμε. Αν την εγκρίνουμε, θα φανεί πάνω από τα δείγματα.");
+      } catch (err) {
+        if (button) button.disabled = false;
+        if (error) {
+          error.hidden = false;
+          error.textContent = err?.message || "Δεν στάλθηκε.";
+        }
+      }
+    });
   }
 })();

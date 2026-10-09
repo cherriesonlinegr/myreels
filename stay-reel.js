@@ -201,14 +201,14 @@ window.MyReelsStay = (() => {
     { key: "lead", label: "Υπότιτλος", rows: 2, max: 240 },
   ];
   const SAMPLES = {
-    title: "Δες τι κάνουμε.",
+    title: "Δες τι φτιάχνουμε για τους πελάτες μας.",
     lead: "Εννέα Reels, από εννέα καταλύματα.",
   };
   for (let index = 1; index <= 9; index += 1) {
     sampleFields.push({ key: `n${index}`, label: `Όνομα ${index}`, kind: "line", max: 80 });
     sampleFields.push({ key: `v${index}`, label: `YouTube ${index}`, kind: "line", max: 200 });
     SAMPLES[`n${index}`] = `Δείγμα ${index}`;
-    SAMPLES[`v${index}`] = "";
+    SAMPLES[`v${index}`] = index === 1 ? "https://youtube.com/shorts/TIuYOdwenhY" : "";
   }
 
   const COPY_PAGES = [
@@ -332,19 +332,25 @@ window.MyReelsStay = (() => {
     return items;
   };
 
+  const localSample = () => ["localhost", "127.0.0.1"].includes(location.hostname);
+
   const workFace = (item) => {
+    if (localSample()) {
+      return `<div class="reel-tile__face reel-tile__face--local"><video src="/local-sample.mp4" muted loop playsinline autoplay></video></div>`;
+    }
     if (!item.videoId) {
       return `<div class="reel-tile__face reel-tile__face--empty" aria-hidden="true"><svg viewBox="0 0 40 40"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg></div>`;
     }
     return `<button type="button" class="reel-tile__face" data-work-video="${escapeHtml(item.videoId)}" aria-label="Παίξε το δείγμα ${escapeHtml(item.name)}"><img src="https://i.ytimg.com/vi/${escapeHtml(item.videoId)}/hqdefault.jpg" alt="" /><span class="reel-tile__badge" aria-hidden="true"></span></button>`;
   };
 
-  const mountWork = (container, pageKey, samples) => {
+  const mountWork = (container, pageKey, samples, options) => {
     if (!container) return;
     const order = WORK_ORDER[pageKey] || WORK_ORDER.landing;
-    const items = workItems(samples);
-    const title = fillTokens(samples?.title, {}).trim();
-    const lead = fillTokens(samples?.lead, {}).trim();
+    const paint = (source) => {
+    const items = workItems(source);
+    const title = fillTokens(source?.title, {}).trim();
+    const lead = fillTokens(source?.lead, {}).trim();
     const tiles = order
       .map((index) => items[index])
       .filter(Boolean)
@@ -353,8 +359,43 @@ window.MyReelsStay = (() => {
           `<figure class="reel-tile" data-work-id="${escapeHtml(item.videoId)}" data-work-name="${escapeHtml(item.name)}">${workFace(item)}<figcaption>${escapeHtml(item.name)}</figcaption></figure>`
       )
       .join("");
-    container.innerHTML = `${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
+    const starRow = (count) => {
+      const n = Math.max(0, Math.min(5, Number(count) || 0));
+      return `<span class="quote__stars" aria-label="${n} από 5"><span class="is-on">${"★".repeat(n)}</span><span>${"★".repeat(5 - n)}</span></span>`;
+    };
+    container.innerHTML = `<div class="quotes" data-quotes hidden></div>${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
     container.hidden = !title && !lead && !tiles;
+    fetch("/api/reviews", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => {
+        const list = Array.isArray(payload?.reviews) ? payload.reviews : [];
+        const host = container.querySelector("[data-quotes]");
+        if (!host || !list.length) return;
+        host.hidden = false;
+        host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid">${list
+          .map(
+            (item) =>
+              `<figure class="quote">${starRow(item.stars)}<blockquote>${escapeHtml(item.message)}</blockquote><figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
+          )
+          .join("")}</div>`;
+        container.hidden = false;
+      })
+      .catch(() => {});
+    container.querySelectorAll("video").forEach((video) => {
+      video.play().catch(() => {});
+    });
+    };
+    paint(samples);
+    if (options?.live !== false && container.dataset.copyFetch !== "1") {
+      container.dataset.copyFetch = "1";
+      fetch("/api/reel-copy", { cache: "no-store" })
+        .then((response) => response.json())
+        .then((payload) => {
+          if (!payload?.copy) return;
+          paint(resolvePages(payload.copy).samples);
+        })
+        .catch(() => {});
+    }
     if (container.dataset.workBound === "1") return;
     container.dataset.workBound = "1";
     container.addEventListener("click", (event) => {
@@ -384,11 +425,29 @@ window.MyReelsStay = (() => {
 
   const packNet = (value, fallback) => parseNet(value) ?? fallback;
 
-  const stayPathName = (value) => cleanName(value).replace(/[\\/]/g, "");
+  const stayPathName = (value) => cleanName(value).replace(/[\\/#?]/g, "");
 
-  const buildLandingUrl = (origin, name, videoId, net, copy, packs) => {
-    const url = new URL(origin);
-    url.pathname = `/myairbnbreels/${stayPathName(name)}`;
+  const landingSlug = (name, taken) => {
+    const base = stayPathName(name);
+    if (!base) return "";
+    const used = new Set((Array.isArray(taken) ? taken : []).map((item) => String(item || "")));
+    if (!used.has(base)) return base;
+    let candidate = `${base}_gr`;
+    let extra = 2;
+    while (used.has(candidate)) {
+      candidate = `${base}_gr${extra}`;
+      extra += 1;
+    }
+    return candidate;
+  };
+
+  const buildLandingUrl = (origin, slug) => {
+    const path = stayPathName(slug);
+    return `${String(origin || "").replace(/\/$/, "")}/myairbnbreels/${path}`;
+  };
+
+  const buildDraftLandingUrl = (origin, name, videoId, net, copy, packs) => {
+    const url = new URL(buildLandingUrl(origin, name));
     url.searchParams.set("v", videoId);
     url.searchParams.set("p", String(parseNet(net) ?? NET));
     url.searchParams.set("p5", String(packNet(packs?.p5, PACK_5)));
@@ -437,7 +496,9 @@ window.MyReelsStay = (() => {
     resolvePages,
     fillTokens,
     mountWork,
+    landingSlug,
     buildLandingUrl,
+    buildDraftLandingUrl,
     buildUpsellUrl,
   };
 })();

@@ -1,5 +1,7 @@
 (() => {
   const stay = window.MyReelsStay;
+
+  const boot = async () => {
   const params = new URLSearchParams(window.location.search);
   const pathStay = (() => {
     try {
@@ -9,12 +11,33 @@
       return "";
     }
   })();
-  const name = stay.cleanName(pathStay || params.get("name"));
-  const videoId = stay.parseYouTubeId(params.get("v"));
-  const driveId = stay.parseDriveId(params.get("g"));
-  const net = stay.parseNet(params.get("p")) ?? stay.NET;
-  const pack5 = stay.parseNet(params.get("p5")) ?? stay.PACK_5;
-  const pack10 = stay.parseNet(params.get("p10")) ?? stay.PACK_10;
+  let name = stay.cleanName(pathStay || params.get("name"));
+  let videoId = stay.parseYouTubeId(params.get("v"));
+  let driveId = stay.parseDriveId(params.get("g"));
+  let net = stay.parseNet(params.get("p"));
+  let pack5 = stay.parseNet(params.get("p5"));
+  let pack10 = stay.parseNet(params.get("p10"));
+  let copyRaw = params.get("c") || "";
+  if (!videoId && pathStay) {
+    try {
+      const response = await fetch(`/api/reel-config?slug=${encodeURIComponent(pathStay)}`, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.ok && data.videoId) {
+        name = stay.cleanName(data.property) || name;
+        videoId = stay.parseYouTubeId(data.videoId);
+        driveId = stay.parseDriveId(data.driveUrl) || driveId;
+        if (stay.parseNet(data.net) != null) net = stay.parseNet(data.net);
+        if (stay.parseNet(data.pack5) != null) pack5 = stay.parseNet(data.pack5);
+        if (stay.parseNet(data.pack10) != null) pack10 = stay.parseNet(data.pack10);
+        if (data.copy) copyRaw = data.copy;
+      }
+    } catch {
+      /* an older link still carries the video in the query */
+    }
+  }
+  net = net ?? stay.NET;
+  pack5 = pack5 ?? stay.PACK_5;
+  pack10 = pack10 ?? stay.PACK_10;
   const gross = stay.grossOf(net);
   const netLabel = stay.euro(net);
   const grossLabel = stay.euro(gross);
@@ -26,11 +49,11 @@
     return;
   }
 
-  const pages = stay.resolvePages(params.get("c"));
+  const pages = stay.resolvePages(copyRaw);
   const copy = pages.landing;
   const tokens = { name, net: netLabel, gross: grossLabel };
   try {
-    sessionStorage.setItem("myreels_funnel_c", params.get("c") || "");
+    sessionStorage.setItem("myreels_funnel_c", copyRaw || "");
   } catch {
     /* the upsell still has the factory text */
   }
@@ -121,7 +144,9 @@
   if (propertyInput && !propertyInput.value) propertyInput.value = name;
 
   ready.hidden = false;
-  stay.mountWork(document.getElementById("work"), "landing", pages.samples);
+  stay.mountWork(document.getElementById("work"), "landing", pages.samples, {
+    live: !params.get("draft"),
+  });
 
   const form = document.getElementById("order");
   const errorEl = document.getElementById("form-error");
@@ -188,4 +213,7 @@
       }
     }
   });
+  };
+
+  boot();
 })();

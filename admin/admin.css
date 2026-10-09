@@ -938,6 +938,91 @@ body.is-viewer #btn-copy-onboarding-lead {
   color: #6e6e73;
 }
 
+.stay-tag--yes {
+  background: rgba(31, 157, 85, 0.12);
+  color: #178746;
+}
+
+.stay-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn--viber {
+  justify-self: start;
+  margin-top: 8px;
+  height: 30px;
+  padding: 0 12px;
+  background: #7360f2;
+  font-size: 13px;
+}
+
+.btn--viber:hover { background: #5b4ad4; }
+
+.stay-reviews__hint,
+.stay-reviews {
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.stay-reviews {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 32px;
+}
+
+.stay-review {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.stay-review__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stay-review__stars { color: #e4e4e8; letter-spacing: 1px; }
+.stay-review__stars .is-on { color: #f5b301; }
+
+.stay-review__status {
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff6dd;
+  color: #9a6b00;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stay-review__status.is-approved { background: #e9f8ef; color: #1b7f3a; }
+.stay-review__status.is-rejected { background: #f4f4f5; color: #6e6e73; }
+
+.stay-review small { color: #6e6e73; }
+.stay-review__quote {
+  margin: 4px 0;
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.stay-review__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.btn--approve { background: #1f9d55; }
+.btn--approve:hover { background: #178746; }
+.btn--reject {
+  background: #fff;
+  color: #e35d6a;
+  border: 1px solid #f3b4bc;
+}
+.btn--reject:hover { background: #fff5f6; }
+
 .stay-seq {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);

@@ -7,7 +7,12 @@
     "api/lead.js": { "includeFiles": "lib/*.mjs" },
     "api/stay-board.js": { "includeFiles": "lib/*.mjs" },
     "api/stay-skip.js": { "includeFiles": "lib/*.mjs" },
-    "api/stay-sequence.js": { "includeFiles": "lib/*.mjs" }
+    "api/stay-sequence.js": { "includeFiles": "lib/*.mjs" },
+    "api/review.js": { "includeFiles": "lib/*.mjs" },
+    "api/reviews.js": { "includeFiles": "lib/*.mjs" },
+    "api/reel-page.js": { "includeFiles": "lib/*.mjs" },
+    "api/reel-config.js": { "includeFiles": "lib/*.mjs" },
+    "api/reel-copy.js": { "includeFiles": "lib/*.mjs" }
   },
   "crons": [
     { "path": "/api/stay-sequence", "schedule": "0 8 * * *" }

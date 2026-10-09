@@ -62,9 +62,24 @@ export function reelPreviewHtml(html, { name, videoId, net, pageUrl, image }) {
     .replace("</head>", `${tags}\n</head>`);
 }
 
-export default function handler(req, res) {
-  const name = cleanName(req.query?.name);
-  const videoId = /^[\w-]{11}$/.test(String(req.query?.v || "")) ? String(req.query.v) : "";
+export default async function handler(req, res) {
+  const pathName = cleanName(req.query?.name);
+  let name = pathName;
+  let videoId = /^[\w-]{11}$/.test(String(req.query?.v || "")) ? String(req.query.v) : "";
+  let net = req.query?.p;
+  if (name && !videoId) {
+    try {
+      const { loadBoard, publicLanding } = await import("../lib/stay-board.mjs");
+      const found = publicLanding(await loadBoard(), name);
+      if (found) {
+        name = found.property || name;
+        videoId = found.videoId;
+        net = found.net;
+      }
+    } catch (err) {
+      console.error("[myreels/reel-page]", err?.message || err);
+    }
+  }
   const proto = String(req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
   const host = String(req.headers["x-forwarded-host"] || req.headers.host || "www.myreels.gr")
     .split(",")[0]
@@ -75,8 +90,8 @@ export default function handler(req, res) {
     params.set(key, value);
   });
   const query = params.toString();
-  const pageUrl = name
-    ? `${proto}://${host}/myairbnbreels/${encodeURIComponent(name)}${query ? `?${query}` : ""}`
+  const pageUrl = pathName
+    ? `${proto}://${host}/myairbnbreels/${encodeURIComponent(pathName)}${query ? `?${query}` : ""}`
     : `${proto}://${host}/reel${query ? `?${query}` : ""}`;
   const image = videoId
     ? `${proto}://${host}/api/reel-thumb?v=${videoId}`
@@ -84,5 +99,5 @@ export default function handler(req, res) {
   const html = readFileSync(join(process.cwd(), "templates", "reel.html"), "utf8");
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=300");
-  res.status(200).send(reelPreviewHtml(html, { name, videoId, net: req.query?.p, pageUrl, image }));
+  res.status(200).send(reelPreviewHtml(html, { name, videoId, net, pageUrl, image }));
 }

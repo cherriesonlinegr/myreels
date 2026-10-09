@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/upsell.css" />
-  <link rel="stylesheet" href="/funnel-spark.css?v=4" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=7" />
 </head>
 <body>
   <div class="spark" aria-hidden="true">
@@ -75,6 +75,41 @@
     </header>
     <h1 id="done-title"></h1>
     <p id="done-text"></p>
+    <section class="rate" id="rate">
+      <h2>Αξιολόγησε το Reel</h2>
+      <p class="rate__lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια, και δυο λόγια.</p>
+      <form id="rate-form">
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+        <fieldset class="score">
+          <legend>Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ</legend>
+          <div class="stars">
+            <label data-star="1"><input type="radio" name="stars" value="1" /><span aria-hidden="true">★</span></label>
+            <label data-star="2"><input type="radio" name="stars" value="2" /><span aria-hidden="true">★</span></label>
+            <label data-star="3"><input type="radio" name="stars" value="3" /><span aria-hidden="true">★</span></label>
+            <label data-star="4"><input type="radio" name="stars" value="4" /><span aria-hidden="true">★</span></label>
+            <label data-star="5"><input type="radio" name="stars" value="5" /><span aria-hidden="true">★</span></label>
+          </div>
+          <small data-star-hint>Διάλεξε αστέρια</small>
+        </fieldset>
+        <label class="field">Το μήνυμά σου
+          <span class="note">Γράψε ό,τι θέλεις για το Reel.</span>
+          <textarea name="message" required minlength="8" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
+        </label>
+        <label class="field">Ονοματεπώνυμο
+          <input id="rate-name" type="text" readonly />
+        </label>
+        <label class="field">Κατάλυμα
+          <input id="rate-property" type="text" readonly />
+        </label>
+        <label class="privacy">
+          <input type="checkbox" name="hideName" />
+          <span>Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.</span>
+        </label>
+        <button type="submit">Υποβολή αξιολόγησης</button>
+        <p class="form-error" id="rate-error" hidden></p>
+      </form>
+      <p class="rate__thanks" id="rate-thanks" hidden></p>
+    </section>
   </main>
 
   <main class="sheet missing" id="missing" hidden>

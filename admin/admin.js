@@ -1665,17 +1665,22 @@ MyReels`,
     };
   }
 
+  function withStaySlugs(items) {
+    const stay = window.MyReelsStay;
+    const next = items.map((item) => ({ ...item }));
+    const taken = [];
+    const ordered = [...next].sort((a, b) => Number(Boolean(b.slug)) - Number(Boolean(a.slug)));
+    ordered.forEach((item) => {
+      const slug = item.slug && !taken.includes(item.slug) ? item.slug : stay.landingSlug(item.name, taken);
+      item.slug = slug;
+      taken.push(slug);
+    });
+    return next;
+  }
+
   function stayLandingUrl(item) {
     const stay = window.MyReelsStay;
-    const net = stay.parseNet(item.net) ?? stay.NET;
-    return stay.buildLandingUrl(
-      window.location.origin,
-      item.name,
-      item.videoId,
-      net,
-      item.copy,
-      { ...stayPacks(item), drive: item.driveId }
-    );
+    return stay.buildLandingUrl(window.location.origin, item.slug || stay.landingSlug(item.name, []));
   }
 
   function loadStays() {
@@ -1695,7 +1700,11 @@ MyReels`,
   function renderStayList() {
     const list = document.getElementById("stay-list");
     if (!list || !window.MyReelsStay) return;
-    const items = loadStays();
+    const loaded = loadStays();
+    const items = withStaySlugs(loaded);
+    if (JSON.stringify(items.map((item) => item.slug)) !== JSON.stringify(loaded.map((item) => item.slug))) {
+      saveStays(items);
+    }
     if (!items.length) {
       list.innerHTML = `<p class="stay-hint">Δεν έχεις δημιουργήσει landing ακόμα.</p>`;
       return;
@@ -1768,7 +1777,7 @@ MyReels`,
   const STAY_STAGE_META = [
     { id: "landing", label: "Landing", hint: "Μόλις φτιάχνεται η σελίδα" },
     { id: "bought", label: "Αγόρασε το Reel", hint: "Κανένα βήμα, έφτασε στα 10, έφτασε στα 5, ή skip και στις 2" },
-    { id: "pack5", label: "Πακέτο 5", hint: "5 Reels συνολικά, χωρίς scheduling" },
+    { id: "pack5", label: "Πακέτο 5", hint: "5 Reels συνολικά. Το tag λέει αν πέρασε από τα 10." },
     { id: "pack10", label: "Πακέτο 10", hint: "10 Reels και διαχείριση social για 2 μήνες" },
   ];
   let stayBoard = { deals: [], sequences: {} };
@@ -1779,6 +1788,8 @@ MyReels`,
     if (status) status.textContent = message || "";
     const seq = document.getElementById("stay-seq-status");
     if (seq && message) seq.textContent = message;
+    const reviews = document.getElementById("stay-review-status");
+    if (reviews && message) reviews.textContent = message;
   }
 
   async function stayBoardRequest(payload) {
@@ -1795,9 +1806,10 @@ MyReels`,
   }
 
   function applyStayBoard(data) {
-    stayBoard = { deals: data.deals || [], sequences: data.sequences || {} };
+    stayBoard = { deals: data.deals || [], sequences: data.sequences || {}, reviews: data.reviews || [] };
     renderStayPipeline();
     renderStaySequences();
+    renderStayReviews();
   }
 
   async function loadStayBoard() {
@@ -1805,14 +1817,16 @@ MyReels`,
     try {
       await stayBoardRequest({ action: "load" });
       const stay = window.MyReelsStay;
-      const deals = loadStays()
-        .filter((item) => item.videoId)
-        .map((item) => ({
+      const stays = withStaySlugs(loadStays());
+      saveStays(stays);
+      const deals = stays.filter((item) => item.videoId).map((item) => ({
           videoId: item.videoId,
           property: item.name,
           net: stay?.parseNet(item.net) ?? stay?.NET,
           pack5: stay?.parseNet(item.pack5) ?? stay?.PACK_5,
           pack10: stay?.parseNet(item.pack10) ?? stay?.PACK_10,
+          slug: item.slug,
+          copy: stay?.encodeCopy(item.copy) || "",
           landingUrl: stayLandingUrl(item),
           driveUrl: item.driveUrl || stay?.driveFileUrl(item.driveId),
           createdAt: new Date(item.createdAt).toISOString(),
@@ -1824,12 +1838,82 @@ MyReels`,
     }
   }
 
+  function publicBuyerName(name, hide) {
+    const clean = String(name || "").trim().replace(/\s+/g, " ");
+    if (!hide || !clean) return clean;
+    const parts = clean.split(" ");
+    if (parts.length < 2) return clean;
+    return `${parts.slice(0, -1).join(" ")} ${parts[parts.length - 1].charAt(0).toLocaleUpperCase("el-GR")}.`;
+  }
+
+  function renderStayReviews() {
+    const root = document.getElementById("stay-reviews");
+    const tab = document.querySelector('[data-stay-tab="reviews"]');
+    if (!root) return;
+    const reviews = (stayBoard.reviews || []).slice().sort((a, b) => {
+      const rank = { pending: 0, approved: 1, rejected: 2 };
+      return (rank[a.status] ?? 3) - (rank[b.status] ?? 3) || String(b.createdAt).localeCompare(String(a.createdAt));
+    });
+    const pending = reviews.filter((item) => item.status === "pending").length;
+    if (tab) tab.textContent = pending ? `Κριτικές (${pending})` : "Κριτικές";
+    if (!reviews.length) {
+      root.innerHTML = `<p class="stay-hint">Καμία κριτική ακόμα. Η φόρμα φεύγει με το email του αρχείου.</p>`;
+      return;
+    }
+    const statusLabel = { pending: "ΑΝΑΜΟΝΗ", approved: "ΣΤΗΝ ΙΣΤΟΣΕΛΙΔΑ", rejected: "ΑΠΟΡΡΙΦΘΗΚΕ" };
+    root.innerHTML = reviews
+      .map((item) => {
+        const shown = publicBuyerName(item.buyerName, item.hideName) || "Χωρίς όνομα";
+        const stars = Array.from({ length: 5 }, (_, index) => `<span class="${index < item.stars ? "is-on" : ""}">★</span>`).join("");
+        const approve = item.status === "approved" ? "" : `<button type="button" class="btn btn--approve" data-review-status="approved" data-review-id="${escapeHtml(item.id)}">Έγκριση για ιστοσελίδα</button>`;
+        const reject = item.status === "rejected" ? "" : `<button type="button" class="btn btn--reject" data-review-status="rejected" data-review-id="${escapeHtml(item.id)}">Απόρριψη</button>`;
+        return `
+          <article class="stay-review">
+            <div class="stay-review__top">
+              <span class="stay-review__stars" aria-label="${item.stars} από 5">${stars}</span>
+              <span class="stay-review__status is-${escapeHtml(item.status)}">${statusLabel[item.status] || "ΑΝΑΜΟΝΗ"}</span>
+            </div>
+            <strong>${escapeHtml(item.buyerName || "Χωρίς ονοματεπώνυμο")}${item.email ? ` · ${escapeHtml(item.email)}` : ""}</strong>
+            <small>Δημόσια εμφάνιση: ${escapeHtml(shown)}${item.property ? ` · ${escapeHtml(item.property)}` : ""}</small>
+            <blockquote class="stay-review__quote">“${escapeHtml(item.message)}”</blockquote>
+            <div class="stay-review__actions">${approve}${reject}</div>
+          </article>`;
+      })
+      .join("");
+  }
+
   function funnelTag(deal) {
     if (deal.stage !== "bought") return "";
     if (deal.funnel === "1" || deal.skipped) return `<span class="stay-tag">Skip και στις 2</span>`;
     if (deal.funnel === "5") return `<span class="stay-tag stay-tag--mid">Έφτασε στα 5</span>`;
     if (deal.funnel === "10") return `<span class="stay-tag stay-tag--mid">Έφτασε στα 10</span>`;
     return `<span class="stay-tag stay-tag--quiet">Κανένα βήμα</span>`;
+  }
+
+  function tenTag(deal) {
+    if (deal.stage !== "pack5") return "";
+    if (deal.sawTen) return `<span class="stay-tag stay-tag--mid">Πήγε στα 10</span>`;
+    return `<span class="stay-tag stay-tag--quiet">Δεν πήγε στα 10</span>`;
+  }
+
+  function reviewTag(deal) {
+    if (deal.stage === "landing") return "";
+    if (deal.reviewed) return `<span class="stay-tag stay-tag--yes">Έκανε κριτική</span>`;
+    return `<span class="stay-tag stay-tag--quiet">Χωρίς κριτική</span>`;
+  }
+
+  function viberPhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (/^69\d{8}$/.test(digits)) return `30${digits}`;
+    if (/^3069\d{8}$/.test(digits)) return digits;
+    return "";
+  }
+
+  function viberButton(deal) {
+    if (deal.stage === "landing" || deal.reviewed) return "";
+    const phone = viberPhone(deal.phone);
+    if (!phone) return "";
+    return `<button type="button" class="btn btn--viber" data-viber-phone="${escapeHtml(phone)}" data-viber-name="${escapeHtml(deal.buyerName || "")}" data-viber-property="${escapeHtml(deal.property || "")}" data-viber-token="${escapeHtml(deal.reviewToken || "")}" data-viber-video="${escapeHtml(deal.videoId || "")}">Στείλε στο Viber</button>`;
   }
 
   function renderStayPipeline() {
@@ -1846,7 +1930,8 @@ MyReels`,
                   <small>${escapeHtml(deal.buyerName || "Χωρίς ονοματεπώνυμο")}</small>
                   <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
                   <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
-                  ${funnelTag(deal)}
+                  <div class="stay-card__tags">${funnelTag(deal)}${tenTag(deal)}${reviewTag(deal)}</div>
+                  ${viberButton(deal)}
                 </article>`
             )
             .join("")
@@ -1917,6 +2002,7 @@ MyReels`,
             <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>350€</td></tr>
             <tr><td><code>{drive}</code></td><td>Link του αρχείου στο Google Drive. Μπαίνει από τη landing.</td><td>https://drive.google.com/file/d/…/view</td></tr>
           </tbody>
+            <tr><td><code>{review}</code></td><td>Η φόρμα κριτικής. Μπαίνει στο email με το αρχείο και στα follow-up. Αν την έχει ήδη στείλει, μένει κενή.</td><td>Σύνδεσμος με το όνομα και το κατάλυμα ήδη μέσα</td></tr>
         </table>
       </div>
       ${
@@ -1994,7 +2080,7 @@ MyReels`,
         const text = card?.querySelector("[data-seq-body]")?.value || "";
         button.disabled = true;
         try {
-          const result = await stayBoardRequest({ action: "test", to, subject, body: text });
+          const result = await stayBoardRequest({ action: "test", to, subject, body: text, stage: staySeqStage });
           const box = card?.querySelector("[data-seq-preview]");
           if (box) {
             box.hidden = false;
@@ -2030,7 +2116,7 @@ MyReels`,
   }
 
   function showStayPanel(name) {
-    ["landings", "pipeline", "sequences"].forEach((id) => {
+    ["landings", "pipeline", "sequences", "reviews"].forEach((id) => {
       const panel = document.getElementById(`stay-panel-${id}`);
       if (panel) panel.hidden = id !== name;
     });
@@ -2159,13 +2245,15 @@ MyReels`,
       const pack5 = stay.parseNet(pack5Input?.value) ?? stay.PACK_5;
       const pack10 = stay.parseNet(pack10Input?.value) ?? stay.PACK_10;
       const packs = { p: net, p5: pack5, p10: pack10, drive: stay.parseDriveId(driveInput?.value), copy: pages };
-      let url = stay.buildLandingUrl(origin, name, videoId, net, pages, packs);
+      let url = stay.buildDraftLandingUrl(origin, name, videoId, net, pages, packs);
       if (kind === "up10") url = stay.buildUpsellUrl(origin, name, videoId, packs);
       if (kind === "up5") url = stay.buildUpsellUrl(origin, name, videoId, { ...packs, step: 5 });
       if (kind === "done10" || kind === "done5" || kind === "done1") {
         url = stay.buildUpsellUrl(origin, name, videoId, { ...packs, preview: kind.replace("done", "") });
       }
-      window.open(url, "_blank", "noopener");
+      const preview = new URL(url);
+      preview.searchParams.set("draft", "1");
+      window.open(preview, "_blank", "noopener");
     };
 
     openCopyBtn?.addEventListener("click", () => {
@@ -2183,7 +2271,9 @@ MyReels`,
     document.getElementById("stay-copy-save-default")?.addEventListener("click", () => {
       const copy = readStayCopyForm();
       localStorage.setItem(STAY_COPY_KEY, JSON.stringify(copy));
-      setCopyStatus("Αυτό είναι πλέον το default για όλες τις σελίδες. Οι επόμενες landings το κουβαλούν στο link.");
+      stayBoardRequest({ action: "saveCopy", copy: stay.encodeCopy(copy) })
+        .then(() => setCopyStatus("Φαίνεται πλέον σε όλες τις σελίδες."))
+        .catch(() => setCopyStatus("Κρατήθηκε σε αυτόν τον browser. Οι σελίδες δεν το πήραν."));
     });
 
     document.getElementById("stay-copy-load-default")?.addEventListener("click", () => {
@@ -2296,20 +2386,22 @@ MyReels`,
       }
 
       const copy = readStayCopyForm();
-      const url = stay.buildLandingUrl(window.location.origin, name, videoId, net, copy, {
-        p5: pack5,
-        p10: pack10,
-        drive: driveId,
-      });
-      if (url.length > 7500) {
+      const encodedCopy = stay.encodeCopy(copy);
+      if (encodedCopy.length > 20000) {
         if (errorEl) {
           errorEl.hidden = false;
-          errorEl.textContent = "Το κείμενο είναι πολύ μεγάλο για link. Σύντομεψέ το.";
+          errorEl.textContent = "Το κείμενο είναι πολύ μεγάλο. Σύντομεψέ το.";
         }
         return;
       }
+      const previous = loadStays();
+      const taken = previous
+        .filter((item) => item.videoId !== videoId)
+        .map((item) => item.slug || item.name);
+      const slug = stay.landingSlug(name, taken);
+      const url = stay.buildLandingUrl(window.location.origin, slug);
 
-      const items = loadStays().filter(
+      const items = previous.filter(
         (item) =>
           !(
             item.videoId === videoId &&
@@ -2328,6 +2420,7 @@ MyReels`,
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
+        slug,
         createdAt: Date.now(),
       };
       items.unshift(item);
@@ -2342,6 +2435,8 @@ MyReels`,
           net,
           pack5,
           pack10,
+          slug,
+          copy: encodedCopy,
           landingUrl: url,
           driveUrl: item.driveUrl,
           createdAt: new Date(item.createdAt).toISOString(),
@@ -2415,6 +2510,56 @@ MyReels`,
       button.addEventListener("click", () => showStayPanel(button.dataset.stayTab));
     });
   }
+
+    document.getElementById("stay-board")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-viber-phone]");
+      if (!button) return;
+      button.disabled = true;
+      try {
+        let token = button.getAttribute("data-viber-token") || "";
+        if (!/^[a-f0-9]{24}$/.test(token)) {
+          const linked = await stayBoardRequest({
+            action: "reviewLink",
+            videoId: button.getAttribute("data-viber-video") || "",
+            property: button.getAttribute("data-viber-property") || "",
+          });
+          token = linked.token || "";
+          applyStayBoard(linked);
+        }
+        const name = button.getAttribute("data-viber-name") || "";
+        const property = button.getAttribute("data-viber-property") || "το κατάλυμα";
+        const hello = name ? `Γεια σου ${name}` : "Γεια σου";
+        const text = `${hello}, αν σου άρεσε το Reel για το ${property}, γράψε μας δυο λόγια. Το όνομά σου και το κατάλυμα είναι ήδη μέσα:\n${location.origin}/review?t=${token}`;
+        await navigator.clipboard.writeText(text);
+        const opener = document.createElement("a");
+        opener.href = `viber://chat?number=+${button.getAttribute("data-viber-phone")}`;
+        document.body.appendChild(opener);
+        opener.click();
+        opener.remove();
+        setStayBoardStatus("Το μήνυμα αντιγράφηκε. Άνοιξε το Viber και κάνε επικόλληση.");
+      } catch (err) {
+        setStayBoardStatus(err?.message || "Το Viber δεν άνοιξε.");
+      }
+      button.disabled = false;
+    });
+
+    document.getElementById("stay-reviews")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-review-id]");
+      if (!button) return;
+      button.disabled = true;
+      try {
+        const result = await stayBoardRequest({
+          action: "moderate",
+          id: button.getAttribute("data-review-id"),
+          status: button.getAttribute("data-review-status"),
+        });
+        applyStayBoard(result);
+        setStayBoardStatus(button.getAttribute("data-review-status") === "approved" ? "Μπήκε πάνω από τα δείγματα." : "Έφυγε από την ιστοσελίδα.");
+      } catch (err) {
+        setStayBoardStatus(err?.message || "Η κριτική δεν άλλαξε.");
+        button.disabled = false;
+      }
+    });
 
   // Init
   fillStageSelect("lead");

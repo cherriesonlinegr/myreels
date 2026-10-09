@@ -19,9 +19,12 @@ export default async function handler(req, res) {
   try {
     const {
       defaultSequences,
+      ensureReviewToken,
       loadBoard,
+      moderateReview,
       removeLanding,
       saveBoard,
+      savePublicCopy,
       sendOne,
       sendTest,
       upsertLanding,
@@ -37,6 +40,10 @@ export default async function handler(req, res) {
         board = upsertLanding(board, deal);
       }
       board = await saveBoard(board);
+      return res.status(200).json({ ok: true, ...board });
+    }
+    if (action === "saveCopy") {
+      const board = await saveBoard(savePublicCopy(await loadBoard(), body.copy));
       return res.status(200).json({ ok: true, ...board });
     }
     if (action === "upsert") {
@@ -64,8 +71,31 @@ export default async function handler(req, res) {
         to: body.to,
         subject: body.subject,
         body: body.body,
+        stage: body.stage,
       });
       return res.status(200).json({ ok: true, ...result });
+    }
+    if (action === "reviewLink") {
+      const current = await loadBoard();
+      const videoId = String(body.videoId || "");
+      const property = String(body.property || "").trim();
+      const deal = current.deals.find(
+        (item) => (videoId && item.videoId === videoId) || (property && item.property === property)
+      );
+      if (!deal || deal.stage === "landing") {
+        return res.status(400).json({ ok: false, error: "Δεν υπάρχει ακόμα φόρμα για αυτό το κατάλυμα." });
+      }
+      ensureReviewToken(deal);
+      const board = await saveBoard(current);
+      const saved = board.deals.find((item) => item.id === deal.id);
+      return res.status(200).json({ ok: true, token: saved?.reviewToken || "", ...board });
+    }
+    if (action === "moderate") {
+      const current = await loadBoard();
+      const result = moderateReview(current, { id: body.id, status: body.status });
+      if (!result.ok) return res.status(400).json({ ok: false, error: "Δεν βρέθηκε η κριτική." });
+      const board = await saveBoard(result.board);
+      return res.status(200).json({ ok: true, ...board });
     }
     if (action === "send") {
       const current = await loadBoard();

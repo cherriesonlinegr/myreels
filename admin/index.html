@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=26" />
+  <link rel="stylesheet" href="/admin/admin.css?v=28" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -152,6 +152,7 @@
         <button type="button" class="stay-subtab is-active" data-stay-tab="landings">Landings</button>
         <button type="button" class="stay-subtab" data-stay-tab="pipeline">Pipeline</button>
         <button type="button" class="stay-subtab" data-stay-tab="sequences">Sequences</button>
+        <button type="button" class="stay-subtab" data-stay-tab="reviews">Κριτικές</button>
       </div>
 
       <div id="stay-panel-landings">
@@ -268,6 +269,12 @@
           <aside class="stay-seq__stages" id="stay-seq-stages"></aside>
           <div class="stay-seq__main" id="stay-seq-editor"></div>
         </div>
+      </div>
+
+      <div id="stay-panel-reviews" hidden>
+        <p class="stay-hint stay-reviews__hint">Πάνω από τα 9 δείγματα μπαίνουν μόνο όσες εγκρίνεις. Το follow-up δεν ξαναβάζει τη φόρμα αν την έχουν ήδη στείλει.</p>
+        <p class="stay-hint" id="stay-review-status"></p>
+        <div class="stay-reviews" id="stay-reviews"></div>
       </div>
     </section>
 
@@ -546,7 +553,6 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=26"></script>
-</div>
+  <script src="/admin/admin.js?v=31"></script>
 </body>
 </html>

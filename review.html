@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Αξιολόγησε το Reel — MyReels</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/review.css" />
+</head>
+<body>
+  <main class="wrap">
+    <p class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
+      <span>myairbnbreels</span>
+    </p>
+    <section class="card" id="card">
+      <h1>Αξιολόγησε το Reel</h1>
+      <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια, και δυο λόγια.</p>
+      <p class="lead" id="status">Ανοίγει η φόρμα…</p>
+    </section>
+  </main>
+  <script>
+    const token = new URLSearchParams(location.search).get("t") || "";
+    const card = document.getElementById("card");
+
+    const escapeHtml = (value) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    function showDone(text) {
+      card.innerHTML = `<div class="done"><h1>Ευχαριστούμε.</h1><p>${escapeHtml(text)}</p></div>`;
+    }
+
+    function paintStars(form) {
+      const picked = Number(form.querySelector("input[name='stars']:checked")?.value || 0);
+      form.querySelectorAll(".stars label").forEach((label) => {
+        label.classList.toggle("is-on", Number(label.dataset.star) <= picked);
+      });
+      const hint = form.querySelector("[data-star-hint]");
+      if (hint) hint.textContent = picked ? `${picked} από 5` : "Επίλεξε αστέρια";
+    }
+
+    function showForm(data) {
+      card.innerHTML = `
+        <h1>Αξιολόγησε το Reel</h1>
+        <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια, και δυο λόγια.</p>
+        <form id="review-form">
+          <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <fieldset class="score">
+            <legend>Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ</legend>
+            <div class="stars">
+              ${[1, 2, 3, 4, 5].map((star) => `<label data-star="${star}"><input type="radio" name="stars" value="${star}" /><span aria-hidden="true">★</span></label>`).join("")}
+            </div>
+            <small data-star-hint>Διάλεξε αστέρια</small>
+          </fieldset>
+          <label class="field">Το μήνυμά σου
+            <span class="note">Γράψε ό,τι θέλεις για το Reel.</span>
+            <textarea name="message" required minlength="8" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
+          </label>
+          <label class="field">Ονοματεπώνυμο
+            <input type="text" readonly value="${escapeHtml(data.buyerName || "")}" />
+          </label>
+          <label class="field">Κατάλυμα
+            <input type="text" readonly value="${escapeHtml(data.property || "")}" />
+          </label>
+          <label class="privacy">
+            <input type="checkbox" name="hideName" />
+            <span>Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.</span>
+          </label>
+          <button type="submit">Υποβολή αξιολόγησης</button>
+          <p class="form-error" id="form-error" hidden></p>
+        </form>
+      `;
+      const form = document.getElementById("review-form");
+      form.addEventListener("change", () => paintStars(form));
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const error = document.getElementById("form-error");
+        const stars = Number(form.querySelector("input[name='stars']:checked")?.value || 0);
+        const message = form.message.value.trim();
+        error.hidden = true;
+        if (!stars) {
+          error.hidden = false;
+          error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
+          return;
+        }
+        if (message.length < 8) {
+          error.hidden = false;
+          error.textContent = "Γράψε δυο λόγια.";
+          return;
+        }
+        const button = form.querySelector("button");
+        button.disabled = true;
+        try {
+          const response = await fetch("/api/review", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token,
+              stars,
+              message,
+              hideName: form.hideName.checked,
+              website: form.website.value,
+            }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || payload.ok === false) throw new Error(payload.error || "Δεν στάλθηκε.");
+          showDone(payload.already ? "Την έχουμε ήδη." : "Την είδαμε. Αν την εγκρίνουμε, θα φανεί πάνω από τα δείγματα.");
+        } catch (err) {
+          error.hidden = false;
+          error.textContent = err?.message || "Δεν στάλθηκε.";
+          button.disabled = false;
+        }
+      });
+    }
+
+    fetch(`/api/review?t=${encodeURIComponent(token)}`)
+      .then((response) => response.json().then((payload) => ({ ok: response.ok, payload })))
+      .then(({ ok, payload }) => {
+        if (!ok || payload.ok === false) {
+          showDone("Αυτός ο σύνδεσμος δεν ανοίγει φόρμα.");
+          return;
+        }
+        if (payload.reviewed) {
+          showDone("Την έχουμε ήδη.");
+          return;
+        }
+        showForm(payload);
+      })
+      .catch(() => showDone("Η φόρμα δεν άνοιξε. Ξαναπροσπάθησε σε λίγο."));
+  </script>
+</body>
+</html>

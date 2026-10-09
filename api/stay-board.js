@@ -1,13 +1,3 @@
-import {
-  defaultSequences,
-  loadBoard,
-  removeLanding,
-  saveBoard,
-  sendOne,
-  sendTest,
-  upsertLanding,
-} from "../lib/stay-board.mjs";
-
 function adminDenied(body) {
   const user = String(body.user || "");
   const pass = String(body.pass || "");
@@ -27,6 +17,15 @@ export default async function handler(req, res) {
   if (denied) return res.status(401).json({ ok: false, error: denied });
 
   try {
+    const {
+      defaultSequences,
+      loadBoard,
+      removeLanding,
+      saveBoard,
+      sendOne,
+      sendTest,
+      upsertLanding,
+    } = await import("../lib/stay-board.mjs");
     const action = String(body.action || "load");
     if (action === "load") {
       const board = await loadBoard();

@@ -379,6 +379,42 @@ form input:focus {
   color: var(--coral-hover);
 }
 
+.sheet.is-five .banner {
+  background:
+    radial-gradient(140px 90px at 0% 0%, rgba(0, 113, 227, 0.22), transparent 72%),
+    linear-gradient(180deg, #fff 0%, #f5f9ff 100%);
+  border-color: rgba(0, 113, 227, 0.22);
+  box-shadow:
+    0 1px 2px rgba(0, 113, 227, 0.06),
+    0 14px 32px rgba(0, 113, 227, 0.1);
+}
+
+.sheet.is-five .banner__mark {
+  filter: drop-shadow(0 8px 14px rgba(0, 113, 227, 0.28));
+}
+
+.sheet.is-five .banner__mark rect,
+.sheet.is-five .banner__mark path:last-of-type {
+  fill: var(--blue);
+}
+
+.sheet.is-five .buy {
+  background: var(--blue);
+}
+
+.sheet.is-five .buy:hover {
+  background: var(--blue-hover);
+}
+
+.sheet.is-five .skip,
+.sheet.is-five .skip:hover {
+  color: var(--blue);
+}
+
+.sheet.is-five .skip:hover {
+  color: var(--blue-hover);
+}
+
 .hp {
   position: absolute;
   left: -9999px;

@@ -187,21 +187,18 @@
   pointer-events: none;
 }
 
-.stage .floaty--a { top: 7%; left: -6px; }
-.stage .floaty--b { top: 18%; right: -8px; }
-.stage .floaty--c { top: 46%; left: -14px; }
-.stage .floaty--d { top: 58%; right: -10px; }
-.stage .floaty--g { bottom: 24%; right: -16px; }
-.stage .floaty--h { bottom: 20%; left: -12px; }
-.stage .floaty--j { top: 10%; right: 18%; }
-.stage .floaty--l { bottom: 10%; left: 16%; }
+.stage .floaty--a { top: 8%; left: -62px; }
+.stage .floaty--c { top: 36%; left: -70px; }
+.stage .floaty--h { top: 62%; left: -58px; }
+.stage .floaty--l { bottom: 8%; left: -66px; }
+.stage .floaty--j { top: 12%; right: -62px; }
+.stage .floaty--b { top: 34%; right: -70px; }
+.stage .floaty--d { top: 56%; right: -58px; }
+.stage .floaty--g { bottom: 12%; right: -66px; }
 
-@media (max-width: 899px) {
+@media (max-width: 959px) {
   .spark > .floaties,
-  .stage .floaty--d,
-  .stage .floaty--g,
-  .stage .floaty--j,
-  .stage .floaty--l {
+  .stage .floaties {
     display: none;
   }
 }

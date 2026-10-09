@@ -131,6 +131,7 @@
     const factory = step === 10 ? stay.COPY_PAGES.find((item) => item.id === "up10").copy : stay.COPY_PAGES.find((item) => item.id === "up5").copy;
     const tokens = tokensFor(packNet, extra);
     document.title = `Συνέχεια για το ${place} · MyReels`;
+    ready.classList.toggle("is-five", step === 5);
     setText(kicker, stay.fillTokens(page.kicker, tokens));
     setText(title, stay.fillTokens(page.title, tokens));
     setText(owned, stay.fillTokens(page.owned, tokens));

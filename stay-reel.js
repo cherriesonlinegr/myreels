@@ -365,7 +365,7 @@ window.MyReelsStay = (() => {
     };
     container.innerHTML = `<div class="quotes" data-quotes hidden></div>${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
     container.hidden = !title && !lead && !tiles;
-    fetch("/api/reviews", { cache: "no-store" })
+    fetch("/api/review?list=1", { cache: "no-store" })
       .then((response) => response.json())
       .then((payload) => {
         const list = Array.isArray(payload?.reviews) ? payload.reviews : [];
@@ -388,7 +388,7 @@ window.MyReelsStay = (() => {
     paint(samples);
     if (options?.live !== false && container.dataset.copyFetch !== "1") {
       container.dataset.copyFetch = "1";
-      fetch("/api/reel-copy", { cache: "no-store" })
+      fetch("/api/reel-config?samples=1", { cache: "no-store" })
         .then((response) => response.json())
         .then((payload) => {
           if (!payload?.copy) return;

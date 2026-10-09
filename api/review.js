@@ -1,7 +1,10 @@
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   try {
-    const { loadBoard, reviewForm, saveBoard, submitReview } = await import("../lib/stay-board.mjs");
+    const { loadBoard, publicReviews, reviewForm, saveBoard, submitReview } = await import("../lib/stay-board.mjs");
+    if (req.method === "GET" && String(req.query?.list || "") === "1") {
+      return res.status(200).json({ ok: true, reviews: publicReviews(await loadBoard()) });
+    }
     if (req.method === "GET") {
       const query = req.query || {};
       const form = reviewForm(

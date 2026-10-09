@@ -60,7 +60,6 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/reel.") ||
     url.pathname === "/api/reel-page" ||
     url.pathname === "/api/reel-config" ||
-    url.pathname === "/api/reel-copy" ||
     url.pathname === "/api/reel-thumb" ||
     url.pathname === "/upsell" ||
     url.pathname === "/upsell.js" ||
@@ -69,7 +68,6 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/review" ||
     url.pathname === "/review.css" ||
     url.pathname === "/api/review" ||
-    url.pathname === "/api/reviews" ||
     url.pathname === "/local-sample.mp4"
   ) {
     return;

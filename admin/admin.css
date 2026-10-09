@@ -1888,9 +1888,18 @@ textarea {
 .mail__folder {
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
+  width: calc(100% - 16px);
   margin: 4px 8px;
   padding: 9px 10px;
   border-radius: 12px;
+}
+
+.mail__folder span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mail__folder.is-active,

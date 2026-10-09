@@ -584,7 +584,236 @@ MyReels`,
     if (tab === "services") renderServicesCatalog();
     if (tab === "onboarding") renderOnboardingTab();
     if (tab === "stays") renderStayList();
+    if (tab === "mail") loadMail();
   }
+
+  const mailState = { folder: "INBOX", folders: [], messages: [], selected: null, configured: false };
+
+  async function mailRequest(payload) {
+    const response = await fetch("/api/mail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: AUTH_USER, pass: AUTH_PASS, ...payload }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) {
+      throw new Error(data.error || "Το ταχυδρομείο δεν φορτώθηκε.");
+    }
+    return data;
+  }
+
+  function mailDate(value) {
+    if (!value) return "";
+    return new Date(value).toLocaleString("el-GR", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function mailSender(message) {
+    if (message.direction === "outbound") return `Προς: ${message.toAddresses || ""}`;
+    return message.fromName
+      ? `${message.fromName} <${message.fromAddress}>`
+      : message.fromAddress || "Άγνωστος";
+  }
+
+  function renderMailFolders() {
+    const box = document.getElementById("mail-folders");
+    if (!box) return;
+    const unread = mailState.folders.find((folder) => folder.label === "Εισερχόμενα")?.unseen || 0;
+    const unreadEl = document.getElementById("mail-unread");
+    if (unreadEl) unreadEl.textContent = String(unread);
+    box.innerHTML = mailState.folders
+      .map((folder) => {
+        const active = folder.path === mailState.folder ? " is-active" : "";
+        const badge = folder.unseen > 0 ? `<span class="mail__badge">${folder.unseen}</span>` : "";
+        const count = folder.total > 0 ? ` (${folder.total})` : "";
+        return `<button type="button" class="mail__folder${active}" data-folder="${escapeHtml(folder.path)}"><span>${escapeHtml(folder.label)}${count}</span>${badge}</button>`;
+      })
+      .join("");
+    box.querySelectorAll("[data-folder]").forEach((button) => {
+      button.addEventListener("click", () => {
+        mailState.folder = button.dataset.folder;
+        mailState.selected = null;
+        renderMailReader();
+        loadMailMessages();
+      });
+    });
+  }
+
+  function renderMailList() {
+    const list = document.getElementById("mail-list");
+    const title = document.getElementById("mail-folder-title");
+    const current = mailState.folders.find((folder) => folder.path === mailState.folder);
+    if (title) title.textContent = current?.label || "Εισερχόμενα";
+    if (!list) return;
+    if (!mailState.messages.length) {
+      list.innerHTML = `<p class="mail__empty">Δεν υπάρχουν μηνύματα σε αυτόν τον φάκελο.</p>`;
+      return;
+    }
+    list.innerHTML = mailState.messages
+      .map((message) => {
+        const active = mailState.selected?.id === message.id ? " is-active" : "";
+        const unread = message.isRead ? "" : " is-unread";
+        return `
+          <button type="button" class="mail__item${active}${unread}" data-uid="${escapeHtml(message.id)}">
+            <div>
+              <p class="mail__from">${escapeHtml(mailSender(message))}</p>
+              <p class="mail__subject">${escapeHtml(message.subject)}</p>
+              <p class="mail__snippet">${escapeHtml(message.snippet || "")}</p>
+            </div>
+            <span class="mail__when">${escapeHtml(mailDate(message.receivedAt))}</span>
+          </button>`;
+      })
+      .join("");
+    list.querySelectorAll("[data-uid]").forEach((button) => {
+      button.addEventListener("click", () => openMail(button.dataset.uid));
+    });
+  }
+
+  function renderMailReader() {
+    const reader = document.getElementById("mail-reader");
+    const message = mailState.selected;
+    if (!reader) return;
+    if (!message) {
+      reader.innerHTML = `<p class="mail__empty">Επίλεξε ένα μήνυμα για προβολή ή απάντηση.</p>`;
+      return;
+    }
+    const canReply = message.direction === "inbound";
+    const body = message.bodyHtml
+      ? `<iframe class="mail__frame" sandbox="" referrerpolicy="no-referrer" id="mail-frame"></iframe>`
+      : `<div class="mail__body">${escapeHtml(message.bodyText || message.snippet || "")}</div>`;
+    reader.innerHTML = `
+      <div class="mail__head">
+        <h3>${escapeHtml(message.subject)}</h3>
+        <p class="mail__meta">${escapeHtml(mailSender(message))}</p>
+        <p class="mail__meta">${escapeHtml(mailDate(message.receivedAt))}</p>
+      </div>
+      ${body}
+      ${
+        canReply
+          ? `<form class="mail__reply" id="mail-reply">
+              <h4>Απάντηση</h4>
+              <input type="email" name="to" value="${escapeHtml(message.fromAddress)}" required />
+              <input type="text" name="subject" value="${escapeHtml(message.subject.startsWith("Re:") ? message.subject : `Re: ${message.subject}`)}" required />
+              <textarea name="text" placeholder="Γράψε την απάντησή σου…" required></textarea>
+              <button type="submit" class="mail__send">Αποστολή</button>
+            </form>`
+          : ""
+      }`;
+    const frame = document.getElementById("mail-frame");
+    if (frame) frame.srcdoc = message.bodyHtml;
+    document.getElementById("mail-reply")?.addEventListener("submit", sendMailReply);
+  }
+
+  function setMailBusy(busy) {
+    document.querySelectorAll("#mail-sync, #mail-sync-all").forEach((button) => {
+      button.disabled = busy;
+    });
+  }
+
+  function showMailProblem(message) {
+    const status = document.getElementById("mail-status");
+    if (!status) return;
+    status.hidden = !message;
+    status.textContent = message || "";
+  }
+
+  async function loadMail() {
+    const setup = document.getElementById("mail-setup");
+    const grid = document.getElementById("mail-grid");
+    showMailProblem("");
+    setMailBusy(true);
+    try {
+      const status = await mailRequest({ action: "status" });
+      mailState.configured = Boolean(status.configured);
+      if (!status.configured) {
+        if (setup) {
+          setup.hidden = false;
+          setup.textContent =
+            "Το contact@myreels.gr δεν έχει κωδικό ακόμα. Βάλε MAILBOX_PASSWORD, ADMIN_USER και ADMIN_PASS στο περιβάλλον του myreels και ξαναφόρτωσε.";
+        }
+        if (grid) grid.hidden = true;
+        return;
+      }
+      if (setup) setup.hidden = true;
+      if (grid) grid.hidden = false;
+      const folders = await mailRequest({ action: "folders" });
+      mailState.folders = folders.folders || [];
+      if (!mailState.folders.some((folder) => folder.path === mailState.folder)) {
+        mailState.folder = mailState.folders[0]?.path || "INBOX";
+      }
+      renderMailFolders();
+      await loadMailMessages();
+    } catch (err) {
+      if (grid) grid.hidden = true;
+      showMailProblem(err?.message || "Το ταχυδρομείο δεν φορτώθηκε.");
+    } finally {
+      setMailBusy(false);
+    }
+  }
+
+  async function loadMailMessages() {
+    const list = document.getElementById("mail-list");
+    if (list) list.innerHTML = `<p class="mail__empty">Φόρτωση…</p>`;
+    renderMailFolders();
+    try {
+      const payload = await mailRequest({ action: "messages", folder: mailState.folder });
+      mailState.messages = payload.messages || [];
+      renderMailList();
+    } catch (err) {
+      showMailProblem(err?.message || "Τα μηνύματα δεν φορτώθηκαν.");
+    }
+  }
+
+  async function openMail(uid) {
+    showMailProblem("");
+    try {
+      const payload = await mailRequest({ action: "read", folder: mailState.folder, uid });
+      mailState.selected = payload.message;
+      mailState.messages = mailState.messages.map((message) =>
+        message.id === String(uid) ? { ...message, isRead: true } : message
+      );
+      renderMailList();
+      renderMailReader();
+    } catch (err) {
+      showMailProblem(err?.message || "Το μήνυμα δεν άνοιξε.");
+    }
+  }
+
+  async function sendMailReply(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const button = form.querySelector("button");
+    if (button) button.disabled = true;
+    showMailProblem("");
+    try {
+      await mailRequest({
+        action: "send",
+        to: form.to.value,
+        subject: form.subject.value,
+        text: form.text.value,
+        inReplyTo: mailState.selected?.messageId || "",
+      });
+      form.text.value = "";
+      showMailProblem("");
+      form.insertAdjacentHTML(
+        "beforeend",
+        `<p class="mail__meta">Η απάντηση στάλθηκε από το contact@myreels.gr.</p>`
+      );
+    } catch (err) {
+      showMailProblem(err?.message || "Η απάντηση δεν στάλθηκε.");
+      if (button) button.disabled = false;
+    }
+  }
+
+  document.getElementById("mail-sync")?.addEventListener("click", () => loadMailMessages());
+  document.getElementById("mail-sync-all")?.addEventListener("click", () => {
+    mailState.selected = null;
+    loadMail();
+  });
 
   document.querySelectorAll("[data-tab]").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));

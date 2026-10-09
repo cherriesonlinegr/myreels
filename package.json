@@ -7,6 +7,9 @@
     "dev": "vercel dev"
   },
   "dependencies": {
+    "imapflow": "^2.3.0",
+    "mailparser": "^3.9.37",
+    "nodemailer": "^10.0.16",
     "resend": "^4.0.0"
   }
 }

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=10" />
+  <link rel="stylesheet" href="/admin/admin.css?v=12" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -54,6 +54,10 @@
         <span class="sidebar__icon" aria-hidden="true">▶</span>
         Καταλύματα
       </button>
+      <button type="button" class="sidebar__link" data-tab="mail">
+        <span class="sidebar__icon" aria-hidden="true">✉</span>
+        Email
+      </button>
       <button type="button" class="sidebar__link" data-tab="services">
         <span class="sidebar__icon" aria-hidden="true">▣</span>
         Υπηρεσίες
@@ -81,6 +85,9 @@
     </button>
     <button type="button" class="mobile-nav__btn" data-tab="stays">
       <span>▶</span>Καταλύματα
+    </button>
+    <button type="button" class="mobile-nav__btn" data-tab="mail">
+      <span>✉</span>Email
     </button>
     <button type="button" class="mobile-nav__btn" data-tab="services">
       <span>▣</span>Υπηρεσίες
@@ -222,6 +229,51 @@
           <h2>Πρόσφατες</h2>
           <div class="stay-list" id="stay-list"></div>
         </article>
+      </div>
+    </section>
+
+    <!-- MAIL TAB -->
+    <section class="view" id="view-mail" data-view="mail" hidden>
+      <div class="mail">
+        <header class="mail__hero">
+          <div class="mail__intro">
+            <span class="mail__mark" aria-hidden="true">✉</span>
+            <div>
+              <p class="mail__hub">Επικοινωνία</p>
+              <h1>Ταχυδρομείο</h1>
+              <p>Πλήρες inbox για το contact@myreels.gr. Εισερχόμενα, εξερχόμενα, spam και αρχειοθετημένα.</p>
+            </div>
+          </div>
+          <div class="mail__hero-actions">
+            <div class="mail__stat">
+              <strong id="mail-unread">0</strong>
+              <span>Αδιάβαστα</span>
+            </div>
+            <button type="button" class="mail__ghost" id="mail-sync">Συγχρονισμός φακέλου</button>
+            <button type="button" class="mail__ghost" id="mail-sync-all">Όλοι οι φάκελοι</button>
+          </div>
+        </header>
+
+        <div class="mail__accounts">
+          <button type="button" class="mail__account is-active">MyReels · contact@myreels.gr</button>
+        </div>
+
+        <p class="mail__setup" id="mail-setup" hidden></p>
+        <p class="mail__status" id="mail-status" hidden></p>
+
+        <div class="mail__grid" id="mail-grid" hidden>
+          <aside class="mail__card">
+            <h2>Φάκελοι</h2>
+            <div class="mail__folders" id="mail-folders"></div>
+          </aside>
+          <section class="mail__card">
+            <h2 id="mail-folder-title">Εισερχόμενα</h2>
+            <div class="mail__list" id="mail-list"></div>
+          </section>
+          <section class="mail__card mail__reader" id="mail-reader">
+            <p class="mail__empty">Επίλεξε ένα μήνυμα για προβολή ή απάντηση.</p>
+          </section>
+        </div>
       </div>
     </section>
 
@@ -435,7 +487,7 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=10"></script>
+  <script src="/admin/admin.js?v=12"></script>
 </div>
 </body>
 </html>

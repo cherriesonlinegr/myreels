@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/mail.js": {
+      "includeFiles": "lib/mailbox.mjs"
+    }
+  },
   "rewrites": [
     { "source": "/admin", "destination": "/admin/index.html" },
     { "source": "/reel", "destination": "/api/reel-page" },

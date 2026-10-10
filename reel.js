@@ -169,41 +169,31 @@
     }
 
     buyBtn.disabled = true;
-    buyBtn.textContent = "Στέλνουμε την παραγγελία…";
+    buyBtn.textContent = "Μετάβαση στην πληρωμή…";
 
     try {
-      const response = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: buyer,
-          business: property,
-          email,
-          phone,
-          videoId,
-          services: ["stay"],
-          source: "reel",
-          priceNet: net,
-          driveUrl: stay.driveFileUrl(driveId),
-          notes: `YouTube: https://www.youtube.com/watch?v=${videoId}`,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Η παραγγελία δεν στάλθηκε.");
-      }
       sessionStorage.setItem(
         "myreels_reel_order",
         JSON.stringify({ name: buyer, email, phone, property })
       );
-      window.location.assign(
-        stay.buildUpsellUrl(window.location.origin, property, videoId, {
-          p: net,
-          p5: pack5,
-          p10: pack10,
-          copy: pages,
-        })
-      );
+      const response = await fetch("/api/viva", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "checkout",
+          kind: "reel",
+          videoId,
+          property,
+          buyerName: buyer,
+          email,
+          phone,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || "Η πληρωμή δεν άνοιξε.");
+      }
+      window.location.assign(payload.url);
     } catch (err) {
       buyBtn.disabled = false;
       buyBtn.textContent = ctaLabel;

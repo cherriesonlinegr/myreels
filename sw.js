@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v32";
+const CACHE_VERSION = "myreels-admin-cache-v33";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
@@ -68,6 +68,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/review" ||
     url.pathname === "/review.css" ||
     url.pathname === "/api/review" ||
+    url.pathname === "/api/viva" ||
     url.pathname === "/local-sample.mp4"
   ) {
     return;

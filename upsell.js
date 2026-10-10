@@ -11,12 +11,14 @@
 
   const doneId = params.get("done");
   const paidId = params.get("paid");
-  if (!name && !doneId && !paidId) {
+  const orderCode = String(params.get("s") || "").replace(/\D/g, "");
+  if (!name && !doneId && !paidId && !orderCode) {
     missing.hidden = false;
     return;
   }
 
   let property = name;
+  let pageVideo = stay.parseYouTubeId(params.get("v"));
   let reelSessionId = paidId && paidId.startsWith("cs_") ? paidId : "";
   let step = params.get("step") === "5" ? 5 : 10;
   let funnelSent = "";
@@ -52,6 +54,11 @@
     showDone(1);
     markFunnel("1");
   });
+
+  if (orderCode && !name && !doneId) {
+    settleViva(orderCode, String(params.get("t") || ""));
+    return;
+  }
 
   if (doneId) confirmDone(doneId);
   else {
@@ -206,33 +213,25 @@
     }
   }
 
-  function savedOrder() {
-    try {
-      const data = JSON.parse(sessionStorage.getItem("myreels_reel_order") || "");
-      if (!data || !data.email || !data.name) return null;
-      return data;
-    } catch {
-      return null;
-    }
-  }
-
   async function payUpgrade(count) {
     const errorEl = document.getElementById("form-error");
     if (errorEl) errorEl.hidden = true;
-    if (!reelSessionId) {
-      await sendUpgradeLead(count);
-      return;
-    }
     if (yes) {
       yes.disabled = true;
       yes.textContent = "Μετάβαση στην πληρωμή…";
     }
     if (no) no.disabled = true;
     try {
-      const response = await fetch("/api/checkout", {
+      const response = await fetch("/api/viva", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "pack", sessionId: reelSessionId, pack: count }),
+        body: JSON.stringify({
+          action: "checkout",
+          kind: "pack",
+          pack: count,
+          videoId: pageVideo,
+          property,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.url) {
@@ -247,59 +246,74 @@
     }
   }
 
-  async function sendUpgradeLead(count) {
-    const order = savedOrder();
-    if (!order) {
-      showError("Στείλε πρώτα την παραγγελία του πρώτου Reel από τη σελίδα του.");
+  async function settleViva(code, transactionId) {
+    const title = missing.querySelector("h1");
+    const text = missing.querySelector("p");
+    if (title) title.textContent = "Ελέγχουμε την πληρωμή…";
+    if (text) text.textContent = "Μείνε σε αυτή τη σελίδα.";
+    missing.hidden = false;
+    let last = null;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      try {
+        const response = await fetch(
+          `/api/viva?s=${encodeURIComponent(code)}&t=${encodeURIComponent(transactionId)}`,
+          { cache: "no-store" }
+        );
+        last = await response.json().catch(() => ({}));
+        if (response.ok && (last.status === "paid" || last.status === "failed")) break;
+      } catch {
+        last = null;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    if (!last || last.status !== "paid") {
+      if (title) title.textContent = "Η πληρωμή δεν επιβεβαιώθηκε.";
+      if (text) {
+        text.textContent = last?.status === "failed"
+          ? "Δεν ολοκληρώθηκε. Γύρνα στη σελίδα του καταλύματος και δοκίμασε ξανά."
+          : "Αν την ολοκλήρωσες, ανανέωσε σε λίγο.";
+      }
       return;
     }
-    if (yes) {
-      yes.disabled = true;
-      yes.textContent = "Στέλνουμε την παραγγελία…";
-    }
-    if (no) no.disabled = true;
-    const packNet = count === 10 ? pack10 : pack5;
+    missing.hidden = true;
+    property = stay.cleanName(last.property) || property;
+    pageVideo = stay.parseYouTubeId(last.videoId) || pageVideo;
+    const paidNet = stay.parseNet(last.net);
+    const next5 = stay.parseNet(last.pack5);
+    const next10 = stay.parseNet(last.pack10);
+    if (paidNet != null) firstNet = paidNet;
+    if (next5 != null) pack5 = next5;
+    if (next10 != null) pack10 = next10;
     try {
-      const response = await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: order.name,
-          business: order.property || property,
-          email: order.email,
-          phone: order.phone || "",
-          services: [count === 10 ? "stay10" : "stay5"],
-          source: "upsell",
-          pack: count,
-          priceNet: packNet,
-          notes:
-            count === 10
-              ? `10 Reels και διαχείριση social 2 μηνών για το ${order.property || property}. Έχει ήδη το πρώτο Reel.`
-              : `5 Reels για το ${order.property || property}, χωρίς διαχείριση social. Έχει ήδη το πρώτο Reel.`,
-        }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Η παραγγελία δεν στάλθηκε.");
-      }
-      showDone(count);
-    } catch (err) {
-      if (yes) yes.disabled = false;
-      if (no) no.disabled = false;
-      render();
-      showError(err?.message || "Κάτι πήγε στραβά. Δοκίμασε ξανά.");
+      const previous = JSON.parse(sessionStorage.getItem("myreels_reel_order") || "{}");
+      sessionStorage.setItem(
+        "myreels_reel_order",
+        JSON.stringify({
+          name: last.buyerName || previous.name || "",
+          email: previous.email || "",
+          phone: previous.phone || "",
+          property,
+        })
+      );
+    } catch {
+      /* the confirmation still uses the name from the payment */
     }
+    if (last.kind === "pack10" || last.kind === "pack5") {
+      showDone(last.kind === "pack5" ? 5 : 10);
+      return;
+    }
+    ready.hidden = false;
+    render();
   }
 
   function markFunnel(step) {
     const rank = { 10: 1, 5: 2, 1: 3 };
     if ((rank[funnelSent] || 0) >= rank[step]) return;
     funnelSent = step;
-    const videoId = stay.parseYouTubeId(params.get("v"));
     fetch("/api/stay-skip", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId, property, step: String(step) }),
+      body: JSON.stringify({ videoId: pageVideo, property, step: String(step) }),
     }).catch(() => {});
   }
 
@@ -328,7 +342,7 @@
     const form = document.getElementById("rate-form");
     const thanks = document.getElementById("rate-thanks");
     if (!form) return;
-    const videoId = stay.parseYouTubeId(params.get("v"));
+    const videoId = pageVideo;
     const nameInput = document.getElementById("rate-name");
     const propertyInput = document.getElementById("rate-property");
     if (propertyInput && !propertyInput.value) propertyInput.value = property;

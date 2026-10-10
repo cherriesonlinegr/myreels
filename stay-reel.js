@@ -375,7 +375,7 @@ window.MyReelsStay = (() => {
         host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid">${list
           .map(
             (item) =>
-              `<figure class="quote">${starRow(item.stars)}<blockquote>${escapeHtml(item.message)}</blockquote><figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
+              `<figure class="quote">${starRow(item.stars)}${item.message ? `<blockquote>${escapeHtml(item.message)}</blockquote>` : ""}<figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
           )
           .join("")}</div>`;
         container.hidden = false;
@@ -425,12 +425,63 @@ window.MyReelsStay = (() => {
 
   const packNet = (value, fallback) => parseNet(value) ?? fallback;
 
-  const stayPathName = (value) =>
-    cleanName(value)
-      .replace(/[\\/#?]/g, "")
-      .replace(/ /g, "_")
+  const latinSlug = (value) => {
+    let text = String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "");
+    [
+      ["ου", "ou"],
+      ["αυ", "av"],
+      ["ευ", "ev"],
+      ["μπ", "b"],
+      ["ντ", "nt"],
+      ["γκ", "gk"],
+      ["γγ", "ng"],
+      ["τσ", "ts"],
+      ["τζ", "tz"],
+    ].forEach(([from, to]) => {
+      text = text.replaceAll(from, to);
+    });
+    const letters = {
+      α: "a",
+      β: "b",
+      γ: "g",
+      δ: "d",
+      ε: "e",
+      ζ: "z",
+      η: "i",
+      θ: "th",
+      ι: "i",
+      κ: "k",
+      λ: "l",
+      μ: "m",
+      ν: "n",
+      ξ: "x",
+      ο: "o",
+      π: "p",
+      ρ: "r",
+      σ: "s",
+      ς: "s",
+      τ: "t",
+      υ: "i",
+      φ: "f",
+      χ: "ch",
+      ψ: "ps",
+      ω: "o",
+    };
+    return [...text]
+      .map((ch) => letters[ch] || ch)
+      .join("")
+      .replace(/[\u0000-\u001F\u007F]/g, "")
+      .replace(/[^a-z0-9]+/g, "_")
       .replace(/_+/g, "_")
-      .replace(/^_|_$/g, "");
+      .replace(/^_|_$/g, "")
+      .slice(0, 80);
+  };
+
+  const stayPathName = (value) => latinSlug(cleanName(value));
 
   const landingSlug = (name, taken) => {
     const base = stayPathName(name);

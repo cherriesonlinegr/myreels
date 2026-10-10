@@ -1876,7 +1876,7 @@ MyReels`,
             </div>
             <strong>${escapeHtml(item.buyerName || "Χωρίς ονοματεπώνυμο")}${item.email ? ` · ${escapeHtml(item.email)}` : ""}</strong>
             <small>Δημόσια εμφάνιση: ${escapeHtml(shown)}${item.property ? ` · ${escapeHtml(item.property)}` : ""}</small>
-            <blockquote class="stay-review__quote">“${escapeHtml(item.message)}”</blockquote>
+            ${item.message ? `<blockquote class="stay-review__quote">“${escapeHtml(item.message)}”</blockquote>` : ""}
             <div class="stay-review__actions">${approve}${reject}</div>
           </article>`;
       })
@@ -1932,6 +1932,11 @@ MyReels`,
                   <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
                   <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
                   <div class="stay-card__tags">${funnelTag(deal)}${tenTag(deal)}${reviewTag(deal)}</div>
+                  ${deal.stage === "landing" ? `<div class="stay-card__move">
+                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="bought" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Αγόρασε το Reel</button>
+                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack5" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Πακέτο 5</button>
+                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack10" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Πακέτο 10</button>
+                  </div>` : ""}
                   ${viberButton(deal)}
                 </article>`
             )
@@ -2002,8 +2007,8 @@ MyReels`,
             <tr><td><code>{pack5}</code></td><td>Τιμή των 5 Reels, χωρίς ΦΠΑ.</td><td>170€</td></tr>
             <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>350€</td></tr>
             <tr><td><code>{drive}</code></td><td>Link του αρχείου στο Google Drive. Μπαίνει από τη landing.</td><td>https://drive.google.com/file/d/…/view</td></tr>
+            <tr><td><code>{review}</code></td><td>Η φόρμα κριτικής. Μπαίνει σε κάθε email μετά την αγορά, μέχρι να τη στείλει. Από το επόμενο email και μετά δεν ξαναμπαίνει.</td><td>Σύνδεσμος με το όνομα και το κατάλυμα ήδη μέσα</td></tr>
           </tbody>
-            <tr><td><code>{review}</code></td><td>Η φόρμα κριτικής. Μπαίνει στο email με το αρχείο και στα follow-up. Αν την έχει ήδη στείλει, μένει κενή.</td><td>Σύνδεσμος με το όνομα και το κατάλυμα ήδη μέσα</td></tr>
         </table>
       </div>
       ${
@@ -2513,6 +2518,34 @@ MyReels`,
   }
 
     document.getElementById("stay-board")?.addEventListener("click", async (event) => {
+      const move = event.target.closest("[data-stay-move]");
+      if (move) {
+        const stage = move.getAttribute("data-stay-move") || "";
+        const labels = { bought: "Αγόρασε το Reel", pack5: "Πακέτο 5", pack10: "Πακέτο 10" };
+        const label = labels[stage];
+        const property = move.getAttribute("data-stay-property") || "το κατάλυμα";
+        const videoId = move.getAttribute("data-stay-video") || "";
+        if (!label || !videoId) return;
+        if (!window.confirm(`Να περάσει το «${property}» στο «${label}»;`)) return;
+        move.disabled = true;
+        try {
+          const result = await stayBoardRequest({ action: "move", videoId, stage });
+          applyStayBoard(result);
+          const deal = (result.deals || []).find((item) => item.videoId === videoId);
+          const sent = deal && Object.keys(deal.sent || {}).length > 0;
+          setStayBoardStatus(
+            sent
+              ? `Πέρασε στο «${label}». Έφυγε το email της παραγγελίας.`
+              : deal?.email
+                ? `Πέρασε στο «${label}».`
+                : `Πέρασε στο «${label}». Δεν υπάρχει email, οπότε δεν έφυγε μήνυμα.`
+          );
+        } catch (err) {
+          setStayBoardStatus(err?.message || "Δεν μετακινήθηκε.");
+          move.disabled = false;
+        }
+        return;
+      }
       const button = event.target.closest("[data-viber-phone]");
       if (!button) return;
       button.disabled = true;

@@ -20,7 +20,7 @@
     </p>
     <section class="card" id="card">
       <h1>Αξιολόγησε το Reel</h1>
-      <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια, και δυο λόγια.</p>
+      <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.</p>
       <p class="lead" id="status">Ανοίγει η φόρμα…</p>
     </section>
   </main>
@@ -51,7 +51,7 @@
     function showForm(data) {
       card.innerHTML = `
         <h1>Αξιολόγησε το Reel</h1>
-        <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια, και δυο λόγια.</p>
+        <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.</p>
         <form id="review-form">
           <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <fieldset class="score">
@@ -62,8 +62,8 @@
             <small data-star-hint>Διάλεξε αστέρια</small>
           </fieldset>
           <label class="field">Το μήνυμά σου
-            <span class="note">Γράψε ό,τι θέλεις για το Reel.</span>
-            <textarea name="message" required minlength="8" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
+            <span class="note">Προαιρετικό.</span>
+            <textarea name="message" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
           </label>
           <label class="field">Ονοματεπώνυμο
             <input type="text" readonly value="${escapeHtml(data.buyerName || "")}" />
@@ -92,9 +92,9 @@
           error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
           return;
         }
-        if (message.length < 8) {
+        if (message.length > 800) {
           error.hidden = false;
-          error.textContent = "Γράψε δυο λόγια.";
+          error.textContent = "Το κείμενο είναι πολύ μεγάλο.";
           return;
         }
         const button = form.querySelector("button");

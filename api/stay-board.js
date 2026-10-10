@@ -19,12 +19,14 @@ export default async function handler(req, res) {
   try {
     const {
       defaultSequences,
+      advanceLanding,
       ensureReviewToken,
       loadBoard,
       moderateReview,
       removeLanding,
       saveBoard,
       savePublicCopy,
+      sendDue,
       sendOne,
       sendTest,
       upsertLanding,
@@ -94,6 +96,14 @@ export default async function handler(req, res) {
       const current = await loadBoard();
       const result = moderateReview(current, { id: body.id, status: body.status });
       if (!result.ok) return res.status(400).json({ ok: false, error: "Δεν βρέθηκε η κριτική." });
+      const board = await saveBoard(result.board);
+      return res.status(200).json({ ok: true, ...board });
+    }
+    if (action === "move") {
+      const current = await loadBoard();
+      const result = advanceLanding(current, { videoId: body.videoId, stage: body.stage });
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+      if (result.changed) await sendDue(result.board, { onlyDay: 0 });
       const board = await saveBoard(result.board);
       return res.status(200).json({ ok: true, ...board });
     }

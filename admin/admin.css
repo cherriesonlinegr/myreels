@@ -916,6 +916,13 @@ body.is-viewer #btn-copy-onboarding-lead {
   font-size: 12px;
 }
 
+.stay-card__move {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .stay-tag {
   justify-self: start;
   margin-top: 6px;

@@ -248,9 +248,11 @@
 
   async function settleViva(code, transactionId) {
     const title = missing.querySelector("h1");
-    const text = missing.querySelector("p");
-    if (title) title.textContent = "Ελέγχουμε την πληρωμή…";
-    if (text) text.textContent = "Μείνε σε αυτή τη σελίδα.";
+    const text = missing.querySelector("h1 + p");
+    const line = missing.querySelector(".banner__line");
+    if (line) line.textContent = "Το πρώτο Reel είναι δικό σου";
+    if (title) title.textContent = "Η πληρωμή σου ολοκληρώθηκε.";
+    if (text) text.textContent = "Δες κάτι που σε ενδιαφέρει!";
     missing.hidden = false;
     let last = null;
     for (let attempt = 0; attempt < 6; attempt += 1) {
@@ -340,7 +342,6 @@
 
   function mountRate() {
     const form = document.getElementById("rate-form");
-    const thanks = document.getElementById("rate-thanks");
     if (!form) return;
     const videoId = pageVideo;
     const nameInput = document.getElementById("rate-name");
@@ -353,11 +354,15 @@
       /* the confirmation still shows the property from the link */
     }
     const finish = (text) => {
-      form.hidden = true;
-      if (thanks) {
-        thanks.hidden = false;
-        thanks.textContent = text;
-      }
+      const rate = document.getElementById("rate");
+      if (!rate) return;
+      rate.replaceChildren();
+      const heading = document.createElement("h2");
+      heading.textContent = "Ευχαριστούμε.";
+      const note = document.createElement("p");
+      note.className = "rate__thanks";
+      note.textContent = text;
+      rate.append(heading, note);
     };
     if (videoId || property) {
       const query = new URLSearchParams();
@@ -394,13 +399,6 @@
         if (error) {
           error.hidden = false;
           error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
-        }
-        return;
-      }
-      if (message.length < 8) {
-        if (error) {
-          error.hidden = false;
-          error.textContent = "Γράψε δυο λόγια.";
         }
         return;
       }

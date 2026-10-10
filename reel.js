@@ -160,10 +160,13 @@
     const email = document.getElementById("buyer-email").value.trim();
     const phone = document.getElementById("buyer-phone").value.trim();
     const trap = form.querySelector(".hp")?.value.trim();
-    if (trap || !buyer || !property || !email || phone.replace(/\D/g, "").length < 10) {
-      if (errorEl && phone.replace(/\D/g, "").length < 10) {
+    if (trap) return;
+    if (!buyer || !property || !email || phone.replace(/\D/g, "").length < 10) {
+      if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = "Γράψε ένα τηλέφωνο.";
+        errorEl.textContent = phone.replace(/\D/g, "").length < 10
+          ? "Γράψε ένα τηλέφωνο."
+          : "Συμπλήρωσε όλα τα πεδία.";
       }
       return;
     }

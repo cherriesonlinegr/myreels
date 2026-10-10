@@ -425,7 +425,12 @@ window.MyReelsStay = (() => {
 
   const packNet = (value, fallback) => parseNet(value) ?? fallback;
 
-  const stayPathName = (value) => cleanName(value).replace(/[\\/#?]/g, "");
+  const stayPathName = (value) =>
+    cleanName(value)
+      .replace(/[\\/#?]/g, "")
+      .replace(/ /g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_|_$/g, "");
 
   const landingSlug = (name, taken) => {
     const base = stayPathName(name);
@@ -496,6 +501,7 @@ window.MyReelsStay = (() => {
     resolvePages,
     fillTokens,
     mountWork,
+    slugify: stayPathName,
     landingSlug,
     buildLandingUrl,
     buildDraftLandingUrl,

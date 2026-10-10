@@ -1671,7 +1671,8 @@ MyReels`,
     const taken = [];
     const ordered = [...next].sort((a, b) => Number(Boolean(b.slug)) - Number(Boolean(a.slug)));
     ordered.forEach((item) => {
-      const slug = item.slug && !taken.includes(item.slug) ? item.slug : stay.landingSlug(item.name, taken);
+      const cleaned = item.slug ? stay.slugify(item.slug) : "";
+      const slug = cleaned && !taken.includes(cleaned) ? cleaned : stay.landingSlug(item.name, taken);
       item.slug = slug;
       taken.push(slug);
     });

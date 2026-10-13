@@ -290,6 +290,20 @@ window.MyReelsStay = (() => {
   const resolvePages = (raw) => normalizePages(decodeCopy(raw));
   const resolveCopy = (raw) => resolvePages(raw).landing;
 
+  const mergeSamples = (base, overrides) => {
+    const next = { ...(base || {}) };
+    if (!overrides || typeof overrides !== "object") return next;
+    for (let index = 1; index <= 9; index += 1) {
+      ["n", "v"].forEach((prefix) => {
+        const key = `${prefix}${index}`;
+        if (!Object.prototype.hasOwnProperty.call(overrides, key)) return;
+        const field = sampleFields.find((item) => item.key === key);
+        next[key] = cleanCopyValue(overrides[key], field?.max || 200);
+      });
+    }
+    return next;
+  };
+
   const fillTokens = (template, vars) => {
     let text = String(template ?? "");
     const name = vars?.name || "";
@@ -385,14 +399,15 @@ window.MyReelsStay = (() => {
       video.pause();
     });
     };
-    paint(samples);
+    const paintMerged = (base) => paint(mergeSamples(base, options?.overrides));
+    paintMerged(samples);
     if (options?.live !== false && container.dataset.copyFetch !== "1") {
       container.dataset.copyFetch = "1";
       fetch("/api/reel-config?samples=1", { cache: "no-store" })
         .then((response) => response.json())
         .then((payload) => {
           if (!payload?.copy) return;
-          paint(resolvePages(payload.copy).samples);
+          paintMerged(resolvePages(payload.copy).samples);
         })
         .catch(() => {});
     }
@@ -586,6 +601,7 @@ window.MyReelsStay = (() => {
     COPY,
     normalizeCopy,
     normalizePages,
+    mergeSamples,
     encodeCopy,
     resolveCopy,
     resolvePages,

@@ -18,6 +18,7 @@
   let pack5 = stay.parseNet(params.get("p5"));
   let pack10 = stay.parseNet(params.get("p10"));
   let copyRaw = params.get("c") || "";
+  let sampleOverrides = {};
   let posterAt = 0;
   if (!videoId && pathStay) {
     try {
@@ -31,6 +32,7 @@
         if (stay.parseNet(data.pack5) != null) pack5 = stay.parseNet(data.pack5);
         if (stay.parseNet(data.pack10) != null) pack10 = stay.parseNet(data.pack10);
         if (data.copy) copyRaw = data.copy;
+        if (data.samples && typeof data.samples === "object") sampleOverrides = data.samples;
         if (Number(data.posterAt) > 0) posterAt = Math.round(Number(data.posterAt) * 10) / 10;
       }
     } catch {
@@ -56,6 +58,7 @@
   const tokens = { name, net: netLabel, gross: grossLabel };
   try {
     sessionStorage.setItem("myreels_funnel_c", copyRaw || "");
+    if (!params.get("draft")) sessionStorage.setItem("myreels_funnel_samples", JSON.stringify(sampleOverrides));
   } catch {
     /* the upsell still has the factory text */
   }
@@ -221,6 +224,7 @@
   ready.hidden = false;
   stay.mountWork(document.getElementById("work"), "landing", pages.samples, {
     live: !params.get("draft"),
+    overrides: params.get("draft") ? null : sampleOverrides,
   });
 
   const form = document.getElementById("order");

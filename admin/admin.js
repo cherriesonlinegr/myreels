@@ -1646,6 +1646,36 @@ MyReels`,
     return stay.normalizePages(input);
   }
 
+  function sampleOverrides(pages, defaults) {
+    const stay = window.MyReelsStay;
+    const current = stay.normalizePages(pages).samples;
+    const base = stay.normalizePages(defaults).samples;
+    const overrides = {};
+    for (let index = 1; index <= 9; index += 1) {
+      ["n", "v"].forEach((prefix) => {
+        const key = `${prefix}${index}`;
+        if (current[key] !== base[key]) overrides[key] = current[key];
+      });
+    }
+    return overrides;
+  }
+
+  function copyWithoutSampleOverrides(pages) {
+    const stay = window.MyReelsStay;
+    const next = stay.normalizePages(pages);
+    next.samples = stay.normalizePages(null).samples;
+    return next;
+  }
+
+  function samplesForItem(item) {
+    const stay = window.MyReelsStay;
+    const defaults = loadDefaultCopy();
+    if (item?.samples && typeof item.samples === "object") return stay.mergeSamples(defaults.samples, item.samples);
+    const remote = (stayBoard.deals || []).find((deal) => deal.videoId === item?.videoId)?.samples;
+    if (remote && Object.keys(remote).length) return stay.mergeSamples(defaults.samples, remote);
+    return stay.mergeSamples(defaults.samples, sampleOverrides(item?.copy, defaults));
+  }
+
   function fillStayCopyForm(copy) {
     const stay = window.MyReelsStay;
     const pages = stay.normalizePages(copy);
@@ -1828,12 +1858,13 @@ MyReels`,
           pack5: stay?.parseNet(item.pack5) ?? stay?.PACK_5,
           pack10: stay?.parseNet(item.pack10) ?? stay?.PACK_10,
           slug: item.slug,
-          copy: stay?.encodeCopy(item.copy) || "",
+          copy: stay?.encodeCopy(item.copy ? copyWithoutSampleOverrides(item.copy) : null) || "",
           landingUrl: stayLandingUrl(item),
           driveUrl: item.driveUrl || stay?.driveFileUrl(item.driveId),
           createdAt: new Date(item.createdAt).toISOString(),
         };
         if (item.posterAt != null) deal.posterAt = item.posterAt;
+        if (item.samples && typeof item.samples === "object") deal.samples = item.samples;
         return deal;
       });
       const seeded = await stayBoardRequest({ action: "seed", deals });
@@ -2167,7 +2198,7 @@ MyReels`,
       up5: "Σελίδα των 5, αν πει όχι στα 10. Ίδια σύμβολα: {name}, {net}, {gross}, {pack}, {extra}, {extraGross}.",
       done: "Οι τρεις επιβεβαιώσεις. Το {name} είναι το κατάλυμα. Άδειο πεδίο κρύβει τη γραμμή.",
       samples:
-        "Τα ίδια 9 δείγματα μπαίνουν στο κάτω μέρος κάθε σελίδας, με άλλη σειρά. Άδειο YouTube μένει κάδρο μέχρι να βάλεις link.",
+        "Τα 9 δείγματα της σελίδας. «Κράτα ως default» τα βάζει σε όλες. Αν αλλάξεις κάποιο και πατήσεις Δημιουργία landing, αλλάζει μόνο αυτή. Άδειο YouTube μένει κάδρο.",
     };
     if (fieldsRoot && !fieldsRoot.childElementCount && copyTabs) {
       copyTabs.innerHTML = stay.COPY_PAGES.map(
@@ -2199,6 +2230,7 @@ MyReels`,
                 <textarea id="stay-copy-samples-lead" rows="2" maxlength="${lead.max}"></textarea>
               </label>
               <div class="stay-samples">${rows.join("")}</div>
+              <p class="stay-hint" id="stay-sample-clash" hidden></p>
             </div>
           `;
         }
@@ -2466,6 +2498,37 @@ MyReels`,
 
     const openPoster = (at) => mountStayPoster(stay.parseYouTubeId(youtubeInput.value), at);
 
+    const markSampleClash = () => {
+      const hero = stay.parseYouTubeId(youtubeInput.value);
+      const same = [];
+      for (let index = 1; index <= 9; index += 1) {
+        const input = document.getElementById(`stay-copy-samples-v${index}`);
+        const row = input?.closest(".stay-sample-row");
+        const id = stay.parseYouTubeId(input?.value || "");
+        const clash = Boolean(hero && id && hero === id);
+        row?.classList.toggle("is-same", clash);
+        if (clash) same.push(String(index));
+      }
+      const note = document.getElementById("stay-sample-clash");
+      if (!note) return;
+      note.hidden = same.length === 0;
+      if (!same.length) {
+        note.textContent = "";
+        return;
+      }
+      const one = same.length === 1;
+      note.textContent = one
+        ? `Το δείγμα ${same[0]} έχει το ίδιο YouTube με το κύριο Reel. Άλλαξέ το σε αυτή τη σελίδα.`
+        : `Τα δείγματα ${same.join(", ")} έχουν το ίδιο YouTube με το κύριο Reel. Άλλαξέ τα σε αυτή τη σελίδα.`;
+    };
+
+    youtubeInput.addEventListener("input", markSampleClash);
+    youtubeInput.addEventListener("change", markSampleClash);
+    fieldsRoot?.addEventListener("input", (event) => {
+      if (String(event.target?.id || "").startsWith("stay-copy-samples-")) markSampleClash();
+    });
+    markSampleClash();
+
     youtubeInput.addEventListener("change", lookupTitle);
     youtubeInput.addEventListener("change", () => openPoster(readStayPoster()));
     youtubeInput.addEventListener("paste", () => {
@@ -2559,6 +2622,7 @@ MyReels`,
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
+        samples: sampleOverrides(copy, loadDefaultCopy()),
         slug,
         createdAt: Date.now(),
       };
@@ -2575,7 +2639,8 @@ MyReels`,
           pack5,
           pack10,
           slug,
-          copy: encodedCopy,
+          copy: stay.encodeCopy(copyWithoutSampleOverrides(copy)),
+          samples: item.samples,
           landingUrl: url,
           driveUrl: item.driveUrl,
           posterAt: item.posterAt || 0,
@@ -2618,7 +2683,10 @@ MyReels`,
         priceInput?.dispatchEvent(new Event("input"));
         pack5Input?.dispatchEvent(new Event("input"));
         pack10Input?.dispatchEvent(new Event("input"));
-        fillStayCopyForm(item.copy || null);
+        const pages = stay.normalizePages(item.copy || null);
+        pages.samples = samplesForItem(item);
+        fillStayCopyForm(pages);
+        markSampleClash();
         const savedPoster = Number(item.posterAt) || (stayBoard.deals || []).find((deal) => deal.videoId === item.videoId)?.posterAt || 0;
         openPoster(savedPoster);
         showCopyPage("landing");

@@ -120,7 +120,18 @@
       if (work) work.hidden = true;
       return;
     }
-    stay.mountWork(work, pageKey, pages.samples, { live: !params.get("draft") });
+    let sampleOverrides = {};
+    if (!params.get("draft")) {
+      try {
+        sampleOverrides = JSON.parse(sessionStorage.getItem("myreels_funnel_samples") || "{}");
+      } catch {
+        sampleOverrides = {};
+      }
+    }
+    stay.mountWork(work, pageKey, pages.samples, {
+      live: !params.get("draft"),
+      overrides: sampleOverrides,
+    });
   }
 
   function render() {

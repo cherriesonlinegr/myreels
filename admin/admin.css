@@ -1268,6 +1268,10 @@ body.is-viewer #btn-copy-onboarding-lead {
   outline: none;
 }
 
+.stay-sample-row.is-same input {
+  border-color: #ff5a5f;
+}
+
 .stay-sample-row input:focus {
   border-color: #ff5a5f;
   box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.15);

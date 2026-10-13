@@ -437,6 +437,24 @@ h1 {
   }
 }
 
+.site-foot {
+  width: min(720px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 8px 0 36px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.site-foot a {
+  color: inherit;
+}
+
+.site-foot a:hover {
+  color: var(--text);
+}
+
 @media (max-width: 959px) {
   .intro {
     text-align: left;

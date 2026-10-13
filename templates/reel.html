@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/reel.css" />
-  <link rel="stylesheet" href="/funnel-spark.css?v=7" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=8" />
 </head>
 <body>
   <div class="spark" aria-hidden="true">
@@ -60,9 +60,12 @@
         <span class="floaty floaty--star floaty--j">⭐</span>
         <span class="floaty floaty--cam floaty--l">🎬</span>
       </div>
-      <div class="frame">
+      <div class="frame" id="frame">
+        <img class="frame__poster" id="frame-poster" alt="" />
         <div id="player"></div>
-        <button type="button" class="sound" id="sound-btn" aria-label="Άνοιξε τον ήχο">
+        <button type="button" class="frame__hit" id="frame-hit" aria-label="Παίξε το Reel"></button>
+        <span class="reel-tile__badge frame__badge" aria-hidden="true"></span>
+        <button type="button" class="sound sound--mini" id="sound-btn" aria-label="Κλείσε τον ήχο">
           <svg class="sound__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path id="sound-path" fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4zm11.5 3a3.5 3.5 0 0 0-2-3.15v6.3a3.5 3.5 0 0 0 2-3.15zM14 4.23v2.06a6 6 0 0 1 0 11.42v2.06a8 8 0 0 0 0-15.54z"/>
           </svg>

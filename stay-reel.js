@@ -336,7 +336,7 @@ window.MyReelsStay = (() => {
 
   const workFace = (item) => {
     if (localSample()) {
-      return `<div class="reel-tile__face reel-tile__face--local"><video src="/local-sample.mp4" muted loop playsinline autoplay></video></div>`;
+      return `<button type="button" class="reel-tile__face reel-tile__face--local" data-work-local="1" aria-label="Παίξε το δείγμα ${escapeHtml(item.name)}"><video src="/local-sample.mp4#t=0.1" loop playsinline preload="metadata"></video><span class="reel-tile__badge" aria-hidden="true"></span></button>`;
     }
     if (!item.videoId) {
       return `<div class="reel-tile__face reel-tile__face--empty" aria-hidden="true"><svg viewBox="0 0 40 40"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg></div>`;
@@ -381,8 +381,8 @@ window.MyReelsStay = (() => {
         container.hidden = false;
       })
       .catch(() => {});
-    container.querySelectorAll("video").forEach((video) => {
-      video.play().catch(() => {});
+    container.querySelectorAll("[data-work-local] video").forEach((video) => {
+      video.pause();
     });
     };
     paint(samples);
@@ -399,6 +399,30 @@ window.MyReelsStay = (() => {
     if (container.dataset.workBound === "1") return;
     container.dataset.workBound = "1";
     container.addEventListener("click", (event) => {
+      const localButton = event.target.closest("[data-work-local]");
+      if (localButton && container.contains(localButton)) {
+        const video = localButton.querySelector("video");
+        if (!video) return;
+        const playing = localButton.classList.contains("is-playing") && !video.paused;
+        container.querySelectorAll("[data-work-local]").forEach((button) => {
+          const other = button.querySelector("video");
+          if (other) other.pause();
+          button.classList.remove("is-playing");
+        });
+        if (playing) return;
+        document.dispatchEvent(new CustomEvent("myreels-work-play"));
+        localButton.classList.add("is-playing");
+        video.muted = false;
+        video.volume = 1;
+        const started = video.play();
+        if (started && typeof started.catch === "function") {
+          started.catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
+        return;
+      }
       const button = event.target.closest("[data-work-video]");
       if (!button || !container.contains(button)) return;
       const figure = button.closest("figure");
@@ -414,12 +438,27 @@ window.MyReelsStay = (() => {
       const frame = document.createElement("div");
       frame.className = "reel-tile__face reel-tile__frame";
       const iframe = document.createElement("iframe");
-      iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(videoId)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+      iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&mute=0&loop=1&playlist=${encodeURIComponent(videoId)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
       iframe.title = figure.getAttribute("data-work-name") || "Δείγμα";
       iframe.allow = "autoplay; encrypted-media; picture-in-picture";
       iframe.setAttribute("allowfullscreen", "");
       frame.appendChild(iframe);
       button.replaceWith(frame);
+      document.dispatchEvent(new CustomEvent("myreels-work-play"));
+    });
+    document.addEventListener("myreels-hero-play", () => {
+      container.querySelectorAll("[data-work-local]").forEach((button) => {
+        const video = button.querySelector("video");
+        if (video) video.pause();
+        button.classList.remove("is-playing");
+      });
+      container.querySelectorAll(".reel-tile__frame").forEach((playing) => {
+        const host = playing.closest("figure");
+        if (!host) return;
+        const id = host.getAttribute("data-work-id") || "";
+        const name = host.getAttribute("data-work-name") || "";
+        playing.replaceWith(document.createRange().createContextualFragment(workFace({ videoId: id, name })).firstChild);
+      });
     });
   };
 

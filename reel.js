@@ -18,6 +18,7 @@
   let pack5 = stay.parseNet(params.get("p5"));
   let pack10 = stay.parseNet(params.get("p10"));
   let copyRaw = params.get("c") || "";
+  let posterAt = 0;
   if (!videoId && pathStay) {
     try {
       const response = await fetch(`/api/reel-config?slug=${encodeURIComponent(pathStay)}`, { cache: "no-store" });
@@ -30,6 +31,7 @@
         if (stay.parseNet(data.pack5) != null) pack5 = stay.parseNet(data.pack5);
         if (stay.parseNet(data.pack10) != null) pack10 = stay.parseNet(data.pack10);
         if (data.copy) copyRaw = data.copy;
+        if (Number(data.posterAt) > 0) posterAt = Math.round(Number(data.posterAt) * 10) / 10;
       }
     } catch {
       /* an older link still carries the video in the query */
@@ -75,7 +77,40 @@
   });
 
   const soundBtn = document.getElementById("sound-btn");
+  const frame = document.getElementById("frame");
+  const frameHit = document.getElementById("frame-hit");
+  const poster = document.getElementById("frame-poster");
+  if (poster) poster.src = `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
   let ytPlayer = null;
+  let wantPlay = false;
+  let soundOn = true;
+  let armPoster = posterAt > 0;
+  let pinPoster = 0;
+
+  const applyHeroSound = (player) => {
+    const target = player || ytPlayer;
+    if (!target || typeof target.unMute !== "function") return;
+    if (soundOn) {
+      target.unMute();
+      target.setVolume(100);
+    } else {
+      target.mute();
+    }
+  };
+
+  const setHeroPlaying = (playing) => {
+    frame?.classList.toggle("is-playing", playing);
+    if (playing) frame?.classList.add("is-started");
+    frameHit?.setAttribute("aria-label", playing ? "Σταμάτα το Reel" : "Παίξε το Reel");
+  };
+
+  const pauseHero = () => {
+    wantPlay = false;
+    setHeroPlaying(false);
+    if (ytPlayer && typeof ytPlayer.pauseVideo === "function") ytPlayer.pauseVideo();
+  };
+
+  document.addEventListener("myreels-work-play", pauseHero);
 
   let started = false;
   const mountPlayer = () => {
@@ -84,8 +119,8 @@
     ytPlayer = new YT.Player("player", {
       videoId,
       playerVars: {
-        autoplay: 1,
-        mute: 1,
+        autoplay: 0,
+        mute: 0,
         loop: 1,
         playlist: videoId,
         controls: 0,
@@ -99,8 +134,36 @@
       },
       events: {
         onReady: (event) => {
+          if (wantPlay) {
+            applyHeroSound(event.target);
+            event.target.playVideo();
+            return;
+          }
+          if (!armPoster) return;
           event.target.mute();
+          event.target.seekTo(posterAt, true);
           event.target.playVideo();
+          window.clearInterval(pinPoster);
+          pinPoster = window.setInterval(() => {
+            if (!armPoster || wantPlay || !ytPlayer || typeof ytPlayer.getCurrentTime !== "function") return;
+            const time = ytPlayer.getCurrentTime();
+            if (time > posterAt + 0.08 || time + 0.05 < posterAt) ytPlayer.seekTo(posterAt, true);
+          }, 80);
+        },
+        onStateChange: (event) => {
+          const state = event.data;
+          if (armPoster && !wantPlay) {
+            if (state === window.YT.PlayerState.PLAYING) frame?.classList.add("is-cued");
+            return;
+          }
+          const playing = state === window.YT.PlayerState.PLAYING;
+          if (playing) {
+            document.dispatchEvent(new CustomEvent("myreels-hero-play"));
+            setHeroPlaying(true);
+            return;
+          }
+          if (wantPlay) return;
+          if (state === window.YT.PlayerState.PAUSED || state === window.YT.PlayerState.ENDED) setHeroPlaying(false);
         },
       },
     });
@@ -124,20 +187,32 @@
   const SOUND_OFF =
     "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H4v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.9 8.9 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z";
 
-  let soundOn = false;
-  soundBtn?.addEventListener("click", () => {
+  soundBtn?.addEventListener("click", (event) => {
+    event.stopPropagation();
     if (!ytPlayer || typeof ytPlayer.unMute !== "function") return;
     soundOn = !soundOn;
-    if (soundOn) {
-      ytPlayer.unMute();
-      ytPlayer.setVolume(100);
-      ytPlayer.playVideo();
-    } else {
-      ytPlayer.mute();
-    }
-    soundBtn.classList.add("sound--mini");
+    applyHeroSound();
+    if (soundOn) ytPlayer.playVideo();
     soundBtn.querySelector("#sound-path")?.setAttribute("d", soundOn ? SOUND_ON : SOUND_OFF);
     soundBtn.setAttribute("aria-label", soundOn ? "Κλείσε τον ήχο" : "Άνοιξε τον ήχο");
+  });
+
+  frameHit?.addEventListener("click", () => {
+    const playing = frame?.classList.contains("is-playing");
+    if (playing) {
+      pauseHero();
+      return;
+    }
+    wantPlay = true;
+    armPoster = false;
+    window.clearInterval(pinPoster);
+    setHeroPlaying(true);
+    document.dispatchEvent(new CustomEvent("myreels-hero-play"));
+    if (!ytPlayer || typeof ytPlayer.playVideo !== "function") return;
+    armPoster = false;
+    ytPlayer.seekTo(0, true);
+    applyHeroSound();
+    ytPlayer.playVideo();
   });
 
   const propertyInput = document.getElementById("buyer-property");

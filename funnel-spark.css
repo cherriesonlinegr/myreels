@@ -336,8 +336,12 @@
 }
 
 .reel-tile__face--local {
-  cursor: default;
+  cursor: pointer;
   background: #1d1d1f;
+}
+
+.reel-tile__face--local.is-playing .reel-tile__badge {
+  display: none;
 }
 
 .reel-tile__face--local video {

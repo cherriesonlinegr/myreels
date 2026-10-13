@@ -1820,7 +1820,8 @@ MyReels`,
       const stay = window.MyReelsStay;
       const stays = withStaySlugs(loadStays());
       saveStays(stays);
-      const deals = stays.filter((item) => item.videoId).map((item) => ({
+      const deals = stays.filter((item) => item.videoId).map((item) => {
+        const deal = {
           videoId: item.videoId,
           property: item.name,
           net: stay?.parseNet(item.net) ?? stay?.NET,
@@ -1831,7 +1832,10 @@ MyReels`,
           landingUrl: stayLandingUrl(item),
           driveUrl: item.driveUrl || stay?.driveFileUrl(item.driveId),
           createdAt: new Date(item.createdAt).toISOString(),
-        }));
+        };
+        if (item.posterAt != null) deal.posterAt = item.posterAt;
+        return deal;
+      });
       const seeded = await stayBoardRequest({ action: "seed", deals });
       applyStayBoard(seeded);
     } catch (err) {
@@ -2338,9 +2342,137 @@ MyReels`,
       }
     };
 
+    let posterPlayer = null;
+    let posterVideoId = "";
+    let posterReady = false;
+    let posterTimer = 0;
+
+    const posterClock = (seconds) => {
+      const total = Math.max(0, Math.round(Number(seconds) || 0));
+      const minutes = Math.floor(total / 60);
+      const rest = total % 60;
+      return `${minutes}:${String(rest).padStart(2, "0")}`;
+    };
+
+    const readStayPoster = () => {
+      const n = Number(document.getElementById("stay-poster-range")?.value);
+      if (!Number.isFinite(n) || n <= 0) return 0;
+      return Math.round(Math.min(n, 3600) * 10) / 10;
+    };
+
+    const paintPosterClock = (seconds) => {
+      const clock = document.getElementById("stay-poster-clock");
+      if (clock) clock.textContent = posterClock(seconds);
+    };
+
+    let holdPosterFrame = false;
+
+    const showPosterFrame = (player, seconds) => {
+      if (!player || typeof player.seekTo !== "function") return;
+      holdPosterFrame = true;
+      player.mute();
+      player.seekTo(Math.max(0, Number(seconds) || 0), true);
+      player.playVideo();
+    };
+
+    const mountStayPoster = (videoId, at) => {
+      const box = document.getElementById("stay-poster");
+      const range = document.getElementById("stay-poster-range");
+      if (!box || !range) return;
+      if (!videoId) {
+        box.hidden = true;
+        return;
+      }
+      const startAt = Number(at) > 0 ? Math.round(Number(at) * 10) / 10 : 0;
+      box.hidden = false;
+      range.value = String(startAt);
+      paintPosterClock(startAt);
+      if (posterVideoId === videoId && posterPlayer && posterReady) {
+        showPosterFrame(posterPlayer, startAt);
+        return;
+      }
+      posterVideoId = videoId;
+      posterReady = false;
+      const frame = box.querySelector(".stay-poster__frame");
+      if (frame) frame.innerHTML = '<div id="stay-poster-player"></div>';
+      const start = () => {
+        if (!window.YT || !window.YT.Player) return;
+        if (posterPlayer && typeof posterPlayer.destroy === "function") {
+          try { posterPlayer.destroy(); } catch { /* a fresh host is already in place */ }
+        }
+        posterPlayer = new window.YT.Player("stay-poster-player", {
+          videoId,
+          width: "180",
+          height: "320",
+          playerVars: {
+            autoplay: 0,
+            mute: 1,
+            controls: 1,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: (event) => {
+              if (posterVideoId !== videoId) return;
+              posterReady = true;
+              const duration = Number(event.target.getDuration()) || 30;
+              range.max = String(Math.max(duration, startAt, 1));
+              range.value = String(Math.min(startAt, duration));
+              paintPosterClock(range.value);
+              if (startAt > 0) showPosterFrame(event.target, startAt);
+            },
+            onStateChange: (event) => {
+              if (posterVideoId !== videoId) return;
+              const playing = event.data === window.YT.PlayerState.PLAYING;
+              const paused = event.data === window.YT.PlayerState.PAUSED;
+              if (holdPosterFrame && playing) {
+                holdPosterFrame = false;
+                event.target.pauseVideo();
+                return;
+              }
+              if (!playing && !paused) return;
+              const now = Math.round(event.target.getCurrentTime() * 10) / 10;
+              range.value = String(now);
+              paintPosterClock(now);
+            },
+          },
+        });
+      };
+      if (window.YT && window.YT.Player) start();
+      else {
+        const previous = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+          if (typeof previous === "function") previous();
+          start();
+        };
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+          const api = document.createElement("script");
+          api.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(api);
+        }
+      }
+    };
+
+    const scrubPoster = () => {
+      const seconds = readStayPoster();
+      paintPosterClock(seconds);
+      window.clearTimeout(posterTimer);
+      posterTimer = window.setTimeout(() => showPosterFrame(posterPlayer, seconds), 180);
+    };
+
+    document.getElementById("stay-poster-range")?.addEventListener("input", scrubPoster);
+
+    const openPoster = (at) => mountStayPoster(stay.parseYouTubeId(youtubeInput.value), at);
+
     youtubeInput.addEventListener("change", lookupTitle);
+    youtubeInput.addEventListener("change", () => openPoster(readStayPoster()));
     youtubeInput.addEventListener("paste", () => {
-      setTimeout(lookupTitle, 0);
+      setTimeout(() => {
+        lookupTitle();
+        openPoster(readStayPoster());
+      }, 0);
     });
 
     form.addEventListener("submit", async (event) => {
@@ -2423,6 +2555,7 @@ MyReels`,
         pack5,
         pack10,
         youtubeUrl: youtubeInput.value.trim(),
+        posterAt: readStayPoster(),
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
@@ -2445,6 +2578,7 @@ MyReels`,
           copy: encodedCopy,
           landingUrl: url,
           driveUrl: item.driveUrl,
+          posterAt: item.posterAt || 0,
           createdAt: new Date(item.createdAt).toISOString(),
         },
       })
@@ -2485,6 +2619,8 @@ MyReels`,
         pack5Input?.dispatchEvent(new Event("input"));
         pack10Input?.dispatchEvent(new Event("input"));
         fillStayCopyForm(item.copy || null);
+        const savedPoster = Number(item.posterAt) || (stayBoard.deals || []).find((deal) => deal.videoId === item.videoId)?.posterAt || 0;
+        openPoster(savedPoster);
         showCopyPage("landing");
         setCopyStatus("Φορτώθηκε αυτή η landing. Άλλαξε το κείμενο και πάτα Δημιουργία.");
         const copyCard = document.getElementById("stay-copy-card");

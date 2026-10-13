@@ -134,7 +134,8 @@ h1 {
 }
 
 .frame #player,
-.frame iframe {
+.frame iframe,
+.frame__poster {
   width: 100%;
   height: 100%;
   border: 0;
@@ -145,9 +146,44 @@ h1 {
   transform-origin: center center;
 }
 
+.frame__poster {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  object-fit: cover;
+}
+
+.frame.is-started .frame__poster,
+.frame.is-cued .frame__poster {
+  display: none;
+}
+
+.frame__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.frame__badge {
+  z-index: 3;
+  pointer-events: none;
+}
+
+.frame.is-playing .frame__badge {
+  display: none;
+}
+
+.frame:not(.is-playing) .sound {
+  display: none;
+}
+
 .sound {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   left: 50%;
   bottom: 18px;
   transform: translateX(-50%);

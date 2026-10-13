@@ -117,7 +117,7 @@ window.MyReelsStay = (() => {
 
   const COPY = {
     label: "Για το {name}",
-    headline: "Το Reel του {name} είναι ήδη έτοιμο.",
+    headline: "Το Reel του «{name}» είναι ήδη έτοιμο.",
     sub: "Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online. Δεν χρειάστηκε γύρισμα. Δεν χρειάστηκε να κάνεις τίποτα.",
     pitchTitle: "Και το καλύτερο; Δεν χρειάστηκε να το τραβήξουμε.",
     pitch:
@@ -294,7 +294,7 @@ window.MyReelsStay = (() => {
     let text = String(template ?? "");
     const name = vars?.name || "";
     if (!name) {
-      text = text.replaceAll(" για το «{name}»", "").replaceAll(" για το {name}", "");
+      text = text.replaceAll(" για το «{name}»", "").replaceAll(" για το {name}", "").replaceAll(" του «{name}»", "");
     }
     return text
       .replaceAll("{name}", name)
@@ -499,7 +499,7 @@ window.MyReelsStay = (() => {
 
   const buildLandingUrl = (origin, slug) => {
     const path = stayPathName(slug);
-    return `${String(origin || "").replace(/\/$/, "")}/myairbnbreels/${path}`;
+    return `${String(origin || "").replace(/\/$/, "")}/luxurystayreels/${path}`;
   };
 
   const buildDraftLandingUrl = (origin, name, videoId, net, copy, packs) => {

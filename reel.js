@@ -5,7 +5,7 @@
   const params = new URLSearchParams(window.location.search);
   const pathStay = (() => {
     try {
-      const match = decodeURIComponent(window.location.pathname).match(/^\/myairbnbreels\/(.+?)\/?$/);
+      const match = decodeURIComponent(window.location.pathname).match(/^\/(?:luxurystayreels|myairbnbreels)\/(.+?)\/?$/);
       return match ? match[1] : "";
     } catch {
       return "";
@@ -66,7 +66,7 @@
   const ctaLabel = textOf("cta") || stay.fillTokens(stay.COPY.cta, tokens);
   const buyBtn = document.getElementById("buy-btn");
   if (buyBtn) buyBtn.textContent = ctaLabel;
-  document.title = `${textOf("headline") || name} · myairbnbreels`;
+  document.title = `${textOf("headline") || name} · LuxuryStayReels`;
   document.querySelectorAll("[data-stay-gross]").forEach((node) => {
     node.textContent = grossLabel;
   });

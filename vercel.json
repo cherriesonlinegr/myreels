@@ -19,6 +19,7 @@
   "rewrites": [
     { "source": "/admin", "destination": "/admin/index.html" },
     { "source": "/reel", "destination": "/api/reel-page" },
+    { "source": "/luxurystayreels/:name", "destination": "/api/reel-page?name=:name" },
     { "source": "/myairbnbreels/:name", "destination": "/api/reel-page?name=:name" }
   ]
 }

@@ -29,7 +29,7 @@ function euroLabel(value) {
 
 export function reelPreviewHtml(html, { name, videoId, net, pageUrl, image }) {
   const title = name
-    ? `Το Reel του ${name} είναι ήδη έτοιμο`
+    ? `Το Reel του «${name}» είναι ήδη έτοιμο`
     : "Το Reel του καταλύματός σου είναι ήδη έτοιμο";
   const description = `Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online. ${euroLabel(net)} χωρίς ΦΠΑ.`;
   const tags = `
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
   });
   const query = params.toString();
   const pageUrl = pathName
-    ? `${proto}://${host}/myairbnbreels/${encodeURIComponent(pathName)}${query ? `?${query}` : ""}`
+    ? `${proto}://${host}/luxurystayreels/${encodeURIComponent(pathName)}${query ? `?${query}` : ""}`
     : `${proto}://${host}/reel${query ? `?${query}` : ""}`;
   const image = videoId
     ? `${proto}://${host}/api/reel-thumb?v=${videoId}`

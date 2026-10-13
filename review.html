@@ -24,6 +24,7 @@
       <p class="lead" id="status">Ανοίγει η φόρμα…</p>
     </section>
   </main>
+  <script src="/cookies.js"></script>
   <script>
     const token = new URLSearchParams(location.search).get("t") || "";
     const card = document.getElementById("card");
@@ -76,6 +77,7 @@
             <span>Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.</span>
           </label>
           <button type="submit">Υποβολή αξιολόγησης</button>
+          <p class="lead"><a href="/privacy.html" target="_blank" rel="noopener">Πολιτική Απορρήτου</a></p>
           <p class="form-error" id="form-error" hidden></p>
         </form>
       `;

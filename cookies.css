@@ -1,0 +1,38 @@
+.cookie-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  width: min(460px, calc(100% - 32px));
+  padding: 12px 12px 12px 16px;
+  border-radius: 18px;
+  background: #fff;
+  color: #1d1d1f;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+  font: 14px/1.4 Outfit, "Segoe UI", sans-serif;
+}
+
+.cookie-bar[hidden] { display: none; }
+
+.cookie-bar p { margin: 0; }
+
+.cookie-bar a { color: inherit; }
+
+.cookie-bar__yes {
+  flex: none;
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #ff5a5f;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.cookie-bar__yes:hover { background: #e84c51; }

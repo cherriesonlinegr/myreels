@@ -120,6 +120,7 @@
     if (started || !window.YT || !window.YT.Player) return;
     started = true;
     ytPlayer = new YT.Player("player", {
+      host: "https://www.youtube-nocookie.com",
       videoId,
       playerVars: {
         autoplay: 0,
@@ -172,18 +173,27 @@
     });
   };
 
-  const previousReady = window.onYouTubeIframeAPIReady;
-  window.onYouTubeIframeAPIReady = () => {
-    if (typeof previousReady === "function") previousReady();
-    mountPlayer();
-  };
+  const youtubeAllowed = () => !window.MyReelsCookies || window.MyReelsCookies.choice() === "all";
 
-  if (window.YT && window.YT.Player) mountPlayer();
-  else {
+  const loadYoutubeApi = () => {
+    if (!youtubeAllowed()) return;
+    if (window.YT && window.YT.Player) {
+      mountPlayer();
+      return;
+    }
+    if (document.querySelector('script[src*="iframe_api"]')) return;
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof previousReady === "function") previousReady();
+      mountPlayer();
+    };
     const api = document.createElement("script");
     api.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(api);
-  }
+  };
+
+  document.addEventListener("myreels-cookies", loadYoutubeApi);
+  loadYoutubeApi();
 
   const SOUND_ON =
     "M4 9v6h4l5 4V5L8 9H4zm11.5 3a3.5 3.5 0 0 0-2-3.15v6.3a3.5 3.5 0 0 0 2-3.15zM14 4.23v2.06a6 6 0 0 1 0 11.42v2.06a8 8 0 0 0 0-15.54z";
@@ -204,6 +214,10 @@
     const playing = frame?.classList.contains("is-playing");
     if (playing) {
       pauseHero();
+      return;
+    }
+    if (!youtubeAllowed()) {
+      window.MyReelsCookies?.ask();
       return;
     }
     wantPlay = true;
@@ -238,8 +252,16 @@
     const property = propertyInput?.value.trim() || "";
     const email = document.getElementById("buyer-email").value.trim();
     const phone = document.getElementById("buyer-phone").value.trim();
+    const accepted = document.getElementById("buyer-privacy")?.checked === true;
     const trap = form.querySelector(".hp")?.value.trim();
     if (trap) return;
+    if (!accepted) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = "Τσέκαρε ότι αποδέχεσαι την Πολιτική Απορρήτου.";
+      }
+      return;
+    }
     if (!buyer || !property || !email || phone.replace(/\D/g, "").length < 10) {
       if (errorEl) {
         errorEl.hidden = false;
@@ -269,6 +291,7 @@
           buyerName: buyer,
           email,
           phone,
+          acceptPrivacy: true,
         }),
       });
       const payload = await response.json().catch(() => ({}));

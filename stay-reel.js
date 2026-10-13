@@ -440,6 +440,10 @@ window.MyReelsStay = (() => {
       }
       const button = event.target.closest("[data-work-video]");
       if (!button || !container.contains(button)) return;
+      if (window.MyReelsCookies && window.MyReelsCookies.choice() !== "all") {
+        window.MyReelsCookies.ask();
+        return;
+      }
       const figure = button.closest("figure");
       const videoId = button.getAttribute("data-work-video");
       if (!figure || !videoId) return;

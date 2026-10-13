@@ -344,6 +344,46 @@ h1 {
   cursor: default;
 }
 
+.order .policy__accept {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.order .policy__accept label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  font-size: 15px;
+}
+
+.order .policy__accept a {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.order .policy__accept span {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.order .policy__accept input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  padding: 0;
+  accent-color: var(--coral);
+  background: #fff;
+  box-shadow: none;
+}
+
 .buy {
   height: 50px;
   margin-top: 4px;

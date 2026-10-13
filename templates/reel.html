@@ -112,6 +112,12 @@
           <span>Τηλέφωνο</span>
           <input type="tel" id="buyer-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="69xxxxxxxx" />
         </label>
+            <p class="policy__accept">
+              <label>
+                <input type="checkbox" id="buyer-privacy" name="privacy" />
+                <span>Αποδέχομαι την <a href="/privacy.html" target="_blank" rel="noopener">Πολιτική Απορρήτου</a>.</span>
+              </label>
+            </p>
         <button type="submit" class="buy" id="buy-btn">Θέλω το Reel — 40€</button>
         <p class="pay-note">Η πληρωμή γίνεται με κάρτα, στο επόμενο βήμα.</p>
         <p class="form-error" id="form-error" hidden></p>
@@ -137,9 +143,10 @@
   </main>
 
   <footer class="site-foot">
-    <p>&copy; 2026 LuxuryStayReels | Powered by <a href="https://www.myreels.gr">myreels.gr</a> και επικοινωνία στο <a href="mailto:contact@myreels.gr">contact@myreels.gr</a> <a href="viber://chat?number=%2B306947447407">viber</a>/<a href="https://wa.me/306947447407">whatsapp</a> <a href="tel:+306947447407">+306947447407</a></p>
+    <p>&copy; 2026 LuxuryStayReels | Powered by <a href="https://www.myreels.gr">myreels.gr</a> · <a href="/privacy.html">Πολιτική Απορρήτου</a> · επικοινωνία στο <a href="mailto:contact@myreels.gr">contact@myreels.gr</a> <a href="viber://chat?number=%2B306947447407">viber</a>/<a href="https://wa.me/306947447407">whatsapp</a> <a href="tel:+306947447407">+306947447407</a></p>
   </footer>
 
+  <script src="/cookies.js"></script>
   <script src="/stay-reel.js"></script>
   <script src="/reel.js"></script>
 </body>

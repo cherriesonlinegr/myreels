@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v38";
+const CACHE_VERSION = "myreels-admin-cache-v39";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
@@ -54,6 +54,10 @@ self.addEventListener("fetch", (event) => {
   // Public reel pages stay fresh. Never cache the worker itself, or updates get stuck.
   if (
     url.pathname === "/sw.js" ||
+    url.pathname === "/cookies.js" ||
+    url.pathname === "/cookies.css" ||
+    url.pathname === "/privacy.html" ||
+    url.pathname === "/privacy.css" ||
     url.pathname === "/stay-reel.js" ||
     url.pathname === "/reel" ||
     url.pathname.startsWith("/luxurystayreels/") ||

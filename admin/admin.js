@@ -2259,7 +2259,8 @@ MyReels`,
     const status = document.getElementById("google-link-status");
     const error = document.getElementById("google-link-error");
     const setup = document.getElementById("google-link-setup");
-    const connect = document.getElementById("google-link-connect");
+    const youtubeBtn = document.getElementById("google-link-youtube");
+    const driveBtn = document.getElementById("google-link-drive");
     const disconnect = document.getElementById("google-link-disconnect");
     const info = data || {};
     if (googleFlash && googleFlash !== "connected") info.error = googleFlash;
@@ -2269,10 +2270,11 @@ MyReels`,
       error.textContent = info.error || "";
     }
     if (setup) setup.hidden = info.configured !== false;
-    if (connect) connect.hidden = !info.configured || Boolean(info.connected);
-    if (disconnect) disconnect.hidden = !info.connected;
+    if (youtubeBtn) youtubeBtn.hidden = !info.configured || Boolean(info.youtube);
+    if (driveBtn) driveBtn.hidden = !info.configured || Boolean(info.drive);
+    if (disconnect) disconnect.hidden = !info.youtube && !info.drive;
     if (!status) return;
-    if (info.connected) {
+    if (info.youtube || info.drive) {
       const who = escapeHtml(info.email || info.account || "myreels.gr@gmail.com");
       const channel = info.channelId
         ? ` Κανάλι: <a href="https://www.youtube.com/channel/${encodeURIComponent(info.channelId)}" target="_blank" rel="noopener">${escapeHtml(info.channelTitle || "YouTube")}</a>.`
@@ -2280,7 +2282,11 @@ MyReels`,
       const folder = info.folderUrl
         ? ` Φάκελος: <a href="${escapeHtml(info.folderUrl)}" target="_blank" rel="noopener">MyReels στο Drive</a>.`
         : "";
-      status.innerHTML = `Συνδεδεμένο ως ${who}.${channel}${folder}`;
+      const missing = [
+        info.youtube ? "" : " Λείπει η σύνδεση YouTube.",
+        info.drive ? "" : " Λείπει η σύνδεση Drive.",
+      ].join("");
+      status.innerHTML = `Συνδεδεμένο ως ${who}.${channel}${folder}${missing}`;
       return;
     }
     if (info.configured === false) {
@@ -2290,7 +2296,7 @@ MyReels`,
         : "Η σύνδεση δεν έχει ρυθμιστεί ακόμα.";
       return;
     }
-    status.textContent = "Έτοιμο για σύνδεση με τον λογαριασμό myreels.gr@gmail.com.";
+    status.textContent = "Πρώτα Σύνδεση YouTube, μετά Σύνδεση Drive, και τις δύο με το myreels.gr@gmail.com. Το Google δεν τα δέχεται στην ίδια άδεια.";
   }
 
   async function loadGoogleLink() {
@@ -3003,22 +3009,28 @@ MyReels`,
       }
     });
 
-  document.getElementById("google-link-connect")?.addEventListener("click", async () => {
-    const button = document.getElementById("google-link-connect");
+  async function startGoogleLink(service, button) {
     if (button) button.disabled = true;
     try {
       const response = await fetch("/api/google-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...sessionCreds(), action: "start" }),
+        body: JSON.stringify({ ...sessionCreds(), action: "start", service }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.url) throw new Error(data.error || "Η σύνδεση δεν ξεκίνησε.");
       location.href = data.url;
     } catch (err) {
-      paintGoogleLink({ configured: true, connected: false, error: err?.message || "Η σύνδεση δεν ξεκίνησε." });
+      paintGoogleLink({ configured: true, youtube: false, drive: false, error: err?.message || "Η σύνδεση δεν ξεκίνησε." });
       if (button) button.disabled = false;
     }
+  }
+
+  document.getElementById("google-link-youtube")?.addEventListener("click", () => {
+    startGoogleLink("youtube", document.getElementById("google-link-youtube"));
+  });
+  document.getElementById("google-link-drive")?.addEventListener("click", () => {
+    startGoogleLink("drive", document.getElementById("google-link-drive"));
   });
 
   document.getElementById("google-link-disconnect")?.addEventListener("click", async () => {
@@ -3048,7 +3060,8 @@ MyReels`,
   setupOnboardingTab();
   setupStayTab();
   const googleParams = new URLSearchParams(location.search);
-  if (googleParams.get("google") === "connected") googleFlash = "connected";
+  const googleBack = googleParams.get("google");
+  if (googleBack === "connected" || googleBack === "youtube" || googleBack === "drive") googleFlash = "connected";
   if (googleParams.get("google") === "error") {
     googleFlash = googleParams.get("reason") || "Η σύνδεση δεν ολοκληρώθηκε.";
   }

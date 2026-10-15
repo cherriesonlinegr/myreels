@@ -170,11 +170,12 @@
               <li>Στην οθόνη συγκατάθεσης διάλεξε External και βάλε το myreels.gr@gmail.com ως test user.</li>
               <li>Φτιάξε OAuth client τύπου Web application. Στα Authorized redirect URIs βάλε και τα τρία:<br /><code>https://myreels.gr/api/google-oauth</code><br /><code>https://www.myreels.gr/api/google-oauth</code><br /><code>http://localhost:3000/api/google-oauth</code></li>
               <li>Βάλε το Client ID και το Client secret στο Vercel, ως <code>GOOGLE_CLIENT_ID</code> και <code>GOOGLE_CLIENT_SECRET</code>, και κάνε νέο deploy.</li>
-              <li>Γύρνα εδώ και πάτα Σύνδεση. Διάλεξε τον λογαριασμό myreels.gr@gmail.com.</li>
+              <li>Γύρνα εδώ και πάτα πρώτα Σύνδεση YouTube και μετά Σύνδεση Drive. Και τις δύο φορές διάλεξε το myreels.gr@gmail.com.</li>
             </ol>
           </div>
           <div class="google-link__actions">
-            <button type="button" class="btn" id="google-link-connect" hidden>Σύνδεση myreels.gr@gmail.com</button>
+            <button type="button" class="btn" id="google-link-youtube" hidden>Σύνδεση YouTube</button>
+            <button type="button" class="btn" id="google-link-drive" hidden>Σύνδεση Drive</button>
             <button type="button" class="btn btn--ghost" id="google-link-disconnect" hidden>Αποσύνδεση</button>
           </div>
         </article>
@@ -665,6 +666,6 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=40"></script>
+  <script src="/admin/admin.js?v=41"></script>
 </body>
 </html>

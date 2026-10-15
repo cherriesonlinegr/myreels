@@ -112,6 +112,23 @@
           <span>Τηλέφωνο</span>
           <input type="tel" id="buyer-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="69xxxxxxxx" />
         </label>
+        <fieldset class="bill">
+          <label>
+            <input type="radio" name="bill" value="receipt" checked />
+            <span>Απόδειξη</span>
+          </label>
+          <label>
+            <input type="radio" name="bill" value="invoice" />
+            <span>Τιμολόγιο</span>
+          </label>
+        </fieldset>
+        <div id="bill-afm" hidden>
+          <label>
+            <span>ΑΦΜ</span>
+            <input type="text" id="buyer-afm" name="afm" inputmode="numeric" maxlength="9" autocomplete="off" />
+          </label>
+          <p class="bill__company" id="bill-company" hidden></p>
+        </div>
             <p class="policy__accept">
               <label>
                 <input type="checkbox" id="buyer-privacy" name="privacy" />

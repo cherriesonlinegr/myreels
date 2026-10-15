@@ -35,6 +35,11 @@ export default async function handler(req, res) {
     } catch {
       body = {};
     }
+    if (body.action === "afm") {
+      const { lookupAfm } = await import("../lib/afm.mjs");
+      const company = await lookupAfm(body.afm);
+      return res.status(200).json({ ok: true, ...company });
+    }
     if (body.action === "checkout") {
       const result = await viva.startCheckout(body);
       return res.status(200).json({ ok: true, url: result.url });

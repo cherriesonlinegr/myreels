@@ -344,6 +344,45 @@ h1 {
   cursor: default;
 }
 
+.order .bill {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.order .bill label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.order .bill input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--coral);
+  background: #fff;
+  box-shadow: none;
+}
+
+.order .bill span {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.bill__company {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
 .order .policy__accept {
   display: flex;
   flex-wrap: wrap;

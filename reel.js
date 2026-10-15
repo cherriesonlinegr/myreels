@@ -243,6 +243,76 @@
 
   const form = document.getElementById("order");
   const errorEl = document.getElementById("form-error");
+  const afmWrap = document.getElementById("bill-afm");
+  const afmInput = document.getElementById("buyer-afm");
+  const companyEl = document.getElementById("bill-company");
+  let billing = { document: "receipt", afm: "", name: "", title: "", address: "", error: "" };
+  let lookupToken = 0;
+
+  const paintCompany = () => {
+    if (!companyEl) return;
+    if (!billing.name) {
+      companyEl.hidden = !billing.error;
+      companyEl.textContent = billing.error || "";
+      return;
+    }
+    companyEl.hidden = false;
+    companyEl.textContent = [billing.name, billing.title, billing.address].filter(Boolean).join("\n");
+  };
+
+  const lookupAfm = async () => {
+    const afm = afmInput?.value.replace(/\D/g, "") || "";
+    billing = { document: "invoice", afm: "", name: "", title: "", address: "", error: "" };
+    if (afm.length !== 9) {
+      paintCompany();
+      return;
+    }
+    const token = ++lookupToken;
+    if (companyEl) {
+      companyEl.hidden = false;
+      companyEl.textContent = "Ψάχνω τα στοιχεία…";
+    }
+    try {
+      const response = await fetch("/api/viva", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "afm", afm }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (token !== lookupToken) return;
+      if (!response.ok || !payload.name) throw new Error(payload.error || "Δεν βρέθηκαν στοιχεία για αυτό το ΑΦΜ.");
+      billing = {
+        document: "invoice",
+        afm: payload.afm || afm,
+        name: payload.name,
+        title: payload.title || "",
+        address: payload.address || "",
+        error: "",
+      };
+    } catch (err) {
+      if (token !== lookupToken) return;
+      billing.error = err?.message || "Η αναζήτηση ΑΦΜ δεν απάντησε. Δοκίμασε ξανά.";
+    }
+    paintCompany();
+  };
+
+  form.querySelectorAll('input[name="bill"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const invoice = form.querySelector('input[name="bill"]:checked')?.value === "invoice";
+      if (afmWrap) afmWrap.hidden = !invoice;
+      if (!invoice) {
+        lookupToken += 1;
+        billing = { document: "receipt", afm: "", name: "", title: "", address: "", error: "" };
+        paintCompany();
+        return;
+      }
+      lookupAfm();
+    });
+  });
+  afmInput?.addEventListener("input", () => {
+    afmInput.value = afmInput.value.replace(/\D/g, "").slice(0, 9);
+    lookupAfm();
+  });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -259,6 +329,15 @@
       if (errorEl) {
         errorEl.hidden = false;
         errorEl.textContent = "Τσέκαρε ότι αποδέχεσαι την Πολιτική Απορρήτου.";
+      }
+      return;
+    }
+    const invoice = form.querySelector('input[name="bill"]:checked')?.value === "invoice";
+    const afm = afmInput?.value.replace(/\D/g, "") || "";
+    if (invoice && (billing.afm !== afm || !billing.name)) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = billing.error || "Βάλε ένα σωστό ΑΦΜ για να βρεθούν τα στοιχεία του τιμολογίου.";
       }
       return;
     }
@@ -292,6 +371,8 @@
           email,
           phone,
           acceptPrivacy: true,
+          document: invoice ? "invoice" : "receipt",
+          afm: invoice ? afm : "",
         }),
       });
       const payload = await response.json().catch(() => ({}));

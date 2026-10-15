@@ -15,6 +15,24 @@ async function rawBody(req) {
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  const part = String(req.query?.part || "");
+  if (part === "checkout" || part === "orders" || part === "stripe") {
+    const routes = await import("../lib/stripe-routes.mjs");
+    if (part === "stripe") {
+      const payload = await rawBody(req);
+      return routes.handleStripeWebhook(req, res, payload);
+    }
+    if (req.method !== "GET" && req.method !== "OPTIONS") {
+      const raw = await rawBody(req);
+      try {
+        req.body = raw ? JSON.parse(raw) : {};
+      } catch {
+        req.body = {};
+      }
+    }
+    if (part === "orders") return routes.handleOrders(req, res);
+    return routes.handleCheckout(req, res);
+  }
   try {
     const viva = await import("../lib/viva.mjs");
     if (req.method === "GET") {

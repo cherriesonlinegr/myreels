@@ -21,6 +21,13 @@ function isYouTubeUrl(value) {
 }
 
 export default async function handler(req, res) {
+  const part = String(req.query?.part || "");
+  if (part === "link" || part === "oauth") {
+    const google = await import("../lib/google-link.mjs");
+    if (part === "oauth") return google.handleGoogleOAuth(req, res);
+    return google.handleGoogleLink(req, res);
+  }
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   if (req.method === "OPTIONS") return res.status(204).end();

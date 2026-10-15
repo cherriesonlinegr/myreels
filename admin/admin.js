@@ -2820,11 +2820,17 @@ MyReels`,
     const reelBar = document.getElementById("reel-upload-bar");
     const reelDone = document.getElementById("reel-upload-done");
     const phaseLabel = {
-      load: "Ετοιμάζεται ο επεξεργαστής…",
+      load: "Κατεβαίνει ο επεξεργαστής…",
       encode: "Μπαίνει το σήμα και ο ήχος…",
       drive: "Ανεβαίνει το καθαρό στο Drive…",
       youtube: "Ανεβαίνει το αντίγραφο στο YouTube…",
     };
+    const stayNameFromFile = (file) => stay.cleanName(String(file?.name || "").replace(/\.[^.]+$/, "")).slice(0, 80);
+    document.getElementById("reel-file")?.addEventListener("change", () => {
+      const picked = document.getElementById("reel-file")?.files?.[0];
+      const nameInput = document.getElementById("reel-name");
+      if (nameInput) nameInput.value = picked ? stayNameFromFile(picked) : "";
+    });
     reelGo?.addEventListener("click", async () => {
       if (!window.MyReelsUpload) {
         if (reelError) {
@@ -2834,7 +2840,9 @@ MyReels`,
         return;
       }
       const file = document.getElementById("reel-file")?.files?.[0];
-      const name = document.getElementById("reel-name")?.value || "";
+      const name = stayNameFromFile(file);
+      const nameInput = document.getElementById("reel-name");
+      if (nameInput) nameInput.value = name;
       if (reelError) reelError.hidden = true;
       if (reelDone) reelDone.hidden = true;
       if (!file) {
@@ -2847,7 +2855,7 @@ MyReels`,
       if (stay.cleanName(name).length < 2) {
         if (reelError) {
           reelError.hidden = false;
-          reelError.textContent = "Γράψε το όνομα του καταλύματος.";
+          reelError.textContent = "Το αρχείο χρειάζεται όνομα, π.χ. Ηλιοπετρόσπιτο.mp4.";
         }
         return;
       }
@@ -2866,12 +2874,14 @@ MyReels`,
         const uploaded = await window.MyReelsUpload.run({
           file,
           audioUrl: `/admin/brand/${audio}-demo.mp3`,
-          markUrl: "/admin/brand/watermark.png",
+          markUrl: "/admin/brand/watermark.png?v=2",
           name: stay.cleanName(name),
           creds: sessionCreds(),
           onProgress: ({ phase, ratio }) => {
-            if (reelStatus) reelStatus.textContent = phaseLabel[phase] || "Δουλεύει…";
-            if (reelBar) reelBar.style.width = `${Math.round((ratio || 0) * 100)}%`;
+            const label = phaseLabel[phase] || "Δουλεύει…";
+            const percent = Math.round((ratio || 0) * 100);
+            if (reelStatus) reelStatus.textContent = percent > 0 && percent < 100 ? `${label} ${percent}%` : label;
+            if (reelBar) reelBar.style.width = `${percent}%`;
           },
         });
         if (reelStatus) reelStatus.textContent = "Φτιάχνεται η landing…";

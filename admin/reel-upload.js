@@ -1,5 +1,5 @@
 import { FFmpeg } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js";
-import { fetchFile, toBlobURL } from "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js";
+import { fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js";
 
 const MAX_BYTES = 150 * 1024 * 1024;
 const MAX_SECONDS = 240;
@@ -29,23 +29,63 @@ function googleMessage(text, fallback) {
   return fallback;
 }
 
-async function engine() {
+function withTimeout(promise, ms, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+async function preload(url, onRatio) {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) throw new Error("download");
+  const total = Number(response.headers.get("content-length")) || 32 * 1024 * 1024;
+  const reader = response.body.getReader();
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    onRatio(Math.min(1, received / total));
+  }
+}
+
+async function engine(onProgress) {
   if (!ffmpegPromise) {
+    const report = onProgress || (() => {});
     ffmpegPromise = (async () => {
       const ffmpeg = new FFmpeg();
       ffmpeg.on("progress", ({ progress }) => onEncode(progress));
       const core = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
-      const worker = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js";
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${core}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${core}/ffmpeg-core.wasm`, "application/wasm"),
-        classWorkerURL: await toBlobURL(worker, "text/javascript"),
-      });
+      report(0.02);
+      await preload(`${core}/ffmpeg-core.wasm`, (ratio) => report(0.05 + ratio * 0.85));
+      await withTimeout(
+        ffmpeg.load({
+          coreURL: `${core}/ffmpeg-core.js`,
+          wasmURL: `${core}/ffmpeg-core.wasm`,
+        }),
+        90000,
+        "Ο επεξεργαστής δεν άνοιξε. Κάνε ανανέωση και ξαναπροσπάθησε, ή χρησιμοποίησε το The Old Way."
+      );
+      report(1);
       return ffmpeg;
     })().catch((err) => {
       ffmpegPromise = null;
       console.error("[myreels/reel] load", err);
-      throw new Error("Ο επεξεργαστής βίντεο δεν φορτώθηκε. Ξαναπροσπάθησε ή χρησιμοποίησε το The Old Way.");
+      const message = String(err?.message || "");
+      if (!message || message === "download" || /failed to fetch|network/i.test(message)) {
+        throw new Error("Ο επεξεργαστής δεν κατέβηκε. Έλεγξε τη σύνδεση και ξαναπροσπάθησε, ή χρησιμοποίησε το The Old Way.");
+      }
+      throw new Error(message);
     });
   }
   return ffmpegPromise;
@@ -81,7 +121,7 @@ async function watermarked(file, audioUrl, markUrl, onProgress) {
     fail("Το βίντεο είναι πάνω από 4 λεπτά. Για τόσο μεγάλο αρχείο χρησιμοποίησε το The Old Way.");
   }
   onProgress({ phase: "load", ratio: 0 });
-  const ffmpeg = await engine();
+  const ffmpeg = await engine((ratio) => onProgress({ phase: "load", ratio }));
   onEncode = (progress) => onProgress({ phase: "encode", ratio: Math.max(0, Math.min(1, progress || 0)) });
   const ext = (/\.([a-z0-9]{2,4})$/i.exec(file.name || "") || [])[1]?.toLowerCase() || "mp4";
   const inputName = `in.${ext}`;

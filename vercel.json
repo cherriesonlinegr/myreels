@@ -11,7 +11,9 @@
     "api/review.js": { "includeFiles": "lib/*.mjs" },
     "api/reel-page.js": { "includeFiles": "lib/*.mjs" },
     "api/reel-config.js": { "includeFiles": "lib/*.mjs" },
-    "api/viva.js": { "includeFiles": "lib/*.mjs" }
+    "api/viva.js": { "includeFiles": "lib/*.mjs" },
+    "api/google-link.js": { "includeFiles": "lib/*.mjs" },
+    "api/google-oauth.js": { "includeFiles": "lib/*.mjs" }
   },
   "crons": [
     { "path": "/api/stay-sequence", "schedule": "0 8 * * *" }

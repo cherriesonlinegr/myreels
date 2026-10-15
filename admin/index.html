@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=30" />
+  <link rel="stylesheet" href="/admin/admin.css?v=32" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -150,12 +150,43 @@
 
       <div class="stay-subtabs" role="tablist">
         <button type="button" class="stay-subtab is-active" data-stay-tab="landings">Landings</button>
+        <button type="button" class="stay-subtab" data-stay-tab="oldway">The Old Way</button>
+        <button type="button" class="stay-subtab" data-stay-tab="leads">Επαφές</button>
         <button type="button" class="stay-subtab" data-stay-tab="pipeline">Pipeline</button>
         <button type="button" class="stay-subtab" data-stay-tab="sequences">Sequences</button>
         <button type="button" class="stay-subtab" data-stay-tab="reviews">Κριτικές</button>
       </div>
 
       <div id="stay-panel-landings">
+      <div class="onboard-admin">
+        <article class="onboard-admin__card onboard-admin__card--wide" id="google-link" hidden>
+          <h2>Σύνδεση YouTube και Drive</h2>
+          <p class="stay-hint" id="google-link-status">Έλεγχος σύνδεσης…</p>
+          <p class="stay-hint stay-hint--error" id="google-link-error" hidden></p>
+          <div id="google-link-setup" hidden>
+            <ol class="onboard-admin__steps">
+              <li>Άνοιξε το <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud</a> με το myreels.gr@gmail.com και φτιάξε project με όνομα MyReels.</li>
+              <li>Ενεργοποίησε τα <strong>YouTube Data API v3</strong> και <strong>Google Drive API</strong>.</li>
+              <li>Στην οθόνη συγκατάθεσης διάλεξε External και βάλε το myreels.gr@gmail.com ως test user.</li>
+              <li>Φτιάξε OAuth client τύπου Web application. Στα Authorized redirect URIs βάλε και τα τρία:<br /><code>https://myreels.gr/api/google-oauth</code><br /><code>https://www.myreels.gr/api/google-oauth</code><br /><code>http://localhost:3000/api/google-oauth</code></li>
+              <li>Βάλε το Client ID και το Client secret στο Vercel, ως <code>GOOGLE_CLIENT_ID</code> και <code>GOOGLE_CLIENT_SECRET</code>, και κάνε νέο deploy.</li>
+              <li>Γύρνα εδώ και πάτα Σύνδεση. Διάλεξε τον λογαριασμό myreels.gr@gmail.com.</li>
+            </ol>
+          </div>
+          <div class="google-link__actions">
+            <button type="button" class="btn" id="google-link-connect" hidden>Σύνδεση myreels.gr@gmail.com</button>
+            <button type="button" class="btn btn--ghost" id="google-link-disconnect" hidden>Αποσύνδεση</button>
+          </div>
+        </article>
+        <article class="onboard-admin__card onboard-admin__card--wide">
+          <h2>Πρόσφατες</h2>
+          <div class="stay-list" id="stay-list"></div>
+        </article>
+      </div>
+      </div>
+
+      <div id="stay-panel-oldway" hidden>
+      <p class="stay-hint stay-board-status">Εφεδρικός τρόπος, με links. Τον χρησιμοποιείς αν το YouTube ή το Drive πιάσουν όριο.</p>
       <div class="onboard-admin">
         <article class="onboard-admin__card">
           <h2>Νέα landing</h2>
@@ -260,12 +291,84 @@
           </div>
           <p class="stay-hint" id="stay-copy-status"></p>
         </article>
-
-        <article class="onboard-admin__card onboard-admin__card--wide">
-          <h2>Πρόσφατες</h2>
-          <div class="stay-list" id="stay-list"></div>
-        </article>
       </div>
+      </div>
+
+      <div id="stay-panel-leads" hidden>
+        <p class="stay-hint stay-board-status" id="stay-leads-status"></p>
+        <div class="onboard-admin">
+          <article class="onboard-admin__card">
+            <h2>Νέα επαφή</h2>
+            <p class="stay-hint stay-leads-note">Γράψε ό,τι βρήκες. Μπαίνει μόνη της στην ουρά για cold outreach.</p>
+            <form id="stay-lead-form">
+              <label class="field">
+                <span class="field__name">Όνομα καταλύματος</span>
+                <input type="text" id="stay-lead-name" required maxlength="120" />
+              </label>
+              <label class="field">
+                <span class="field__name">Περιοχή</span>
+                <select id="stay-lead-region" required>
+                  <option value="">Διάλεξε</option>
+                  <option>Αράχωβα &amp; Δελφοί</option>
+                  <option>Ζαγοροχώρια &amp; Ιωάννινα</option>
+                  <option>Πήλιο</option>
+                  <option>Ορεινή Αρκαδία</option>
+                  <option>Καρπενήσι &amp; Ευρυτανία</option>
+                  <option>Παλαιός Άγιος Αθανάσιος &amp; Νυμφαίο</option>
+                  <option>Σαντορίνη</option>
+                  <option>Βέροια</option>
+                  <option>Μέτσοβο</option>
+                  <option>Άλλη</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__name">Site</span>
+                <input type="url" id="stay-lead-link" placeholder="https://" />
+              </label>
+              <label class="field">
+                <span class="field__name">Email</span>
+                <input type="email" id="stay-lead-email" />
+              </label>
+              <label class="field">
+                <span class="field__name">Τηλέφωνο</span>
+                <input type="tel" id="stay-lead-phone" />
+              </label>
+              <label class="field">
+                <span class="field__name">Social</span>
+                <input type="url" id="stay-lead-social" placeholder="https://www.instagram.com/…" />
+              </label>
+              <label class="field">
+                <span class="field__name">Τρόπος επικοινωνίας</span>
+                <select id="stay-lead-channel">
+                  <option>Instagram</option>
+                  <option>Facebook</option>
+                  <option>Email</option>
+                  <option>Τηλέφωνο</option>
+                  <option>Viber</option>
+                  <option>WhatsApp</option>
+                  <option>Φόρμα ιστοσελίδας</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__name">Σημειώσεις</span>
+                <textarea id="stay-lead-notes" rows="2"></textarea>
+              </label>
+              <button type="submit" class="btn" id="stay-lead-save">Μπες στην ουρά</button>
+            </form>
+          </article>
+          <article class="onboard-admin__card">
+            <h2>Ουρά</h2>
+            <div class="stay-list" id="stay-lead-queue"></div>
+          </article>
+          <article class="onboard-admin__card onboard-admin__card--wide">
+            <h2>Όλες οι επαφές</h2>
+            <div class="stay-list" id="stay-lead-all"></div>
+          </article>
+          <article class="onboard-admin__card onboard-admin__card--wide">
+            <h2>Κινήσεις</h2>
+            <div class="stay-list" id="stay-lead-moves"></div>
+          </article>
+        </div>
       </div>
 
       <div id="stay-panel-pipeline" hidden>
@@ -562,6 +665,6 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=38"></script>
+  <script src="/admin/admin.js?v=40"></script>
 </body>
 </html>

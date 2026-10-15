@@ -771,6 +771,25 @@ body.is-viewer #btn-copy-onboarding-lead {
   margin-top: 4px;
 }
 
+.google-link__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.google-link__actions .btn {
+  margin-top: 0;
+}
+
+#google-link-status a {
+  color: var(--blue);
+}
+
+#google-link [hidden] {
+  display: none;
+}
+
 .onboard-admin__grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1287,6 +1306,10 @@ body.is-viewer #btn-copy-onboarding-lead {
 #stay-copy-card code {
   font-family: inherit;
   font-weight: 700;
+}
+
+.stay-leads-note {
+  margin: 0 0 12px;
 }
 
 .stay-list {

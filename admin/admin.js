@@ -623,6 +623,7 @@ MyReels`,
     if (tab === "stays") {
       renderStayList();
       loadStayBoard();
+      loadGoogleLink();
     }
     if (tab === "payments") loadPayments();
     if (tab === "mail") loadMail();
@@ -2156,14 +2157,161 @@ MyReels`,
     });
   }
 
+  let stayLeads = { leads: [], moves: [], canWrite: false };
+
+  function setStayLeadsStatus(message) {
+    const status = document.getElementById("stay-leads-status");
+    if (status) status.textContent = message || "";
+  }
+
+  function leadMeta(lead) {
+    return [lead.region, lead.channel, lead.email, lead.phone].filter(Boolean).join(" · ");
+  }
+
+  function renderStayLeads() {
+    const queue = document.getElementById("stay-lead-queue");
+    const all = document.getElementById("stay-lead-all");
+    const moves = document.getElementById("stay-lead-moves");
+    const queued = stayLeads.leads
+      .filter((lead) => lead.status === "Στην ουρά")
+      .sort((left, right) => (Number(left.order) || 9999) - (Number(right.order) || 9999));
+    if (queue) {
+      queue.innerHTML = queued.length
+        ? queued
+            .map(
+              (lead) => `<article class="stay-row">
+                <div>
+                  <strong>${lead.order ? `${escapeHtml(lead.order)}. ` : ""}${escapeHtml(lead.name)}</strong>
+                  <small>${escapeHtml(leadMeta(lead) || "Χωρίς στοιχεία επικοινωνίας")}</small>
+                </div>
+                <button type="button" class="btn btn--ghost" data-lead-sent="${escapeHtml(lead.name)}">Στάλθηκε</button>
+              </article>`
+            )
+            .join("")
+        : `<p class="stay-hint">Η ουρά είναι άδεια. Νέα επαφή μπαίνει εδώ.</p>`;
+    }
+    if (all) {
+      all.innerHTML = stayLeads.leads.length
+        ? stayLeads.leads
+            .map((lead) => {
+              const href = /^https?:\/\//i.test(lead.link) ? lead.link : "";
+              const site = href
+                ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(href.replace(/^https?:\/\//, ""))}</a>`
+                : "";
+              return `<article class="stay-row">
+                <div>
+                  <strong>${escapeHtml(lead.name)}</strong>
+                  <small>${escapeHtml([lead.status || "Νέο", leadMeta(lead)].filter(Boolean).join(" · "))}</small>
+                  ${site ? `<div class="stay-row__links">${site}</div>` : ""}
+                </div>
+              </article>`;
+            })
+            .join("")
+        : `<p class="stay-hint">Δεν υπάρχουν επαφές στο Sheet.</p>`;
+    }
+    if (moves) {
+      const recent = stayLeads.moves.slice().reverse().slice(0, 12);
+      moves.innerHTML = recent.length
+        ? recent
+            .map(
+              (item) => `<article class="stay-row">
+                <div>
+                  <strong>${escapeHtml(item.name)} · ${escapeHtml(item.move)}</strong>
+                  <small>${escapeHtml([item.date, item.detail].filter(Boolean).join(" · "))}</small>
+                </div>
+              </article>`
+            )
+            .join("")
+        : `<p class="stay-hint">Οι κινήσεις γράφονται εδώ: ουρά, μήνυμα, landing, αγορά.</p>`;
+    }
+  }
+
+  async function loadStayLeads() {
+    setStayLeadsStatus("");
+    try {
+      stayLeads = await stayBoardRequest({ action: "leads" });
+      renderStayLeads();
+      if (!stayLeads.canWrite) {
+        setStayLeadsStatus("Βλέπεις το Google Sheet. Για να γράφεται από εδώ η ουρά, η landing και η αγορά, το Sheet μοιράζεται με τον λογαριασμό του site.");
+      }
+    } catch (err) {
+      setStayLeadsStatus(err?.message || "Οι επαφές δεν φορτώθηκαν.");
+    }
+  }
+
   function showStayPanel(name) {
-    ["landings", "pipeline", "sequences", "reviews"].forEach((id) => {
+    ["landings", "oldway", "leads", "pipeline", "sequences", "reviews"].forEach((id) => {
       const panel = document.getElementById(`stay-panel-${id}`);
       if (panel) panel.hidden = id !== name;
     });
     document.querySelectorAll("[data-stay-tab]").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.stayTab === name);
     });
+    if (name === "leads") loadStayLeads();
+  }
+
+  let googleFlash = "";
+
+  function paintGoogleLink(data) {
+    const card = document.getElementById("google-link");
+    if (!card || isStayUser()) return;
+    card.hidden = false;
+    const status = document.getElementById("google-link-status");
+    const error = document.getElementById("google-link-error");
+    const setup = document.getElementById("google-link-setup");
+    const connect = document.getElementById("google-link-connect");
+    const disconnect = document.getElementById("google-link-disconnect");
+    const info = data || {};
+    if (googleFlash && googleFlash !== "connected") info.error = googleFlash;
+    googleFlash = "";
+    if (error) {
+      error.hidden = !info.error;
+      error.textContent = info.error || "";
+    }
+    if (setup) setup.hidden = info.configured !== false;
+    if (connect) connect.hidden = !info.configured || Boolean(info.connected);
+    if (disconnect) disconnect.hidden = !info.connected;
+    if (!status) return;
+    if (info.connected) {
+      const who = escapeHtml(info.email || info.account || "myreels.gr@gmail.com");
+      const channel = info.channelId
+        ? ` Κανάλι: <a href="https://www.youtube.com/channel/${encodeURIComponent(info.channelId)}" target="_blank" rel="noopener">${escapeHtml(info.channelTitle || "YouTube")}</a>.`
+        : "";
+      const folder = info.folderUrl
+        ? ` Φάκελος: <a href="${escapeHtml(info.folderUrl)}" target="_blank" rel="noopener">MyReels στο Drive</a>.`
+        : "";
+      status.innerHTML = `Συνδεδεμένο ως ${who}.${channel}${folder}`;
+      return;
+    }
+    if (info.configured === false) {
+      const missing = Array.isArray(info.missing) && info.missing.length ? info.missing.join(", ") : "";
+      status.textContent = missing
+        ? `Λείπουν από το Vercel: ${missing}. Ακολούθησε τα βήματα και μετά πάτα Σύνδεση.`
+        : "Η σύνδεση δεν έχει ρυθμιστεί ακόμα.";
+      return;
+    }
+    status.textContent = "Έτοιμο για σύνδεση με τον λογαριασμό myreels.gr@gmail.com.";
+  }
+
+  async function loadGoogleLink() {
+    const card = document.getElementById("google-link");
+    if (!card || isStayUser()) return;
+    try {
+      const live = Boolean(googleFlash);
+      const response = await fetch("/api/google-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sessionCreds(), action: "status", live }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok && data.ok === false && !data.missing) {
+        paintGoogleLink({ configured: true, connected: false, error: data.error || "Η σύνδεση δεν ελέγχθηκε." });
+        return;
+      }
+      paintGoogleLink(data);
+    } catch (err) {
+      paintGoogleLink({ configured: true, connected: false, error: err?.message || "Η σύνδεση δεν ελέγχθηκε." });
+    }
   }
 
   function setupStayTab() {
@@ -2647,7 +2795,10 @@ MyReels`,
           createdAt: new Date(item.createdAt).toISOString(),
         },
       })
-        .then(applyStayBoard)
+        .then((result) => {
+          applyStayBoard(result);
+          if (result.sheet) setStayBoardStatus(result.sheet);
+        })
         .catch((err) => setStayBoardStatus(err?.message || "Η landing δεν μπήκε στο pipeline."));
       const ok = await copyText(url);
       if (copyBtn) {
@@ -2690,6 +2841,7 @@ MyReels`,
         const savedPoster = Number(item.posterAt) || (stayBoard.deals || []).find((deal) => deal.videoId === item.videoId)?.posterAt || 0;
         openPoster(savedPoster);
         showCopyPage("landing");
+        showStayPanel("oldway");
         setCopyStatus("Φορτώθηκε αυτή η landing. Άλλαξε το κείμενο και πάτα Δημιουργία.");
         const copyCard = document.getElementById("stay-copy-card");
         copyCard?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2719,6 +2871,53 @@ MyReels`,
     document.querySelectorAll("[data-stay-tab]").forEach((button) => {
       button.addEventListener("click", () => showStayPanel(button.dataset.stayTab));
     });
+
+    document.getElementById("stay-lead-form")?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("stay-lead-save");
+      if (button) button.disabled = true;
+      try {
+        stayLeads = await stayBoardRequest({
+          action: "leadSave",
+          lead: {
+            name: document.getElementById("stay-lead-name")?.value || "",
+            region: document.getElementById("stay-lead-region")?.value || "",
+            link: document.getElementById("stay-lead-link")?.value || "",
+            email: document.getElementById("stay-lead-email")?.value || "",
+            phone: document.getElementById("stay-lead-phone")?.value || "",
+            social: document.getElementById("stay-lead-social")?.value || "",
+            channel: document.getElementById("stay-lead-channel")?.value || "",
+            notes: document.getElementById("stay-lead-notes")?.value || "",
+          },
+        });
+        renderStayLeads();
+        event.target.reset();
+        const channel = document.getElementById("stay-lead-channel");
+        if (channel) channel.value = "Instagram";
+        setStayLeadsStatus("Μπήκε στην ουρά.");
+      } catch (err) {
+        setStayLeadsStatus(err?.message || "Η επαφή δεν μπήκε στην ουρά.");
+      }
+      if (button) button.disabled = false;
+    });
+
+    document.getElementById("stay-lead-queue")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-lead-sent]");
+      if (!button) return;
+      button.disabled = true;
+      try {
+        stayLeads = await stayBoardRequest({
+          action: "leadMove",
+          property: button.getAttribute("data-lead-sent") || "",
+          move: "Στάλθηκε μήνυμα",
+        });
+        renderStayLeads();
+        setStayLeadsStatus("Γράφτηκε ότι στάλθηκε το μήνυμα.");
+      } catch (err) {
+        setStayLeadsStatus(err?.message || "Η κίνηση δεν γράφτηκε.");
+        button.disabled = false;
+      }
+    });
   }
 
     document.getElementById("stay-board")?.addEventListener("click", async (event) => {
@@ -2735,6 +2934,11 @@ MyReels`,
         try {
           const result = await stayBoardRequest({ action: "move", videoId, stage });
           applyStayBoard(result);
+          if (result.sheet) {
+            setStayBoardStatus(result.sheet);
+            move.disabled = false;
+            return;
+          }
           const deal = (result.deals || []).find((item) => item.videoId === videoId);
           const sent = deal && Object.keys(deal.sent || {}).length > 0;
           setStayBoardStatus(
@@ -2799,6 +3003,43 @@ MyReels`,
       }
     });
 
+  document.getElementById("google-link-connect")?.addEventListener("click", async () => {
+    const button = document.getElementById("google-link-connect");
+    if (button) button.disabled = true;
+    try {
+      const response = await fetch("/api/google-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sessionCreds(), action: "start" }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) throw new Error(data.error || "Η σύνδεση δεν ξεκίνησε.");
+      location.href = data.url;
+    } catch (err) {
+      paintGoogleLink({ configured: true, connected: false, error: err?.message || "Η σύνδεση δεν ξεκίνησε." });
+      if (button) button.disabled = false;
+    }
+  });
+
+  document.getElementById("google-link-disconnect")?.addEventListener("click", async () => {
+    if (!window.confirm("Να κοπεί η σύνδεση με το YouTube και το Drive;")) return;
+    const button = document.getElementById("google-link-disconnect");
+    if (button) button.disabled = true;
+    try {
+      const response = await fetch("/api/google-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sessionCreds(), action: "disconnect" }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ok === false) throw new Error(data.error || "Η αποσύνδεση δεν ολοκληρώθηκε.");
+      paintGoogleLink(data);
+    } catch (err) {
+      paintGoogleLink({ configured: true, connected: true, error: err?.message || "Η αποσύνδεση δεν ολοκληρώθηκε." });
+    }
+    if (button) button.disabled = false;
+  });
+
   // Init
   fillStageSelect("lead");
   fillServiceChecks([]);
@@ -2806,5 +3047,14 @@ MyReels`,
   renderBoard();
   setupOnboardingTab();
   setupStayTab();
+  const googleParams = new URLSearchParams(location.search);
+  if (googleParams.get("google") === "connected") googleFlash = "connected";
+  if (googleParams.get("google") === "error") {
+    googleFlash = googleParams.get("reason") || "Η σύνδεση δεν ολοκληρώθηκε.";
+  }
+  if (googleParams.get("google")) {
+    history.replaceState({}, "", location.pathname);
+    switchTab("stays");
+  }
   }
 })();

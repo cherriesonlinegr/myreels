@@ -23,6 +23,7 @@ export default async function handler(req, res) {
       ensureReviewToken,
       loadBoard,
       moderateReview,
+      noteLead,
       removeLanding,
       saveBoard,
       savePublicCopy,
@@ -49,8 +50,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, ...board });
     }
     if (action === "upsert") {
-      const board = await saveBoard(upsertLanding(await loadBoard(), body.deal || {}));
-      return res.status(200).json({ ok: true, ...board });
+      const before = await loadBoard();
+      const videoId = String(body.deal?.videoId || "").trim();
+      const existed = before.deals.some((item) => item.videoId === videoId);
+      const board = await saveBoard(upsertLanding(before, body.deal || {}));
+      let sheet = "";
+      if (!existed && videoId) {
+        const deal = board.deals.find((item) => item.videoId === videoId);
+        sheet = await noteLead(deal?.property, "Δημιουργήθηκε landing", deal?.landingUrl || "");
+      }
+      return res.status(200).json({ ok: true, sheet, ...board });
     }
     if (action === "remove") {
       const board = await saveBoard(removeLanding(await loadBoard(), String(body.videoId || "")));
@@ -105,7 +114,31 @@ export default async function handler(req, res) {
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       if (result.changed) await sendDue(result.board, { onlyDay: 0 });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, ...board });
+      let sheet = "";
+      if (result.changed) {
+        const stage = result.deal?.stage;
+        const label = stage === "pack10" ? "Αγόρασε 10 Reels" : stage === "pack5" ? "Αγόρασε 5 Reels" : "Αγόρασε 1 Reel";
+        sheet = await noteLead(result.deal?.property, label, "");
+      }
+      return res.status(200).json({ ok: true, sheet, ...board });
+    }
+    if (action === "leads" || action === "leadSave" || action === "leadMove") {
+      const { listLeads, saveLead, logMovement } = await import("../lib/lead-sheet.mjs");
+      if (action === "leadSave") await saveLead(body.lead || {});
+      if (action === "leadMove") {
+        const logged = await logMovement({
+          property: body.property,
+          move: body.move,
+          detail: body.detail,
+        });
+        if (logged.skipped) {
+          return res.status(503).json({
+            ok: false,
+            error: "Η κίνηση δεν γράφτηκε. Το Sheet πρέπει να είναι μοιρασμένο με τον λογαριασμό του site.",
+          });
+        }
+      }
+      return res.status(200).json({ ok: true, ...(await listLeads()) });
     }
     if (action === "send") {
       const current = await loadBoard();
@@ -116,6 +149,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: "Άγνωστη ενέργεια." });
   } catch (err) {
     console.error("[myreels/board]", err?.message || err);
-    return res.status(500).json({ ok: false, error: err?.message || "Το pipeline δεν αποθηκεύτηκε." });
+    const status = Number(err?.status);
+    return res.status(status >= 400 && status < 600 ? status : 500).json({
+      ok: false,
+      error: err?.message || "Το pipeline δεν αποθηκεύτηκε.",
+    });
   }
 }

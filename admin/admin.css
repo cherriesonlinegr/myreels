@@ -786,8 +786,30 @@ body.is-viewer #btn-copy-onboarding-lead {
   color: var(--blue);
 }
 
-#google-link [hidden] {
+#google-link [hidden],
+#reel-upload[hidden],
+#reel-upload [hidden] {
   display: none;
+}
+
+.reel-upload__bar {
+  height: 8px;
+  margin: 4px 0 12px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--line);
+}
+
+.reel-upload__bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--blue);
+}
+
+#reel-upload-go:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .onboard-admin__grid {

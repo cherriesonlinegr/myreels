@@ -2251,11 +2251,16 @@ MyReels`,
   }
 
   let googleFlash = "";
+  let googleLinkState = {};
 
   function paintGoogleLink(data) {
     const card = document.getElementById("google-link");
     if (!card || isStayUser()) return;
     card.hidden = false;
+    const uploadCard = document.getElementById("reel-upload");
+    if (uploadCard) uploadCard.hidden = false;
+    const uploadGo = document.getElementById("reel-upload-go");
+    const uploadHint = document.getElementById("reel-upload-hint");
     const status = document.getElementById("google-link-status");
     const error = document.getElementById("google-link-error");
     const setup = document.getElementById("google-link-setup");
@@ -2265,6 +2270,7 @@ MyReels`,
     const info = data || {};
     if (googleFlash && googleFlash !== "connected") info.error = googleFlash;
     googleFlash = "";
+    googleLinkState = info;
     if (error) {
       error.hidden = !info.error;
       error.textContent = info.error || "";
@@ -2273,6 +2279,13 @@ MyReels`,
     if (youtubeBtn) youtubeBtn.hidden = !info.configured || Boolean(info.youtube);
     if (driveBtn) driveBtn.hidden = !info.configured || Boolean(info.drive);
     if (disconnect) disconnect.hidden = !info.youtube && !info.drive;
+    if (uploadGo && uploadGo.dataset.busy !== "1") uploadGo.disabled = !(info.youtube && info.drive);
+    if (uploadHint && uploadGo?.dataset.busy !== "1") {
+      uploadHint.textContent =
+        info.youtube && info.drive
+          ? "Διάλεξε το καθαρό βίντεο και τον ήχο. Το σήμα μπαίνει στον υπολογιστή σου. Το καθαρό πάει στο Drive, το αντίγραφο στο YouTube."
+          : "Σύνδεσε πρώτα και το YouTube και το Drive.";
+    }
     if (!status) return;
     if (info.youtube || info.drive) {
       const who = escapeHtml(info.email || info.account || "myreels.gr@gmail.com");
@@ -2496,6 +2509,9 @@ MyReels`,
     bindPricePreview(priceInput, pricePreview);
     bindPricePreview(pack5Input, pack5Preview);
     bindPricePreview(pack10Input, pack10Preview);
+    bindPricePreview(document.getElementById("reel-price"), document.getElementById("reel-price-preview"));
+    bindPricePreview(document.getElementById("reel-pack5"), document.getElementById("reel-pack5-preview"));
+    bindPricePreview(document.getElementById("reel-pack10"), document.getElementById("reel-pack10-preview"));
 
     let lookupToken = 0;
 
@@ -2692,70 +2708,38 @@ MyReels`,
       }, 0);
     });
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      if (errorEl) errorEl.hidden = true;
-      const name = stay.cleanName(nameInput.value);
-      const videoId = stay.parseYouTubeId(youtubeInput.value);
-      const driveId = stay.parseDriveId(driveInput?.value);
-      const net = stay.parseNet(priceInput?.value);
-      const pack5 = stay.parseNet(pack5Input?.value);
-      const pack10 = stay.parseNet(pack10Input?.value);
-      if (!videoId) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = "Βάλε ένα έγκυρο YouTube link (watch, youtu.be ή Shorts).";
+    async function publishStayLanding(input) {
+      const target = input.errorTarget;
+      const fail = (text) => {
+        if (target) {
+          target.hidden = false;
+          target.textContent = text;
         }
-        return;
-      }
-      if (!driveId) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = "Βάλε το link του αρχείου από το Google Drive.";
-        }
-        return;
-      }
-      if (name.length < 2) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = "Γράψε το όνομα του καταλύματος.";
-        }
-        return;
-      }
-
-      if (net == null) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = "Βάλε την τιμή του πρώτου βίντεο χωρίς ΦΠΑ. Default είναι 40€.";
-        }
-        return;
-      }
-
+        return null;
+      };
+      if (target) target.hidden = true;
+      const name = stay.cleanName(input.name);
+      const videoId = stay.parseYouTubeId(input.youtubeUrl);
+      const driveId = stay.parseDriveId(input.driveId || input.driveUrl);
+      const net = stay.parseNet(input.net);
+      const pack5 = stay.parseNet(input.pack5);
+      const pack10 = stay.parseNet(input.pack10);
+      if (!videoId) return fail("Βάλε ένα έγκυρο YouTube link (watch, youtu.be ή Shorts).");
+      if (!driveId) return fail("Βάλε το link του αρχείου από το Google Drive.");
+      if (name.length < 2) return fail("Γράψε το όνομα του καταλύματος.");
+      if (net == null) return fail("Βάλε την τιμή του πρώτου βίντεο χωρίς ΦΠΑ. Default είναι 40€.");
       if (pack5 == null || pack10 == null) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent =
-            "Βάλε τις τιμές των πακέτων χωρίς ΦΠΑ. Default είναι 170€ για τα 5 και 350€ για τα 10.";
-        }
-        return;
+        return fail("Βάλε τις τιμές των πακέτων χωρίς ΦΠΑ. Default είναι 170€ για τα 5 και 350€ για τα 10.");
       }
-
       const copy = readStayCopyForm();
       const encodedCopy = stay.encodeCopy(copy);
-      if (encodedCopy.length > 20000) {
-        if (errorEl) {
-          errorEl.hidden = false;
-          errorEl.textContent = "Το κείμενο είναι πολύ μεγάλο. Σύντομεψέ το.";
-        }
-        return;
-      }
+      if (encodedCopy.length > 20000) return fail("Το κείμενο είναι πολύ μεγάλο. Σύντομεψέ το.");
       const previous = loadStays();
       const taken = previous
         .filter((item) => item.videoId !== videoId)
         .map((item) => item.slug || item.name);
       const slug = stay.landingSlug(name, taken);
       const url = stay.buildLandingUrl(window.location.origin, slug);
-
       const items = previous.filter(
         (item) =>
           !(
@@ -2771,8 +2755,8 @@ MyReels`,
         net,
         pack5,
         pack10,
-        youtubeUrl: youtubeInput.value.trim(),
-        posterAt: readStayPoster(),
+        youtubeUrl: String(input.youtubeUrl || "").trim(),
+        posterAt: input.posterAt != null ? input.posterAt : readStayPoster(),
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
@@ -2811,6 +2795,138 @@ MyReels`,
         copyBtn.textContent = ok ? "Αντιγράφηκε ✓" : "Αντιγραφή link";
         setTimeout(() => {
           copyBtn.textContent = "Αντιγραφή link";
+        }, 1600);
+      }
+      return { ...item, url };
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await publishStayLanding({
+        name: nameInput.value,
+        youtubeUrl: youtubeInput.value,
+        driveId: driveInput?.value,
+        net: priceInput?.value,
+        pack5: pack5Input?.value,
+        pack10: pack10Input?.value,
+        errorTarget: errorEl,
+      });
+    });
+
+    const reelGo = document.getElementById("reel-upload-go");
+    const reelStatus = document.getElementById("reel-upload-status");
+    const reelError = document.getElementById("reel-upload-error");
+    const reelTrack = document.getElementById("reel-upload-track");
+    const reelBar = document.getElementById("reel-upload-bar");
+    const reelDone = document.getElementById("reel-upload-done");
+    const phaseLabel = {
+      load: "Ετοιμάζεται ο επεξεργαστής…",
+      encode: "Μπαίνει το σήμα και ο ήχος…",
+      drive: "Ανεβαίνει το καθαρό στο Drive…",
+      youtube: "Ανεβαίνει το αντίγραφο στο YouTube…",
+    };
+    reelGo?.addEventListener("click", async () => {
+      if (!window.MyReelsUpload) {
+        if (reelError) {
+          reelError.hidden = false;
+          reelError.textContent = "Ο επεξεργαστής δεν φόρτωσε ακόμα. Ξαναπάτα σε λίγο.";
+        }
+        return;
+      }
+      const file = document.getElementById("reel-file")?.files?.[0];
+      const name = document.getElementById("reel-name")?.value || "";
+      if (reelError) reelError.hidden = true;
+      if (reelDone) reelDone.hidden = true;
+      if (!file) {
+        if (reelError) {
+          reelError.hidden = false;
+          reelError.textContent = "Διάλεξε το καθαρό βίντεο.";
+        }
+        return;
+      }
+      if (stay.cleanName(name).length < 2) {
+        if (reelError) {
+          reelError.hidden = false;
+          reelError.textContent = "Γράψε το όνομα του καταλύματος.";
+        }
+        return;
+      }
+      if (!googleLinkState.youtube || !googleLinkState.drive) {
+        if (reelError) {
+          reelError.hidden = false;
+          reelError.textContent = "Σύνδεσε πρώτα και το YouTube και το Drive.";
+        }
+        return;
+      }
+      reelGo.dataset.busy = "1";
+      reelGo.disabled = true;
+      if (reelTrack) reelTrack.hidden = false;
+      const audio = document.getElementById("reel-audio")?.value === "2" ? "2" : "1";
+      try {
+        const uploaded = await window.MyReelsUpload.run({
+          file,
+          audioUrl: `/admin/brand/${audio}-demo.mp3`,
+          markUrl: "/admin/brand/watermark.png",
+          name: stay.cleanName(name),
+          creds: sessionCreds(),
+          onProgress: ({ phase, ratio }) => {
+            if (reelStatus) reelStatus.textContent = phaseLabel[phase] || "Δουλεύει…";
+            if (reelBar) reelBar.style.width = `${Math.round((ratio || 0) * 100)}%`;
+          },
+        });
+        if (reelStatus) reelStatus.textContent = "Φτιάχνεται η landing…";
+        const item = await publishStayLanding({
+          name,
+          youtubeUrl: uploaded.youtubeUrl,
+          driveId: uploaded.driveId,
+          net: document.getElementById("reel-price")?.value,
+          pack5: document.getElementById("reel-pack5")?.value,
+          pack10: document.getElementById("reel-pack10")?.value,
+          posterAt: 0,
+          errorTarget: reelError,
+        });
+        if (!item) {
+          if (reelError && !reelError.textContent) {
+            reelError.hidden = false;
+            reelError.textContent = "Τα αρχεία ανέβηκαν, αλλά η landing δεν φτιάχτηκε.";
+          }
+          if (reelStatus) {
+            reelStatus.textContent = `YouTube: ${uploaded.youtubeUrl} · Drive: ${uploaded.driveUrl}`;
+          }
+          return;
+        }
+        const urlEl = document.getElementById("reel-upload-url");
+        const openEl = document.getElementById("reel-upload-open");
+        if (urlEl) urlEl.value = item.url;
+        if (openEl) openEl.href = item.url;
+        if (reelDone) reelDone.hidden = false;
+        if (reelStatus) reelStatus.textContent = "Η landing είναι έτοιμη. Το YouTube μπορεί να χρειαστεί ένα λεπτό μέχρι να παίξει.";
+        const fileInput = document.getElementById("reel-file");
+        if (fileInput) fileInput.value = "";
+      } catch (err) {
+        if (reelError) {
+          reelError.hidden = false;
+          reelError.textContent = err?.message || "Το ανέβασμα δεν ολοκληρώθηκε.";
+        }
+        if (reelStatus) {
+          reelStatus.textContent = err?.driveUrl
+            ? `Το καθαρό είναι στο Drive: ${err.driveUrl}`
+            : "";
+        }
+      } finally {
+        delete reelGo.dataset.busy;
+        reelGo.disabled = !(googleLinkState.youtube && googleLinkState.drive);
+        if (reelTrack) reelTrack.hidden = true;
+        if (reelBar) reelBar.style.width = "0";
+      }
+    });
+    document.getElementById("reel-upload-copy")?.addEventListener("click", async () => {
+      const button = document.getElementById("reel-upload-copy");
+      const ok = await copyText(document.getElementById("reel-upload-url")?.value || "");
+      if (button) {
+        button.textContent = ok ? "Αντιγράφηκε ✓" : "Αποτυχία";
+        setTimeout(() => {
+          button.textContent = "Αντιγραφή link";
         }, 1600);
       }
     });

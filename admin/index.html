@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=32" />
+  <link rel="stylesheet" href="/admin/admin.css?v=33" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -177,6 +177,58 @@
             <button type="button" class="btn" id="google-link-youtube" hidden>Σύνδεση YouTube</button>
             <button type="button" class="btn" id="google-link-drive" hidden>Σύνδεση Drive</button>
             <button type="button" class="btn btn--ghost" id="google-link-disconnect" hidden>Αποσύνδεση</button>
+          </div>
+        </article>
+        <article class="onboard-admin__card onboard-admin__card--wide" id="reel-upload" hidden>
+          <h2>Νέο Reel</h2>
+          <p class="stay-hint" id="reel-upload-hint">Σύνδεσε πρώτα και το YouTube και το Drive.</p>
+          <label class="field">
+            <span>Καθαρό βίντεο</span>
+            <input type="file" id="reel-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" />
+          </label>
+          <label class="field">
+            <span>Ήχος στο αντίγραφο</span>
+            <select id="reel-audio">
+              <option value="1">1 demo</option>
+              <option value="2">2 demo</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Όνομα καταλύματος</span>
+            <input type="text" id="reel-name" maxlength="80" placeholder="Ηλιοπετρόσπιτο" />
+          </label>
+          <div class="stay-prices">
+            <label class="field">
+              <span>1ο βίντεο, χωρίς ΦΠΑ</span>
+              <input type="number" id="reel-price" min="1" max="100000" step="0.01" value="40" />
+              <small class="stay-hint" id="reel-price-preview">Με ΦΠΑ: 49,60€</small>
+            </label>
+            <label class="field">
+              <span>5 βίντεο, χωρίς ΦΠΑ</span>
+              <input type="number" id="reel-pack5" min="1" max="100000" step="0.01" value="170" />
+              <small class="stay-hint" id="reel-pack5-preview">Με ΦΠΑ: 210,80€</small>
+            </label>
+            <label class="field">
+              <span>10 βίντεο, χωρίς ΦΠΑ</span>
+              <input type="number" id="reel-pack10" min="1" max="100000" step="0.01" value="350" />
+              <small class="stay-hint" id="reel-pack10-preview">Με ΦΠΑ: 434€</small>
+            </label>
+          </div>
+          <div class="reel-upload__bar" id="reel-upload-track" hidden><span id="reel-upload-bar"></span></div>
+          <p class="stay-hint" id="reel-upload-status"></p>
+          <p class="stay-hint stay-hint--error" id="reel-upload-error" hidden></p>
+          <div class="google-link__actions">
+            <button type="button" class="btn" id="reel-upload-go" disabled>Ανέβασμα και landing</button>
+          </div>
+          <div id="reel-upload-done" hidden>
+            <label class="field">
+              <span>Landing</span>
+              <input type="text" id="reel-upload-url" readonly />
+            </label>
+            <div class="google-link__actions">
+              <a class="btn" id="reel-upload-open" href="/" target="_blank" rel="noopener">Άνοιγμα</a>
+              <button type="button" class="btn btn--ghost" id="reel-upload-copy">Αντιγραφή link</button>
+            </div>
           </div>
         </article>
         <article class="onboard-admin__card onboard-admin__card--wide">
@@ -666,6 +718,7 @@
 
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js"></script>
-  <script src="/admin/admin.js?v=41"></script>
+  <script type="module" src="/admin/reel-upload.js?v=1"></script>
+  <script src="/admin/admin.js?v=42"></script>
 </body>
 </html>

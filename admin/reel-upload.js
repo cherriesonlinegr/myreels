@@ -70,6 +70,7 @@ async function engine(onProgress) {
       await preload(`${core}/ffmpeg-core.wasm`, (ratio) => report(0.05 + ratio * 0.85));
       await withTimeout(
         ffmpeg.load({
+          classWorkerURL: new URL("/admin/vendor/ffmpeg-worker.js", window.location.origin).href,
           coreURL: `${core}/ffmpeg-core.js`,
           wasmURL: `${core}/ffmpeg-core.wasm`,
         }),

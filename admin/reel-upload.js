@@ -117,7 +117,7 @@ function stampFilter(duration, markW, hasAudio) {
   const third = Math.round((duration * 2) / 3 * 1000) / 1000;
   const thirdEnd = Math.round((third + 6) * 1000) / 1000;
   const delay2 = Math.round(third * 1000);
-  const video = `[1:v]format=rgba,colorchannelmixer=aa=0.35,scale=${markW}:-2[wm];[0:v][wm]overlay=x=(W-w)/2:y=(H-h)/2:enable='between(t,4,10)+between(t,${third},${thirdEnd})'[vout];`;
+  const video = `[1:v]format=rgba,colorchannelmixer=aa=0.45,scale=${markW}:-2[wm];[0:v][wm]overlay=x=(W-w)/2:y=(H-h)/2:enable='between(t,4,10)+between(t,${third},${thirdEnd})'[vout];`;
   const voice = (index, delay) =>
     `[${index}:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,adelay=${delay}|${delay},apad,aformat=channel_layouts=stereo`;
   if (!hasAudio) {

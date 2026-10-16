@@ -113,12 +113,37 @@ function videoInfo(file) {
   });
 }
 
-async function watermarked(file, audioUrl, markUrl, onProgress) {
+function stampFilter(duration, markW, hasAudio) {
+  const third = Math.round((duration * 2) / 3 * 1000) / 1000;
+  const thirdEnd = Math.round((third + 6) * 1000) / 1000;
+  const delay2 = Math.round(third * 1000);
+  const video = `[1:v]format=rgba,colorchannelmixer=aa=0.35,scale=${markW}:-2[wm];[0:v][wm]overlay=x=(W-w)/2:y=(H-h)/2:enable='between(t,4,10)+between(t,${third},${thirdEnd})'[vout];`;
+  const voice = (index, delay) =>
+    `[${index}:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,adelay=${delay}|${delay},apad,aformat=channel_layouts=stereo`;
+  if (!hasAudio) {
+    return `${video}${voice(2, 6000)}[v1];${voice(3, delay2)}[v2];[v1][v2]amix=inputs=2:duration=longest:dropout_transition=0:normalize=0,atrim=0:${duration}[aout]`;
+  }
+  return `${video}[0:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,apad,aformat=channel_layouts=stereo[base];${voice(2, 6000)}[v1];${voice(3, delay2)}[v2];[v1][v2]amerge=inputs=2,pan=stereo|c0=c0+c2|c1=c1+c3[voices];[base][voices]amerge=inputs=2,pan=stereo|c0=c0+c2|c1=c1+c3,atrim=0:${duration}[aout]`;
+}
+
+async function sourceHasAudio(ffmpeg, inputName) {
+  const lines = [];
+  const onLog = ({ message }) => lines.push(String(message || ""));
+  ffmpeg.on("log", onLog);
+  await ffmpeg.exec(["-hide_banner", "-i", inputName]);
+  if (typeof ffmpeg.off === "function") ffmpeg.off("log", onLog);
+  return lines.some((line) => /\bAudio:/.test(line));
+}
+
+async function watermarked(file, markUrl, onProgress) {
   if (file.size > MAX_BYTES) {
     fail("Το αρχείο είναι μεγάλο για επεξεργασία εδώ. Χρησιμοποίησε το The Old Way.");
   }
   const info = await videoInfo(file);
-  if (Number.isFinite(info.duration) && info.duration > MAX_SECONDS) {
+  if (!Number.isFinite(info.duration) || info.duration <= 10) {
+    fail("Το βίντεο είναι πολύ μικρό για το σήμα και τα ηχητικά.");
+  }
+  if (info.duration > MAX_SECONDS) {
     fail("Το βίντεο είναι πάνω από 4 λεπτά. Για τόσο μεγάλο αρχείο χρησιμοποίησε το The Old Way.");
   }
   onProgress({ phase: "load", ratio: 0 });
@@ -129,23 +154,24 @@ async function watermarked(file, audioUrl, markUrl, onProgress) {
   const markW = Math.max(240, Math.round((info.width * 0.72) / 2) * 2);
   await ffmpeg.writeFile(inputName, await fetchFile(file));
   await ffmpeg.writeFile("mark.png", await fetchFile(markUrl));
-  await ffmpeg.writeFile("bed.mp3", await fetchFile(audioUrl));
+  await ffmpeg.writeFile("voice1.mp3", await fetchFile("/admin/brand/1-demo.mp3"));
+  await ffmpeg.writeFile("voice2.mp3", await fetchFile("/admin/brand/2-demo.mp3"));
+  const hasAudio = await sourceHasAudio(ffmpeg, inputName);
   const code = await ffmpeg.exec([
     "-i",
     inputName,
     "-i",
     "mark.png",
-    "-stream_loop",
-    "-1",
     "-i",
-    "bed.mp3",
+    "voice1.mp3",
+    "-i",
+    "voice2.mp3",
     "-filter_complex",
-    `[1:v]scale=${markW}:-2[wm];[0:v][wm]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=auto[v]`,
+    stampFilter(Math.round(info.duration * 1000) / 1000, markW, hasAudio),
     "-map",
-    "[v]",
+    "[vout]",
     "-map",
-    "2:a:0",
-    "-shortest",
+    "[aout]",
     "-c:v",
     "libx264",
     "-preset",
@@ -166,7 +192,8 @@ async function watermarked(file, audioUrl, markUrl, onProgress) {
   const data = await ffmpeg.readFile("out.mp4");
   await ffmpeg.deleteFile(inputName).catch(() => {});
   await ffmpeg.deleteFile("mark.png").catch(() => {});
-  await ffmpeg.deleteFile("bed.mp3").catch(() => {});
+  await ffmpeg.deleteFile("voice1.mp3").catch(() => {});
+  await ffmpeg.deleteFile("voice2.mp3").catch(() => {});
   await ffmpeg.deleteFile("out.mp4").catch(() => {});
   onEncode = () => {};
   return new Blob([data], { type: "video/mp4" });
@@ -284,9 +311,9 @@ async function uploadYouTube(creds, blob, title, onProgress) {
 }
 
 window.MyReelsUpload = {
-  async run({ file, audioUrl, markUrl, name, creds, onProgress }) {
+  async run({ file, markUrl, name, creds, onProgress }) {
     const report = onProgress || (() => {});
-    const copy = await watermarked(file, audioUrl, markUrl, report);
+    const copy = await watermarked(file, markUrl, report);
     report({ phase: "drive", ratio: 0 });
     let driveId = "";
     try {

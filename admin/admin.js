@@ -2869,11 +2869,9 @@ MyReels`,
       reelGo.dataset.busy = "1";
       reelGo.disabled = true;
       if (reelTrack) reelTrack.hidden = false;
-      const audio = document.getElementById("reel-audio")?.value === "2" ? "2" : "1";
       try {
         const uploaded = await window.MyReelsUpload.run({
           file,
-          audioUrl: `/admin/brand/${audio}-demo.mp3`,
           markUrl: "/admin/brand/watermark.png?v=2",
           name: stay.cleanName(name),
           creds: sessionCreds(),

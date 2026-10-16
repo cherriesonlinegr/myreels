@@ -40,6 +40,79 @@
   const yes = document.getElementById("offer-yes");
   const no = document.getElementById("offer-no");
 
+  let priorAfm = "";
+  let billing = { document: "receipt", afm: "", name: "", title: "", address: "", error: "" };
+  let lookupToken = 0;
+  const afmWrap = document.getElementById("bill-afm");
+  const afmInput = document.getElementById("buyer-afm");
+  const companyEl = document.getElementById("bill-company");
+
+  const paintCompany = () => {
+    if (!companyEl) return;
+    if (!billing.name) {
+      companyEl.hidden = !billing.error;
+      companyEl.textContent = billing.error || "";
+      return;
+    }
+    companyEl.hidden = false;
+    companyEl.textContent = [billing.name, billing.title, billing.address].filter(Boolean).join("\n");
+  };
+
+  const lookupAfm = async () => {
+    const afm = afmInput?.value.replace(/\D/g, "") || "";
+    billing = { document: "invoice", afm: "", name: "", title: "", address: "", error: "" };
+    if (afm.length !== 9) {
+      paintCompany();
+      return;
+    }
+    const token = ++lookupToken;
+    if (companyEl) {
+      companyEl.hidden = false;
+      companyEl.textContent = "Ψάχνω τα στοιχεία…";
+    }
+    try {
+      const response = await fetch("/api/viva", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "afm", afm }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (token !== lookupToken) return;
+      if (!response.ok || !payload.name) throw new Error(payload.error || "Δεν βρέθηκαν στοιχεία για αυτό το ΑΦΜ.");
+      billing = {
+        document: "invoice",
+        afm: payload.afm || afm,
+        name: payload.name,
+        title: payload.title || "",
+        address: payload.address || "",
+        error: "",
+      };
+    } catch (err) {
+      if (token !== lookupToken) return;
+      billing.error = err?.message || "Η αναζήτηση ΑΦΜ δεν απάντησε. Δοκίμασε ξανά.";
+    }
+    paintCompany();
+  };
+
+  document.querySelectorAll('#ready input[name="bill"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const invoice = document.querySelector('#ready input[name="bill"]:checked')?.value === "invoice";
+      if (afmWrap) afmWrap.hidden = !invoice;
+      if (!invoice) {
+        lookupToken += 1;
+        billing = { document: "receipt", afm: "", name: "", title: "", address: "", error: "" };
+        paintCompany();
+        return;
+      }
+      if (afmInput && !afmInput.value && priorAfm) afmInput.value = priorAfm;
+      lookupAfm();
+    });
+  });
+  afmInput?.addEventListener("input", () => {
+    afmInput.value = afmInput.value.replace(/\D/g, "").slice(0, 9);
+    lookupAfm();
+  });
+
   yes?.addEventListener("click", () => payUpgrade(step));
   no?.addEventListener("click", () => {
     if (step === 10) {
@@ -158,6 +231,7 @@
     fillList(perks, page.perks, tokens);
     if (!params.get("preview")) markFunnel(step === 5 ? "5" : "10");
 
+    const billBlock = document.getElementById("offer-bill");
     if (!extra) {
       if (context) {
         context.hidden = false;
@@ -166,9 +240,11 @@
       if (netNode) netNode.textContent = "";
       if (grossNode) grossNode.textContent = "";
       if (yes) yes.hidden = true;
+      if (billBlock) billBlock.hidden = true;
       paintWork(step === 10 ? "up10" : "up5");
       return;
     }
+    if (billBlock) billBlock.hidden = false;
     if (yes) yes.hidden = false;
     setText(context, stay.fillTokens(page.context, tokens));
     if (netNode) netNode.textContent = stay.euro(extra.extraNet);
@@ -224,9 +300,22 @@
     }
   }
 
+  function chosenBill() {
+    const invoice = document.querySelector('#ready input[name="bill"]:checked')?.value === "invoice";
+    return {
+      document: invoice ? "invoice" : "receipt",
+      afm: invoice ? afmInput?.value.replace(/\D/g, "") || "" : "",
+    };
+  }
+
   async function payUpgrade(count) {
     const errorEl = document.getElementById("form-error");
     if (errorEl) errorEl.hidden = true;
+    const choice = chosenBill();
+    if (choice.document === "invoice" && (billing.afm !== choice.afm || !billing.name)) {
+      showError(billing.error || "Βάλε ένα σωστό ΑΦΜ για να βρεθούν τα στοιχεία του τιμολογίου.");
+      return;
+    }
     if (yes) {
       yes.disabled = true;
       yes.textContent = "Μετάβαση στην πληρωμή…";
@@ -242,6 +331,8 @@
           pack: count,
           videoId: pageVideo,
           property,
+          document: choice.document,
+          afm: choice.afm,
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -297,6 +388,7 @@
     if (paidNet != null) firstNet = paidNet;
     if (next5 != null) pack5 = next5;
     if (next10 != null) pack10 = next10;
+    priorAfm = last.document === "invoice" && /^\d{9}$/.test(last.afm || "") ? last.afm : "";
     try {
       const previous = JSON.parse(sessionStorage.getItem("myreels_reel_order") || "{}");
       sessionStorage.setItem(

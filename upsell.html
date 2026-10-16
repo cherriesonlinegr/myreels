@@ -60,6 +60,24 @@
       <p class="offer__context" id="offer-context"></p>
       <p class="pack__gross" id="offer-net">310€</p>
       <p class="pack__net" id="offer-gross">384,40€ με ΦΠΑ</p>
+      <div id="offer-bill">
+        <fieldset class="bill">
+          <label>
+            <input type="radio" name="bill" value="receipt" checked />
+            <span>Απόδειξη</span>
+          </label>
+          <label>
+            <input type="radio" name="bill" value="invoice" />
+            <span>Τιμολόγιο</span>
+          </label>
+        </fieldset>
+        <div id="bill-afm" hidden>
+          <label class="field">ΑΦΜ
+            <input type="text" id="buyer-afm" name="afm" inputmode="numeric" maxlength="9" autocomplete="off" />
+          </label>
+          <p class="bill__company" id="bill-company" hidden></p>
+        </div>
+      </div>
       <button type="button" class="buy" id="offer-yes">Ναι, θέλω τα 10 και τη διαχείριση</button>
       <button type="button" class="skip" id="offer-no">Όχι τώρα. Συνεχίζω μόνο με το Reel που αγόρασα.</button>
     </section>

@@ -263,6 +263,65 @@ h1 {
   font-weight: 700;
 }
 
+.bill {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.bill label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.bill input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--coral);
+}
+
+.bill span {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#bill-afm {
+  margin-top: 12px;
+  text-align: left;
+}
+
+#bill-afm .field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+#buyer-afm {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  padding: 10px 12px;
+}
+
+.bill__company {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
 .buy {
   width: 100%;
   min-height: 50px;
@@ -404,6 +463,10 @@ form input:focus {
 .sheet.is-five .banner__mark rect,
 .sheet.is-five .banner__mark path:last-of-type {
   fill: var(--blue);
+}
+
+.sheet.is-five .bill input {
+  accent-color: var(--blue);
 }
 
 .sheet.is-five .buy {

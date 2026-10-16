@@ -98,6 +98,6 @@ export default async function handler(req, res) {
     : `${proto}://${host}/favicon.png`;
   const html = readFileSync(join(process.cwd(), "templates", "reel.html"), "utf8");
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=300");
+  res.setHeader("Cache-Control", "no-store");
   res.status(200).send(reelPreviewHtml(html, { name, videoId, net, pageUrl, image }));
 }

@@ -1,13 +1,12 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v39";
+const CACHE_VERSION = "myreels-admin-cache-v40";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
   "/admin/admin.css",
   "/admin/admin.js",
   "/services-data.js",
-  "/stay-reel.js",
   "/favicon.svg",
   "/favicon.png",
   "/assets/favicon-512.png",

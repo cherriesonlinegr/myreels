@@ -105,7 +105,7 @@ h1 {
 .stage {
   position: relative;
   justify-self: center;
-  width: fit-content;
+  width: min(100%, calc(min(72vh, 640px) * 9 / 16));
   max-width: 100%;
 }
 
@@ -121,13 +121,13 @@ h1 {
 .frame {
   position: relative;
   z-index: 1;
-  height: min(72vh, 640px);
-  width: auto;
+  width: 100%;
+  height: auto;
   aspect-ratio: 9 / 16;
-  max-width: 100%;
   border-radius: 32px;
   overflow: hidden;
   background: #000;
+  transform: translateZ(0);
   box-shadow:
     0 1px 1px rgba(0, 0, 0, 0.04),
     0 24px 60px rgba(0, 0, 0, 0.16);
@@ -136,6 +136,8 @@ h1 {
 .frame #player,
 .frame iframe,
 .frame__poster {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
@@ -529,10 +531,10 @@ h1 {
     position: sticky;
     top: 40px;
     justify-self: end;
+    width: min(100%, calc(min(84vh, 780px) * 9 / 16));
   }
 
   .frame {
-    height: min(84vh, 780px);
     border-radius: 36px;
   }
 

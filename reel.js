@@ -223,8 +223,6 @@
     wantPlay = true;
     armPoster = false;
     window.clearInterval(pinPoster);
-    setHeroPlaying(true);
-    document.dispatchEvent(new CustomEvent("myreels-hero-play"));
     if (!ytPlayer || typeof ytPlayer.playVideo !== "function") return;
     armPoster = false;
     ytPlayer.seekTo(0, true);

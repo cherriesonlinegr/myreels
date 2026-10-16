@@ -230,11 +230,19 @@ window.MyReelsStay = (() => {
 
   const pageById = (id) => COPY_PAGES.find((page) => page.id === id);
 
+  const LEGACY = {
+    landing: { cta: ["Θέλω το Reel — {net}"] },
+    up10: { yes: ["Ναι, θέλω τα 10 και τη διαχείριση — {extra}"] },
+    up5: { yes: ["Ναι, θέλω τα 5 — {extra}"] },
+  };
+
   const normalizePage = (page, source) => {
     const copy = {};
     page.fields.forEach((field) => {
       const has = source && Object.prototype.hasOwnProperty.call(source, field.key);
-      copy[field.key] = has ? cleanCopyValue(source[field.key], field.max) : page.copy[field.key];
+      const stored = has ? cleanCopyValue(source[field.key], field.max) : "";
+      const retired = (LEGACY[page.id] && LEGACY[page.id][field.key]) || [];
+      copy[field.key] = has && !retired.includes(stored) ? stored : page.copy[field.key];
     });
     return copy;
   };

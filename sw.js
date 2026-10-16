@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v40";
+const CACHE_VERSION = "myreels-admin-cache-v41";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",
@@ -58,6 +58,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/privacy.html" ||
     url.pathname === "/privacy.css" ||
     url.pathname === "/stay-reel.js" ||
+    url.pathname === "/reel.js" ||
     url.pathname === "/reel" ||
     url.pathname.startsWith("/luxurystayreels/") ||
     url.pathname.startsWith("/myairbnbreels/") ||

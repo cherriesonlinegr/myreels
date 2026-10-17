@@ -576,7 +576,96 @@ h1 {
   color: var(--text);
 }
 
+.dock {
+  display: none;
+}
+
 @media (max-width: 959px) {
+  body .spark-row {
+    display: none;
+  }
+
+  .page {
+    width: min(100% - 28px, 560px);
+    padding: 16px 0 28px;
+    gap: 18px;
+  }
+
+  .logo {
+    margin-bottom: 14px;
+  }
+
+  .logo__mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .logo__word {
+    font-size: 18px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  .sub {
+    font-size: 16px;
+  }
+
+  .intro { order: 1; }
+  .sell { display: contents; }
+  .sell h2.ask { order: 2; margin-top: 0; }
+  .sell .amount { order: 2; }
+  .sell .breakdown { order: 2; }
+  .sell .yes { order: 2; margin-bottom: 0; }
+  .stage {
+    order: 3;
+    width: min(100%, 210px);
+  }
+  .sell .order { order: 4; margin-top: 4px; }
+  .sell [data-copy="pitchTitle"] { order: 5; margin-top: 8px; }
+  .sell [data-copy="pitch"] { order: 5; }
+  .sell .honest { order: 5; }
+  .sell .micro { order: 5; }
+  .sell .ps { order: 5; }
+  .page > .work { order: 6; }
+
+  .buy {
+    height: 54px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .order {
+    scroll-margin-top: 12px;
+  }
+
+  body:has(.cookie-bar:not([hidden])) .dock {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .dock {
+    display: flex;
+    position: fixed;
+    z-index: 30;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    height: 54px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border-radius: 980px;
+    background: var(--coral);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 12px 28px rgba(255, 90, 95, 0.35);
+  }
+
   .intro {
     text-align: left;
   }

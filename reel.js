@@ -83,7 +83,22 @@
   });
   const ctaLabel = textOf("cta") || stay.fillTokens(stay.COPY.cta, tokens);
   const buyBtn = document.getElementById("buy-btn");
+  const dock = document.getElementById("dock");
   if (buyBtn) buyBtn.textContent = ctaLabel;
+  if (dock) {
+    dock.textContent = ctaLabel;
+    dock.addEventListener("click", (event) => {
+      event.preventDefault();
+      document.getElementById("order")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("buyer-name")?.focus({ preventScroll: true });
+    });
+    if (buyBtn && "IntersectionObserver" in window) {
+      const watch = new IntersectionObserver(([entry]) => {
+        dock.hidden = entry.isIntersecting;
+      }, { threshold: 0.5 });
+      watch.observe(buyBtn);
+    }
+  }
   document.title = `${textOf("headline") || name} · LuxuryStayReels`;
   document.querySelectorAll("[data-stay-gross]").forEach((node) => {
     node.textContent = grossLabel;

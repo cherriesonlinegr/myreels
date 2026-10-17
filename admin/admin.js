@@ -2049,7 +2049,7 @@ MyReels`,
             <tr><td><code>{pack5}</code></td><td>Τιμή των 5 Reels, χωρίς ΦΠΑ.</td><td>170€</td></tr>
             <tr><td><code>{pack10}</code></td><td>Τιμή των 10 Reels, χωρίς ΦΠΑ.</td><td>350€</td></tr>
             <tr><td><code>{drive}</code></td><td>Link του αρχείου στο Google Drive. Μπαίνει από τη landing.</td><td>https://drive.google.com/file/d/…/view</td></tr>
-            <tr><td><code>{review}</code></td><td>Η φόρμα κριτικής. Μπαίνει σε κάθε email μετά την αγορά, μέχρι να τη στείλει. Από το επόμενο email και μετά δεν ξαναμπαίνει.</td><td>Σύνδεσμος με το όνομα και το κατάλυμα ήδη μέσα</td></tr>
+            <tr><td><code>{review}</code></td><td>Η φόρμα κριτικής. Μπαίνει σε κάθε email μετά την αγορά, μέχρι να τη στείλει. Από το επόμενο email και μετά δεν ξαναμπαίνει.</td><td>Αν δεν μας έγραψες ακόμα δύο λόγια… και το link της φόρμας</td></tr>
           </tbody>
         </table>
       </div>
@@ -3116,7 +3116,7 @@ MyReels`,
         const name = button.getAttribute("data-viber-name") || "";
         const property = button.getAttribute("data-viber-property") || "το κατάλυμα";
         const hello = name ? `Γεια σου ${name}` : "Γεια σου";
-        const text = `${hello}, αν σου άρεσε το Reel για το ${property}, γράψε μας δυο λόγια. Το όνομά σου και το κατάλυμα είναι ήδη μέσα:\n${location.origin}/review?t=${token}`;
+        const text = `${hello},\n\nΑν δεν μας έγραψες ακόμα δύο λόγια για την εμπειρία σου, θα μας βοηθούσε αφάνταστα αν αφιέρωνες μόλις 30 δευτερόλεπτα για να μας αφήσεις μια σύντομη αξιολόγηση.\n${location.origin}/review?t=${token}`;
         await navigator.clipboard.writeText(text);
         const opener = document.createElement("a");
         opener.href = `viber://chat?number=+${button.getAttribute("data-viber-phone")}`;

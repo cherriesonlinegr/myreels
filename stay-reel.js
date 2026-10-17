@@ -385,22 +385,53 @@ window.MyReelsStay = (() => {
       const n = Math.max(0, Math.min(5, Number(count) || 0));
       return `<span class="quote__stars" aria-label="${n} από 5"><span class="is-on">${"★".repeat(n)}</span><span>${"★".repeat(5 - n)}</span></span>`;
     };
+    const featured = [
+      {
+        stars: 5,
+        name: "Ελένη Μαυροπούλου",
+        property: "Το Πέτρινο",
+        message: "Το Reel ανέδειξε την ατμόσφαιρα του καταλύματος μας πολύ καλύτερα από τις απλές φωτογραφίες. Απογείωσε την εικόνα μας! Σας ευχαριστούμε!",
+      },
+      {
+        stars: 5,
+        name: "Γιώργος",
+        property: "The Loft",
+        message: "Το ανέβασα την ίδια κιόλας μέρα! Μετέτρεψαν τις φωτογραφίες μου σε επαγγελματικό βίντεο χωρίς να χρειαστεί να κουνήσω το δάχτυλό μου. Απλά υπέροχο!",
+      },
+      {
+        stars: 5,
+        name: "Μαρία Κωνσταντίνου",
+        property: "Villa Mare",
+        message: "Το μεγαλύτερο πρόβλημά μου ήταν ότι δεν είχα χρόνο για γυρίσματα. Το βίντεο ήταν έτοιμο, η ποιότητα εξαιρετική και το ανέβασα αμέσως. Εξαιρετικό Value for money!",
+      },
+      {
+        stars: 5,
+        name: "Γιάννης Μιχαλόπουλος",
+        property: "Traditional Guesthouse Πήλιο",
+        message: "Ήμουν επιφυλακτικός στην αρχή, αλλά μόλις είδα το κατάλυμά μου στο βίντεο, το αγόρασα στη στιγμή.\nΔεν περίμενα ότι από τις απλές φωτογραφίες του site μου θα έβγαινε τέτοιο αποτέλεσμα. Είναι ό,τι πιο vfm έχω αγοράσει για το μάρκετινγκ του σπιτιού.",
+      },
+    ];
+    const paintQuotes = (extra) => {
+      const host = container.querySelector("[data-quotes]");
+      if (!host) return;
+      const seen = new Set(featured.map((item) => item.message));
+      const list = featured.concat((extra || []).filter((item) => item?.message && !seen.has(item.message)));
+      host.hidden = false;
+      host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid">${list
+        .map(
+          (item) =>
+            `<figure class="quote">${starRow(item.stars)}${item.message ? `<blockquote>${escapeHtml(item.message)}</blockquote>` : ""}<figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
+        )
+        .join("")}</div>`;
+      container.hidden = false;
+    };
     container.innerHTML = `<div class="quotes" data-quotes hidden></div>${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
     container.hidden = !title && !lead && !tiles;
+    paintQuotes([]);
     fetch("/api/review?list=1", { cache: "no-store" })
       .then((response) => response.json())
       .then((payload) => {
-        const list = Array.isArray(payload?.reviews) ? payload.reviews : [];
-        const host = container.querySelector("[data-quotes]");
-        if (!host || !list.length) return;
-        host.hidden = false;
-        host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid">${list
-          .map(
-            (item) =>
-              `<figure class="quote">${starRow(item.stars)}${item.message ? `<blockquote>${escapeHtml(item.message)}</blockquote>` : ""}<figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
-          )
-          .join("")}</div>`;
-        container.hidden = false;
+        paintQuotes(Array.isArray(payload?.reviews) ? payload.reviews : []);
       })
       .catch(() => {});
     container.querySelectorAll("[data-work-local] video").forEach((video) => {

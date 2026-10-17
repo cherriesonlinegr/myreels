@@ -1847,7 +1847,12 @@ MyReels`,
   async function loadStayBoard() {
     setStayBoardStatus("");
     try {
-      await stayBoardRequest({ action: "load" });
+      const loaded = await stayBoardRequest({ action: "load" });
+      if (window.MyReelsStay && loaded.copy) {
+        const pages = window.MyReelsStay.resolvePages(loaded.copy);
+        localStorage.setItem(STAY_COPY_KEY, JSON.stringify(pages));
+        fillStayCopyForm(pages);
+      }
       const stay = window.MyReelsStay;
       const stays = withStaySlugs(loadStays());
       saveStays(stays);

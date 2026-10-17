@@ -1776,10 +1776,10 @@ MyReels`,
               </span>
             </div>
             <div class="stay-row__actions">
+              <a class="btn btn--sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">Άνοιγμα</a>
               <button type="button" class="btn btn--ghost btn--sm" data-stay-edit="${escapeHtml(item.id)}">Επεξεργασία</button>
               <button type="button" class="btn btn--ghost btn--sm" data-stay-copy="${escapeHtml(url)}">Αντιγραφή</button>
-              <a class="btn btn--ghost btn--sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">Άνοιγμα</a>
-              <button type="button" class="btn btn--ghost btn--sm" data-stay-delete="${escapeHtml(item.id)}">Διαγραφή</button>
+              <button type="button" class="btn btn--ghost btn--sm btn--danger" data-stay-delete="${escapeHtml(item.id)}">Διαγραφή</button>
             </div>
           </article>
         `;
@@ -2025,8 +2025,8 @@ MyReels`,
     const emails = stayBoard.sequences?.[staySeqStage] || [];
     editor.innerHTML = `
       <div class="stay-seq__bar">
-        <button type="button" class="btn" id="stay-seq-add">+ Email</button>
         <button type="button" class="btn" id="stay-seq-save">Αποθήκευση</button>
+        <button type="button" class="btn btn--ghost" id="stay-seq-add">+ Email</button>
         <button type="button" class="btn btn--ghost" id="stay-seq-reset">Επαναφορά</button>
         <label class="field stay-seq__to">
           <span>Δοκιμή στο</span>
@@ -2034,6 +2034,8 @@ MyReels`,
         </label>
       </div>
       <p class="stay-hint" id="stay-seq-status">Ημέρα 0 φεύγει μόνη της μόλις το κατάλυμα μπει στο στάδιο και έχουμε email. Οι επόμενες μέρες φεύγουν μόνες τους.</p>
+      <details class="stay-details">
+        <summary>Μεταβλητές</summary>
       <div class="stay-tokens-wrap">
         <table class="stay-tokens">
           <thead>
@@ -2053,6 +2055,7 @@ MyReels`,
           </tbody>
         </table>
       </div>
+      </details>
       ${
         emails
           .map(
@@ -2065,7 +2068,7 @@ MyReels`,
               <div class="stay-result__actions">
                 <button type="button" class="btn btn--ghost" data-seq-test>Δοκιμή</button>
                 <button type="button" class="btn btn--ghost" data-seq-send="${escapeHtml(email.id)}">Στείλε σε όσους είναι εδώ</button>
-                <button type="button" class="btn btn--ghost" data-seq-delete>Διαγραφή</button>
+                <button type="button" class="btn btn--ghost btn--danger" data-seq-delete>Διαγραφή</button>
               </div>
               <div class="stay-seq__preview" data-seq-preview hidden></div>
             </article>`

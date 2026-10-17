@@ -243,6 +243,24 @@
   gap: 12px;
 }
 
+.quotes__dots {
+  display: none;
+}
+
+.quotes__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.quotes__dot.is-on {
+  background: #ff5a5f;
+}
+
 .quote {
   flex: 1 1 240px;
   max-width: 320px;
@@ -418,6 +436,53 @@
     left: 13px;
     top: 10px;
     border-width: 7px 0 7px 11px;
+  }
+
+  .reel-tile:has(.reel-tile__frame),
+  .reel-tile:has(.is-playing) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 959px) {
+  .reel-tile:has(.reel-tile__frame),
+  .reel-tile:has(.is-playing) {
+    grid-column: 1 / -1;
+  }
+
+  .sell > .quotes {
+    margin: 4px 0 0;
+  }
+
+  .sell > .quotes + .order {
+    margin-top: 12px;
+  }
+
+  .sell > .quotes .quotes__grid {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sell > .quotes .quotes__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sell > .quotes .quote {
+    flex: 0 0 100%;
+    max-width: 100%;
+    scroll-snap-align: start;
+  }
+
+  .sell > .quotes .quotes__dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
   }
 }
 

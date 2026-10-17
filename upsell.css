@@ -69,11 +69,11 @@ body {
 }
 
 .banner__brand {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.045em;
   color: var(--coral);
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .banner__line {
@@ -115,15 +115,15 @@ body {
 }
 
 h1 {
-  font-size: clamp(32px, 8vw, 40px);
+  font-size: 40px;
   font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
-  margin-bottom: 12px;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin-bottom: 14px;
 }
 
 .owned {
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.25;
@@ -136,7 +136,7 @@ h1 {
 .done p,
 .missing p:last-child {
   font-size: 17px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--muted);
   white-space: pre-line;
 }
@@ -150,17 +150,18 @@ h1 {
 }
 
 .next h2,
-.close h2 {
-  font-size: 28px;
+.close h2,
+.rate h2 {
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.035em;
-  line-height: 1.12;
+  line-height: 1.08;
   margin-bottom: 8px;
 }
 
 .next > p:first-of-type {
   font-size: 17px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--muted);
   margin-bottom: 8px;
 }
@@ -175,8 +176,8 @@ h1 {
 
 .offer__context {
   margin: 8px 0 14px;
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.5;
   color: var(--muted);
   white-space: pre-line;
 }
@@ -227,7 +228,7 @@ h1 {
 }
 
 .pack__gross {
-  font-size: 52px;
+  font-size: clamp(56px, 12vw, 76px);
   font-weight: 600;
   letter-spacing: -0.045em;
   line-height: 0.95;
@@ -236,7 +237,8 @@ h1 {
 
 .pack__net,
 .pack__each {
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 500;
   line-height: 1.35;
   color: var(--muted);
 }
@@ -246,8 +248,8 @@ h1 {
   display: grid;
   gap: 8px;
   margin: 14px 0 16px;
-  font-size: 16px;
-  line-height: 1.35;
+  font-size: 17px;
+  line-height: 1.5;
 }
 
 .perks li {
@@ -575,8 +577,6 @@ form input:focus {
 
 .rate h2 {
   margin: 0 0 6px;
-  font-size: 28px;
-  letter-spacing: -0.03em;
   text-align: center;
 }
 
@@ -585,8 +585,8 @@ form input:focus {
   margin: 0 auto 16px;
   max-width: 34rem;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.5;
   text-align: center;
 }
 
@@ -691,15 +691,29 @@ form input:focus {
 
 .rate button[type="submit"] {
   width: 100%;
-  height: 52px;
+  height: 50px;
   border: 0;
-  border-radius: 999px;
-  background: #ff5a5f;
+  border-radius: 980px;
+  background: var(--coral);
   color: #fff;
   font: inherit;
-  font-size: 16px;
-  font-weight: 650;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   cursor: pointer;
+}
+
+#rate-property {
+  color: var(--coral);
+  font-weight: 600;
+}
+
+.place {
+  color: var(--coral);
+}
+
+.dock {
+  display: none;
 }
 
 .rate button[type="submit"]:hover { background: #e84c51; }
@@ -712,12 +726,56 @@ form input:focus {
   text-align: center;
 }
 
-@media (min-width: 800px) {
+@media (max-width: 959px) {
+  body:has(.cookie-bar:not([hidden])) .dock {
+    bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  body:has(.dock:not([hidden])) .sheet,
+  body:has(.dock:not([hidden])) .work {
+    scroll-margin-bottom: 80px;
+  }
+
+  .dock {
+    display: flex;
+    position: fixed;
+    z-index: 30;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    height: 54px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border-radius: 980px;
+    background: var(--coral);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 12px 28px rgba(255, 90, 95, 0.35);
+  }
+
+  .dock.is-five {
+    background: var(--blue);
+    box-shadow: 0 12px 28px rgba(0, 113, 227, 0.35);
+  }
+}
+
+@media (min-width: 960px) {
   .sheet {
     padding-top: 64px;
   }
 
   h1 {
     font-size: 56px;
+  }
+
+  .next h2,
+  .close h2,
+  .rate h2 {
+    font-size: 40px;
   }
 }

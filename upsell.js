@@ -31,6 +31,18 @@
     }
   }
   const pages = stay.resolvePages(copyRaw);
+  const dock = document.getElementById("dock");
+  dock?.addEventListener("click", (event) => {
+    event.preventDefault();
+    const offerOpen = ready && !ready.hidden;
+    const target = offerOpen ? document.getElementById("offer-yes") : document.getElementById("rate");
+    target?.scrollIntoView({ behavior: "smooth", block: offerOpen ? "center" : "start" });
+    if (offerOpen) document.getElementById("offer-yes")?.focus({ preventScroll: true });
+    else document.querySelector("#rate-form button[type='submit']")?.focus({ preventScroll: true });
+  });
+  window.addEventListener("scroll", placeDock, { passive: true });
+  window.addEventListener("resize", placeDock);
+
   const preview = params.get("preview");
   if (preview === "1" || preview === "5" || preview === "10") {
     showDone(Number(preview));
@@ -163,11 +175,34 @@
     };
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function withPlace(value) {
+    const text = String(value || "").trim();
+    const name = property;
+    if (!name || !text.includes(name)) return escapeHtml(text);
+    const token = "\u0001";
+    const safeName = escapeHtml(name);
+    const span = `<span class="place">«${safeName}»</span>`;
+    return escapeHtml(text)
+      .replaceAll(`«${safeName}»`, token)
+      .replaceAll(`&quot;${safeName}&quot;`, token)
+      .replaceAll(`“${safeName}”`, token)
+      .replaceAll(safeName, token)
+      .replaceAll(token, span);
+  }
+
   function setText(node, value) {
     if (!node) return;
     const text = String(value || "").trim();
     node.hidden = text.length === 0;
-    node.textContent = text;
+    node.innerHTML = withPlace(text);
   }
 
   function fillList(node, raw, tokens) {
@@ -179,7 +214,7 @@
     node.replaceChildren(
       ...lines.map((line) => {
         const item = document.createElement("li");
-        item.textContent = line;
+        item.innerHTML = withPlace(line);
         return item;
       })
     );
@@ -242,6 +277,7 @@
       if (yes) yes.hidden = true;
       if (billBlock) billBlock.hidden = true;
       paintWork(step === 10 ? "up10" : "up5");
+      placeDock();
       return;
     }
     if (billBlock) billBlock.hidden = false;
@@ -252,6 +288,7 @@
     if (yes) yes.textContent = stay.fillTokens(page.yes, tokens).trim() || stay.fillTokens(factory.yes, tokens);
     if (no) no.textContent = stay.fillTokens(page.no, tokens).trim() || stay.fillTokens(factory.no, tokens);
     paintWork(step === 10 ? "up10" : "up5");
+    placeDock();
   }
 
   async function confirmReel(id) {
@@ -373,13 +410,13 @@
       const value = beatText()[index];
       if (!title) return;
       if (!fade) {
-        title.textContent = value;
+        title.innerHTML = withPlace(value);
         return;
       }
       title.classList.add("is-dim");
       window.setTimeout(() => {
         if (!hold || beat !== index) return;
-        title.textContent = value;
+        title.innerHTML = withPlace(value);
         title.classList.remove("is-dim");
       }, 180);
     };
@@ -404,7 +441,7 @@
         last = await response.json().catch(() => ({}));
         if (response.ok && last.status === "paid") {
           property = stay.cleanName(last.property) || property;
-          if (hold && beat === 1 && title && !title.classList.contains("is-dim")) title.textContent = beatText()[1];
+          if (hold && beat === 1 && title && !title.classList.contains("is-dim")) title.innerHTML = withPlace(beatText()[1]);
           break;
         }
         if (response.ok && last.status === "failed") break;
@@ -493,6 +530,7 @@
     paintWork(count === 10 ? "done10" : count === 5 ? "done5" : "done1");
     mountRate();
     window.scrollTo(0, 0);
+    placeDock();
   }
 
   function mountRate() {
@@ -516,8 +554,9 @@
       heading.textContent = "Ευχαριστούμε.";
       const note = document.createElement("p");
       note.className = "rate__thanks";
-      note.textContent = text;
+      note.innerHTML = withPlace(text);
       rate.append(heading, note);
+      placeDock();
     };
     if (videoId || property) {
       const query = new URLSearchParams();
@@ -584,4 +623,29 @@
       }
     });
   }
+
+  function placeDock() {
+    const dock = document.getElementById("dock");
+    if (!dock) return;
+    const offerOpen = ready && !ready.hidden;
+    const doneOpen = done && !done.hidden;
+    const button = offerOpen
+      ? document.getElementById("offer-yes")
+      : doneOpen
+        ? document.querySelector("#rate-form button[type='submit']")
+        : null;
+    const anchor = offerOpen ? document.getElementById("offer-net") : doneOpen ? document.getElementById("done-title") : null;
+    if (!button || button.hidden || !button.textContent.trim() || !anchor || window.innerWidth > 959) {
+      dock.hidden = true;
+      return;
+    }
+    dock.textContent = button.textContent.trim();
+    dock.classList.toggle("is-five", Boolean(offerOpen && ready.classList.contains("is-five")));
+    const priceTop = anchor.getBoundingClientRect().top;
+    const box = button.getBoundingClientRect();
+    const priceShown = priceTop < window.innerHeight * 0.92;
+    const buttonShown = box.top < window.innerHeight - 12 && box.bottom > 48;
+    dock.hidden = !(priceShown && !buttonShown);
+  }
+
 })();

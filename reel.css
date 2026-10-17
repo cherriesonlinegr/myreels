@@ -581,62 +581,67 @@ h1 {
 }
 
 @media (max-width: 959px) {
-  body .spark-row {
+  .intro {
+    text-align: left;
+  }
+
+  html.is-mobile-b body .spark-row {
     display: none;
   }
 
-  .page {
+  html.is-mobile-b .page {
     width: min(100% - 28px, 560px);
     padding: 16px 0 28px;
     gap: 18px;
   }
 
-  .logo {
+  html.is-mobile-b .logo {
     margin-bottom: 14px;
   }
 
-  .logo__mark {
+  html.is-mobile-b .logo__mark {
     width: 30px;
     height: 30px;
   }
 
-  .logo__word {
+  html.is-mobile-b .logo__word {
     font-size: 18px;
   }
 
-  h1 {
+  html.is-mobile-b h1 {
     font-size: 32px;
   }
 
-  .sub {
+  html.is-mobile-b .sub {
     font-size: 16px;
   }
 
-  .intro { order: 1; }
-  .sell { display: contents; }
-  .sell h2.ask { order: 2; margin-top: 0; }
-  .sell .amount { order: 2; }
-  .sell .breakdown { order: 2; }
-  .sell .yes { order: 2; margin-bottom: 0; }
-  .stage {
+  html.is-mobile-b .intro { order: 1; }
+  html.is-mobile-b .sell { display: contents; }
+  html.is-mobile-b .sell h2.ask { order: 2; margin-top: 0; }
+  html.is-mobile-b .sell .amount { order: 2; }
+  html.is-mobile-b .sell .breakdown { order: 2; }
+  html.is-mobile-b .sell .yes { order: 2; margin-bottom: 0; }
+  html.is-mobile-b .stage {
     order: 3;
     width: min(100%, 210px);
   }
-  .sell .order { order: 4; margin-top: 4px; }
-  .sell [data-copy="pitchTitle"] { order: 5; margin-top: 8px; }
-  .sell [data-copy="pitch"] { order: 5; }
-  .sell .honest { order: 5; }
-  .sell .micro { order: 5; }
-  .sell .ps { order: 5; }
-  .page > .work { order: 6; }
+  html.is-mobile-b .sell > .quotes { order: 4; }
+  html.is-mobile-b .sell .order { order: 4; margin-top: 4px; }
+  html.is-mobile-b .sell [data-copy="pitchTitle"] { order: 5; margin-top: 8px; }
+  html.is-mobile-b .sell [data-copy="pitch"] { order: 5; }
+  html.is-mobile-b .sell .honest { order: 5; }
+  html.is-mobile-b .sell .micro { order: 5; }
+  html.is-mobile-b .sell .ps { order: 5; }
+  html.is-mobile-b .page > .work { order: 6; }
 
-  .buy {
+  html.is-mobile-b .buy {
     height: 54px;
     font-size: 16px;
     font-weight: 600;
   }
 
-  .order {
+  html.is-mobile-b .order {
     scroll-margin-top: 12px;
   }
 
@@ -664,9 +669,5 @@ h1 {
     text-align: center;
     text-decoration: none;
     box-shadow: 0 12px 28px rgba(255, 90, 95, 0.35);
-  }
-
-  .intro {
-    text-align: left;
   }
 }

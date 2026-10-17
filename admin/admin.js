@@ -1761,7 +1761,7 @@ MyReels`,
           <article class="stay-row">
             <div>
               <strong>${escapeHtml(item.name)}</strong>
-              <small>${escapeHtml(when)} · 1: ${escapeHtml(grossLabel)} · 5: ${escapeHtml(gross5)} · 10: ${escapeHtml(gross10)}</small>
+              <small>${escapeHtml(when)} · 1: ${escapeHtml(grossLabel)} · 5: ${escapeHtml(gross5)} · 10: ${escapeHtml(gross10)}${item.mobile === "b" ? " · Κινητό Β" : ""}</small>
               <span class="stay-row__links">
                 <a href="${escapeHtml(youtubeHref)}" target="_blank" rel="noopener" title="YouTube — στη landing" aria-label="YouTube, στη landing">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FF0000"/><path fill="#fff" d="M10 8.2v7.6l6.4-3.8L10 8.2z"/></svg>
@@ -1870,6 +1870,7 @@ MyReels`,
           createdAt: new Date(item.createdAt).toISOString(),
         };
         if (item.posterAt != null) deal.posterAt = item.posterAt;
+        if (item.mobile === "a" || item.mobile === "b") deal.mobile = item.mobile;
         if (item.samples && typeof item.samples === "object") deal.samples = item.samples;
         return deal;
       });
@@ -2467,6 +2468,7 @@ MyReels`,
       }
       const preview = new URL(url);
       preview.searchParams.set("draft", "1");
+      if (document.querySelector('input[name="stay-mobile"]:checked')?.value === "b") preview.searchParams.set("m", "b");
       window.open(preview, "_blank", "noopener");
     };
 
@@ -2762,6 +2764,7 @@ MyReels`,
         pack10,
         youtubeUrl: String(input.youtubeUrl || "").trim(),
         posterAt: input.posterAt != null ? input.posterAt : readStayPoster(),
+        mobile: input.mobile === "b" ? "b" : "a",
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
@@ -2787,6 +2790,7 @@ MyReels`,
           landingUrl: url,
           driveUrl: item.driveUrl,
           posterAt: item.posterAt || 0,
+          mobile: input.mobile === "b" ? "b" : "a",
           createdAt: new Date(item.createdAt).toISOString(),
         },
       })
@@ -2814,6 +2818,7 @@ MyReels`,
         net: priceInput?.value,
         pack5: pack5Input?.value,
         pack10: pack10Input?.value,
+        mobile: document.querySelector('input[name="stay-mobile"]:checked')?.value,
         errorTarget: errorEl,
       });
     });
@@ -2896,6 +2901,7 @@ MyReels`,
           pack5: document.getElementById("reel-pack5")?.value,
           pack10: document.getElementById("reel-pack10")?.value,
           posterAt: 0,
+          mobile: document.querySelector('input[name="reel-mobile"]:checked')?.value,
           errorTarget: reelError,
         });
         if (!item) {
@@ -2975,6 +2981,10 @@ MyReels`,
         markSampleClash();
         const savedPoster = Number(item.posterAt) || (stayBoard.deals || []).find((deal) => deal.videoId === item.videoId)?.posterAt || 0;
         openPoster(savedPoster);
+        const savedMobile = item.mobile === "b" || (stayBoard.deals || []).find((deal) => deal.videoId === item.videoId)?.mobile === "b" ? "b" : "a";
+        document.querySelectorAll('input[name="stay-mobile"]').forEach((input) => {
+          input.checked = input.value === savedMobile;
+        });
         showCopyPage("landing");
         showStayPanel("oldway");
         setCopyStatus("Φορτώθηκε αυτή η landing. Άλλαξε το κείμενο και πάτα Δημιουργία.");

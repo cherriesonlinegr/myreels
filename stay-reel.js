@@ -411,19 +411,50 @@ window.MyReelsStay = (() => {
         message: "Ήμουν επιφυλακτικός στην αρχή, αλλά μόλις είδα το κατάλυμά μου στο βίντεο, το αγόρασα στη στιγμή.\nΔεν περίμενα ότι από τις απλές φωτογραφίες του site μου θα έβγαινε τέτοιο αποτέλεσμα. Είναι ό,τι πιο vfm έχω αγοράσει για το μάρκετινγκ του σπιτιού.",
       },
     ];
+    const placeQuotes = () => {
+      const host = document.querySelector("[data-quotes]");
+      const form = document.getElementById("order");
+      if (!host || !form || host.parentElement !== container && host.parentElement !== form.parentElement) return;
+      if (window.matchMedia("(max-width: 959px)").matches) form.before(host);
+      else container.prepend(host);
+    };
+    if (!document.documentElement.dataset.quotesPark) {
+      document.documentElement.dataset.quotesPark = "1";
+      window.addEventListener("resize", placeQuotes);
+    }
     const paintQuotes = (extra) => {
-      const host = container.querySelector("[data-quotes]");
+      const host = container.querySelector("[data-quotes]") || document.querySelector("[data-quotes]");
       if (!host) return;
       const seen = new Set(featured.map((item) => item.message));
       const list = featured.concat((extra || []).filter((item) => item?.message && !seen.has(item.message)));
       host.hidden = false;
-      host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid">${list
+      host.innerHTML = `<h2 class="quotes__title">Κριτικές</h2><div class="quotes__grid" tabindex="0" aria-label="Κριτικές">${list
         .map(
           (item) =>
             `<figure class="quote">${starRow(item.stars)}${item.message ? `<blockquote>${escapeHtml(item.message)}</blockquote>` : ""}<figcaption>${escapeHtml([item.name, item.property].filter(Boolean).join(" · "))}</figcaption></figure>`
         )
-        .join("")}</div>`;
+        .join("")}</div><div class="quotes__dots"></div>`;
+      const scroller = host.querySelector(".quotes__grid");
+      const dots = host.querySelector(".quotes__dots");
+      const cards = [...scroller.children];
+      dots.innerHTML = cards
+        .map((_, index) => `<button type="button" class="quotes__dot${index === 0 ? " is-on" : ""}" aria-label="Κριτική ${index + 1}"></button>`)
+        .join("");
+      const mark = () => {
+        const width = cards[0]?.getBoundingClientRect().width || scroller.clientWidth || 1;
+        const index = Math.max(0, Math.min(cards.length - 1, Math.round(scroller.scrollLeft / (width + 12))));
+        dots.querySelectorAll(".quotes__dot").forEach((dot, dotIndex) => dot.classList.toggle("is-on", dotIndex === index));
+      };
+      scroller.addEventListener("scroll", mark, { passive: true });
+      dots.addEventListener("click", (event) => {
+        const dot = event.target.closest(".quotes__dot");
+        if (!dot) return;
+        const index = [...dots.children].indexOf(dot);
+        const width = cards[0]?.getBoundingClientRect().width || scroller.clientWidth;
+        scroller.scrollTo({ left: index * (width + 12), behavior: "smooth" });
+      });
       container.hidden = false;
+      placeQuotes();
     };
     container.innerHTML = `<div class="quotes" data-quotes hidden></div>${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
     container.hidden = !title && !lead && !tiles;
@@ -466,6 +497,7 @@ window.MyReelsStay = (() => {
         if (playing) return;
         document.dispatchEvent(new CustomEvent("myreels-work-play"));
         localButton.classList.add("is-playing");
+        if (window.innerWidth <= 959) localButton.closest("figure")?.scrollIntoView({ behavior: "smooth", block: "center" });
         video.muted = false;
         video.volume = 1;
         const started = video.play();
@@ -503,6 +535,7 @@ window.MyReelsStay = (() => {
       frame.appendChild(iframe);
       button.replaceWith(frame);
       document.dispatchEvent(new CustomEvent("myreels-work-play"));
+      if (window.innerWidth <= 959) figure.scrollIntoView({ behavior: "smooth", block: "center" });
     });
     document.addEventListener("myreels-hero-play", () => {
       container.querySelectorAll("[data-work-local]").forEach((button) => {

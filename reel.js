@@ -20,6 +20,7 @@
   let copyRaw = params.get("c") || "";
   let sampleOverrides = {};
   let posterAt = 0;
+  if (params.get("m") === "b") document.documentElement.classList.add("is-mobile-b");
   if (!videoId && pathStay) {
     try {
       const response = await fetch(`/api/reel-config?slug=${encodeURIComponent(pathStay)}`, { cache: "no-store" });
@@ -34,6 +35,7 @@
         if (data.copy) copyRaw = data.copy;
         if (data.samples && typeof data.samples === "object") sampleOverrides = data.samples;
         if (Number(data.posterAt) > 0) posterAt = Math.round(Number(data.posterAt) * 10) / 10;
+        if (data.mobile === "b") document.documentElement.classList.add("is-mobile-b");
       }
     } catch {
       /* an older link still carries the video in the query */
@@ -74,7 +76,13 @@
     const filled = stay.fillTokens(copy[key], { ...tokens, name: name ? marker : "" }).trim();
     const safe = escapeHtml(filled);
     if (!name) return safe;
-    return safe.replaceAll(marker, `<span class="place">${escapeHtml(name)}</span>`);
+    const quoted = key === "label" ? escapeHtml(name) : `«${escapeHtml(name)}»`;
+    const span = `<span class="place">${quoted}</span>`;
+    return safe
+      .replaceAll(`«${marker}»`, span)
+      .replaceAll(`&quot;${marker}&quot;`, span)
+      .replaceAll(`“${marker}”`, span)
+      .replaceAll(marker, span);
   };
   document.querySelectorAll("[data-copy]").forEach((node) => {
     const html = htmlOf(node.getAttribute("data-copy"));
@@ -92,12 +100,21 @@
       document.getElementById("order")?.scrollIntoView({ behavior: "smooth", block: "start" });
       document.getElementById("buyer-name")?.focus({ preventScroll: true });
     });
-    if (buyBtn && "IntersectionObserver" in window) {
-      const watch = new IntersectionObserver(([entry]) => {
-        dock.hidden = entry.isIntersecting;
-      }, { threshold: 0.5 });
-      watch.observe(buyBtn);
-    }
+    const price = document.querySelector(".amount");
+    const placeDock = () => {
+      if (!price || !buyBtn || window.innerWidth > 959) {
+        dock.hidden = true;
+        return;
+      }
+      const priceTop = price.getBoundingClientRect().top;
+      const buy = buyBtn.getBoundingClientRect();
+      const priceShown = priceTop < window.innerHeight * 0.92;
+      const buyShown = buy.top < window.innerHeight - 12 && buy.bottom > 48;
+      dock.hidden = !(priceShown && !buyShown);
+    };
+    placeDock();
+    window.addEventListener("scroll", placeDock, { passive: true });
+    window.addEventListener("resize", placeDock);
   }
   document.title = `${textOf("headline") || name} · LuxuryStayReels`;
   document.querySelectorAll("[data-stay-gross]").forEach((node) => {

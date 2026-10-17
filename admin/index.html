@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=33" />
+  <link rel="stylesheet" href="/admin/admin.css?v=34" />
   <meta name="theme-color" content="#0071e3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
@@ -207,6 +207,11 @@
               <small class="stay-hint" id="reel-pack10-preview">Με ΦΠΑ: 434€</small>
             </label>
           </div>
+          <fieldset class="stay-mobile">
+            <legend>Κινητό</legend>
+            <label><input type="radio" name="reel-mobile" value="a" checked /> Α · όπως είναι τώρα</label>
+            <label><input type="radio" name="reel-mobile" value="b" /> Β · τιμή και κουμπί στην πρώτη οθόνη</label>
+          </fieldset>
           <div class="reel-upload__bar" id="reel-upload-track" hidden><span id="reel-upload-bar"></span></div>
           <p class="stay-hint" id="reel-upload-status"></p>
           <p class="stay-hint stay-hint--error" id="reel-upload-error" hidden></p>
@@ -288,6 +293,11 @@
                 <small class="stay-hint" id="stay-pack10-preview">Με ΦΠΑ: 434€</small>
               </label>
             </div>
+            <fieldset class="stay-mobile">
+              <legend>Κινητό</legend>
+              <label><input type="radio" name="stay-mobile" value="a" checked /> Α · όπως είναι τώρα</label>
+              <label><input type="radio" name="stay-mobile" value="b" /> Β · τιμή και κουμπί στην πρώτη οθόνη</label>
+            </fieldset>
             <p class="stay-hint">Μετά την αγορά βλέπει πρώτα τα 10, με διαχείριση social για 2 μήνες. Αν πει όχι, βλέπει τα 5, χωρίς διαχείριση. Πληρώνει μόνο τη διαφορά από το πρώτο Reel.</p>
             <p class="stay-hint" id="stay-title-status"></p>
             <p class="stay-hint stay-hint--error" id="stay-form-error" hidden></p>
@@ -712,6 +722,6 @@
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js?v=3"></script>
   <script type="module" src="/admin/reel-upload.js?v=5"></script>
-  <script src="/admin/admin.js?v=45"></script>
+  <script src="/admin/admin.js?v=46"></script>
 </body>
 </html>

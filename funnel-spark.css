@@ -451,7 +451,11 @@
   }
 
   .sell > .quotes {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin: 4px 0 0;
+    overflow: hidden;
   }
 
   .sell > .quotes + .order {
@@ -459,6 +463,9 @@
   }
 
   .sell > .quotes .quotes__grid {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     flex-wrap: nowrap;
     justify-content: flex-start;
     gap: 12px;

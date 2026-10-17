@@ -581,6 +581,24 @@ h1 {
 }
 
 @media (max-width: 959px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: calc(100% - 40px);
+  }
+
+  .intro,
+  .stage,
+  .sell,
+  .work {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .intro {
     text-align: left;
   }

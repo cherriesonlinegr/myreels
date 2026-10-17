@@ -352,10 +352,48 @@
     const title = missing.querySelector("h1");
     const text = missing.querySelector("h1 + p");
     const line = missing.querySelector(".banner__line");
+    const loader = document.getElementById("wait-loader");
     if (line) line.textContent = "Το πρώτο Reel είναι δικό σου";
-    if (title) title.textContent = "Η πληρωμή σου ολοκληρώθηκε.";
-    if (text) text.textContent = "Δες κάτι που σε ενδιαφέρει!";
+    if (text) {
+      text.textContent = "";
+      text.hidden = true;
+    }
+    if (loader) loader.hidden = false;
     missing.hidden = false;
+    const beatText = () => [
+      "Η πληρωμή σου ολοκληρώθηκε.",
+      stay.fillTokens("Το Reel για το «{name}» είναι δικό σου!", { name: property }),
+      "Μην κλείσεις τη σελίδα.",
+      "Έχουμε μια πρόταση που, ειλικρινά, δεν πρέπει να χάσεις!",
+    ];
+    let beat = 0;
+    let hold = true;
+    const showBeat = (index, fade) => {
+      beat = index;
+      const value = beatText()[index];
+      if (!title) return;
+      if (!fade) {
+        title.textContent = value;
+        return;
+      }
+      title.classList.add("is-dim");
+      window.setTimeout(() => {
+        if (!hold || beat !== index) return;
+        title.textContent = value;
+        title.classList.remove("is-dim");
+      }, 180);
+    };
+    showBeat(0, false);
+    const beatTimer = window.setInterval(() => {
+      if (beat >= 3) {
+        window.clearInterval(beatTimer);
+        return;
+      }
+      showBeat(beat + 1, true);
+    }, 1100);
+    const beatsDone = new Promise((resolve) => {
+      window.setTimeout(resolve, 4200);
+    });
     let last = null;
     for (let attempt = 0; attempt < 6; attempt += 1) {
       try {
@@ -364,15 +402,29 @@
           { cache: "no-store" }
         );
         last = await response.json().catch(() => ({}));
-        if (response.ok && (last.status === "paid" || last.status === "failed")) break;
+        if (response.ok && last.status === "paid") {
+          property = stay.cleanName(last.property) || property;
+          if (hold && beat === 1 && title && !title.classList.contains("is-dim")) title.textContent = beatText()[1];
+          break;
+        }
+        if (response.ok && last.status === "failed") break;
       } catch {
         last = null;
       }
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    if (!last || last.status !== "paid") {
+    const paid = Boolean(last && last.status === "paid");
+    if (paid) await beatsDone;
+    hold = false;
+    window.clearInterval(beatTimer);
+    title?.classList.remove("is-dim");
+    if (loader) loader.hidden = true;
+    if (!paid) {
+      const face = document.getElementById("wait-face");
+      if (face) face.hidden = false;
       if (title) title.textContent = "Η πληρωμή δεν επιβεβαιώθηκε.";
       if (text) {
+        text.hidden = false;
         text.textContent = last?.status === "failed"
           ? "Δεν ολοκληρώθηκε. Γύρνα στη σελίδα του καταλύματος και δοκίμασε ξανά."
           : "Αν την ολοκλήρωσες, ανανέωσε σε λίγο.";

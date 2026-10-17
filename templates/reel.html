@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/reel.css?v=4" />
+  <link rel="stylesheet" href="/reel.css?v=10" />
   <link rel="stylesheet" href="/funnel-spark.css?v=8" />
 </head>
 <body>
@@ -49,7 +49,11 @@
       </p>
     </header>
 
-    <div class="stage">
+      <div class="stage">
+      <div class="stills" aria-hidden="true">
+        <span class="still still--a"><img id="still-a" alt="" /></span>
+        <span class="still still--b"><img id="still-b" alt="" /></span>
+      </div>
       <div class="floaties" aria-hidden="true">
         <span class="floaty floaty--ig floaty--a"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></span>
         <span class="floaty floaty--fb floaty--b"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3c-2.8 0-5 2.2-5 5v2H7v4h2v8h4v-8h3l1-4h-4V9c0-.6.4-1 1-1z"/></svg></span>
@@ -75,16 +79,20 @@
     </div>
 
     <section class="sell">
-      <h2 data-copy="pitchTitle">Και το καλύτερο; Δεν χρειάστηκε να το τραβήξουμε.</h2>
-      <p data-copy="pitch">
-        Πήραμε τις φωτογραφίες του καταλύματός σου και δημιουργήσαμε ένα Reel όπου ένα μοντέλο κινείται μέσα στον χώρο.
-        Εσύ δεν χρειάστηκε να κανονίσεις γύρισμα, να εμφανιστείς στην κάμερα ή να τραβήξεις καινούργιο υλικό.
-      </p>
+      <div class="pitch">
+        <h2 data-copy="pitchTitle">Και το καλύτερο; Δεν χρειάστηκε να το τραβήξουμε.</h2>
+        <p data-copy="pitch">
+          Πήραμε τις φωτογραφίες του καταλύματός σου και δημιουργήσαμε ένα Reel όπου ένα μοντέλο κινείται μέσα στον χώρο.
+          Εσύ δεν χρειάστηκε να κανονίσεις γύρισμα, να εμφανιστείς στην κάμερα ή να τραβήξεις καινούργιο υλικό.
+        </p>
+      </div>
 
-      <h2 class="ask" data-copy="priceTitle">Και πόσο;</h2>
-      <p class="amount" data-stay-net>40€</p>
-      <p class="breakdown"><span data-stay-gross>49,60€</span> με ΦΠΑ</p>
-      <p class="yes" data-copy="priceYes">Ναι. Για ολόκληρο το Reel.</p>
+      <div class="plate">
+        <h2 class="ask" data-copy="priceTitle">Και πόσο;</h2>
+        <p class="amount" data-stay-net>40€</p>
+        <p class="breakdown"><span data-stay-gross>49,60€</span> με ΦΠΑ</p>
+        <p class="yes" data-copy="priceYes">Ναι. Για ολόκληρο το Reel.</p>
+      </div>
       <p class="honest" data-copy="priceNote">
         Δεν είναι έκπτωση από κάποια «αρχική τιμή».
         Δεν υπάρχει κάποιο κόλπο.
@@ -164,7 +172,7 @@
   </footer>
 
   <script src="/cookies.js"></script>
-  <script src="/stay-reel.js?v=3"></script>
-  <script src="/reel.js?v=4"></script>
+  <script src="/stay-reel.js?v=4"></script>
+  <script src="/reel.js?v=5"></script>
 </body>
 </html>

@@ -84,6 +84,9 @@
   const frameHit = document.getElementById("frame-hit");
   const poster = document.getElementById("frame-poster");
   if (poster) poster.src = `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
+  document.querySelectorAll(".still img").forEach((img) => {
+    img.src = poster?.src || "";
+  });
   let ytPlayer = null;
   let wantPlay = false;
   let soundOn = true;

@@ -63,10 +63,23 @@
     /* the upsell still has the factory text */
   }
   const textOf = (key) => stay.fillTokens(copy[key], tokens).trim();
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  const htmlOf = (key) => {
+    const marker = "\u0001";
+    const filled = stay.fillTokens(copy[key], { ...tokens, name: name ? marker : "" }).trim();
+    const safe = escapeHtml(filled);
+    if (!name) return safe;
+    return safe.replaceAll(marker, `<span class="place">${escapeHtml(name)}</span>`);
+  };
   document.querySelectorAll("[data-copy]").forEach((node) => {
-    const text = textOf(node.getAttribute("data-copy"));
-    node.hidden = text.length === 0;
-    node.textContent = text;
+    const html = htmlOf(node.getAttribute("data-copy"));
+    node.hidden = html.length === 0;
+    node.innerHTML = html;
   });
   const ctaLabel = textOf("cta") || stay.fillTokens(stay.COPY.cta, tokens);
   const buyBtn = document.getElementById("buy-btn");
@@ -84,9 +97,6 @@
   const frameHit = document.getElementById("frame-hit");
   const poster = document.getElementById("frame-poster");
   if (poster) poster.src = `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg`;
-  document.querySelectorAll(".still img").forEach((img) => {
-    img.src = poster?.src || "";
-  });
   let ytPlayer = null;
   let wantPlay = false;
   let soundOn = true;

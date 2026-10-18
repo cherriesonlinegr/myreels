@@ -456,6 +456,9 @@ window.MyReelsStay = (() => {
       container.hidden = false;
       placeQuotes();
     };
+    document.querySelectorAll("[data-quotes]").forEach((node) => {
+      if (!container.contains(node)) node.remove();
+    });
     container.innerHTML = `<div class="quotes" data-quotes hidden></div>${title ? `<h2 class="work__title">${escapeHtml(title)}</h2>` : ""}${lead ? `<p class="work__lead">${escapeHtml(lead)}</p>` : ""}<div class="work__grid">${tiles}</div>`;
     container.hidden = !title && !lead && !tiles;
     paintQuotes([]);

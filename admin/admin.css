@@ -1174,21 +1174,38 @@ body.is-viewer #btn-copy-onboarding-lead {
   margin: 12px 0;
 }
 
-.stay-social__group {
+.stay-social__pick {
   display: grid;
-  gap: 6px;
-}
-
-.stay-social__btn {
-  justify-content: flex-start;
-  text-align: left;
-  white-space: normal;
-}
-
-.stay-social__btn small,
-.stay-social__btn time {
+  gap: 4px;
   color: #6e6e73;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.stay-social select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: #fff;
+  color: #1d1d1f;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stay-social__preview {
+  margin: 0;
+  min-height: 96px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f6f6f8;
+  color: #1d1d1f;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 #view-stays .stay-panel.is-readonly > .stay-panel__head::after {
@@ -1203,13 +1220,13 @@ body.is-viewer #btn-copy-onboarding-lead {
   content: "Μπορείς να γράψεις σημείωση. Οι υπόλοιπες αλλαγές είναι κλειστές.";
 }
 
-#view-stays .stay-panel.is-readonly button:not(.stay-card__name):not(.stay-stage):not(.stay-copy-tab):not([data-seq-stage]):not([data-stay-close]):not(#stay-archive-toggle):not(#stay-copy-open):not(#stay-open):not(#stay-copy):not(#stay-lead-sync):not([data-stay-social]) {
+#view-stays .stay-panel.is-readonly button:not(.stay-card__name):not(.stay-stage):not(.stay-copy-tab):not([data-seq-stage]):not([data-stay-close]):not(#stay-archive-toggle):not(#stay-copy-open):not(#stay-open):not(#stay-copy):not(#stay-lead-sync):not([data-stay-social-send]) {
   display: none !important;
 }
 
 #view-stays .stay-panel.is-readonly input:not(#stay-find):not([data-stay-note]),
-#view-stays .stay-panel.is-readonly textarea:not([data-stay-note]),
-#view-stays .stay-panel.is-readonly select {
+#view-stays .stay-panel.is-readonly textarea:not([data-stay-note]):not([data-stay-social-preview]),
+#view-stays .stay-panel.is-readonly select:not([data-stay-social-pick]) {
   pointer-events: none;
   color: #6e6e73;
 }

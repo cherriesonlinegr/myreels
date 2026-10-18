@@ -2123,6 +2123,24 @@ MyReels`,
       hint: "Μετά από 5–6 μέρες",
       text: "Καλησπέρα! Επειδή κλείνουμε τον κύκλο της προσφοράς για την περιοχή σας αυτή την εβδομάδα, το Reel για το {property} θα παραμείνει διαθέσιμο για λίγες ακόμα ώρες.\n\nΑν θέλετε να το κατοχυρώσετε και να το ανεβάσετε άμεσα, μπορείτε να το πάρετε εδώ: {link}. Αν όχι, ελπίζω τουλάχιστον να πήρατε μια καλή ιδέα για το πώς μπορούμε να παρουσιάσουμε το χώρο σας! Καλή συνέχεια!",
     },
+    {
+      id: "n1",
+      group: "Είπε όχι",
+      label: "Όχι, ευχαριστώ",
+      text: "Κατανοητό απόλυτα{name}! Ευχαριστώ πολύ για τον χρόνο σας.\n\nΑν αλλάξει κάτι στο μέλλον ή θελήσετε να φρεσκάρετε την εικόνα του {property} στα social χωρίς γυρίσματα, θα είμαστε εδώ. Καλή συνέχεια και καλές κρατήσεις!",
+    },
+    {
+      id: "n2",
+      group: "Είπε όχι",
+      label: "Τα κάνουν μόνοι τους",
+      text: "Πολύ ευχάριστο αυτό! Είναι σημαντικό που το κατάλυμα έχει ήδη σταθερή παρουσία.\n\nΚρατήστε απλά την επαφή μας αν ποτέ χρειαστείτε κάποιο έξτρα βίντεο \"εξπρές\" για να καλύψετε κενά στο πρόγραμμά σας χωρίς να σπαταλάτε χρόνο. Καλή επιτυχία στη σεζόν!",
+    },
+    {
+      id: "n3",
+      group: "Είπε όχι",
+      label: "Δεν έχουν budget",
+      text: "Σεβαστό απόλυτα! Γι' αυτό ακριβώς φτιάξαμε το μεμονωμένο Reel στα 40€, για να μην χρειάζεται μεγάλο budget ή μηνιαίες συνδρομές.\n\nΑν κάποια στιγμή θέλετε να πάρετε μόνο αυτό το έτοιμο βίντεο χωρίς καμία άλλη υποχρέωση, πείτε μου να σας στείλω το link. Καλή συνέχεια!",
+    },
   ];
 
   function stayPropertyKey(value) {
@@ -2136,9 +2154,11 @@ MyReels`,
   }
 
   function stayOutreachText(message, deal) {
+    const person = String(deal?.buyerName || "").trim().split(/\s+/)[0] || "";
     return String(message.text || "")
       .replaceAll("{property}", deal.property || "")
-      .replaceAll("{link}", deal.landingUrl || "");
+      .replaceAll("{link}", deal.landingUrl || "")
+      .replaceAll("{name}", person ? `, ${person}` : "");
   }
 
   function stayOutreachLatest(deal) {
@@ -2166,22 +2186,23 @@ MyReels`,
     const where = /instagram\.com/i.test(href) ? "Instagram" : /facebook\.com/i.test(href) ? "Facebook" : "Social";
     const latest = stayOutreachLatest(deal);
     const id = escapeHtml(deal.videoId || "");
-    const groups = ["Πρώτη επαφή", "Δεν απάντησε", "Είδε το link"];
-    const blocks = groups
+    const groups = ["Πρώτη επαφή", "Δεν απάντησε", "Είδε το link", "Είπε όχι"];
+    const options = groups
       .map((group) => {
-        const buttons = OUTREACH.filter((message) => message.group === group)
+        const items = OUTREACH.filter((message) => message.group === group)
           .map((message) => {
             const when = latest.get(message.id);
-            return `<button type="button" class="btn btn--ghost btn--sm stay-social__btn" data-stay-social="${message.id}" data-stay-video="${id}">${escapeHtml(message.label)}${message.hint ? ` <small>${escapeHtml(message.hint)}</small>` : ""}${when ? ` <time>${escapeHtml(stayWhen(when))}</time>` : ""}</button>`;
+            const extra = [message.hint, when ? stayWhen(when) : ""].filter(Boolean).join(" · ");
+            return `<option value="${message.id}">${escapeHtml(message.label)}${extra ? ` · ${escapeHtml(extra)}` : ""}</option>`;
           })
           .join("");
-        return `<div class="stay-social__group"><p class="stay-hint">${escapeHtml(group)}</p>${buttons}</div>`;
+        return `<optgroup label="${escapeHtml(group)}">${items}</optgroup>`;
       })
       .join("");
     const link = href
       ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${where}</a>`
       : "Δεν βρέθηκε social στο Sheet με αυτό ακριβώς το όνομα.";
-    return `<section class="stay-social"><h3>Social</h3><p class="stay-hint">${link}</p>${blocks}<p class="stay-hint">Το κλικ αντιγράφει το μήνυμα και ανοίγει το προφίλ.</p></section>`;
+    return `<section class="stay-social"><h3>Social</h3><p class="stay-hint">${link}</p><label class="stay-social__pick"><span>Μήνυμα</span><select data-stay-social-pick data-stay-video="${id}"><option value="">Διάλεξε για προεπισκόπηση</option>${options}</select></label><pre class="stay-social__preview" data-stay-social-preview>Διάλεξε μήνυμα για να το δεις.</pre><button type="button" class="btn" data-stay-social-send data-stay-video="${id}">Αντιγραφή και άνοιγμα</button></section>`;
   }
 
   function stayCard(deal) {
@@ -3747,6 +3768,16 @@ MyReels`,
       paintPick();
     }
 
+    document.getElementById("stay-panel-pipeline")?.addEventListener("change", (event) => {
+      const pick = event.target.closest("[data-stay-social-pick]");
+      if (!pick) return;
+      const preview = pick.closest(".stay-social")?.querySelector("[data-stay-social-preview]");
+      const videoId = pick.getAttribute("data-stay-video") || "";
+      const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
+      const message = OUTREACH.find((item) => item.id === pick.value);
+      if (preview) preview.textContent = message && deal ? stayOutreachText(message, deal) : "Διάλεξε μήνυμα για να το δεις.";
+    });
+
     document.getElementById("stay-panel-pipeline")?.addEventListener("click", async (event) => {
       if (event.target.id === "stay-sheet" || event.target.closest("[data-stay-close]")) {
         stayOpen = "";
@@ -3754,13 +3785,17 @@ MyReels`,
         if (sheet) sheet.hidden = true;
         return;
       }
-      const social = event.target.closest("[data-stay-social]");
+      const social = event.target.closest("[data-stay-social-send]");
       if (social) {
-        const messageId = social.getAttribute("data-stay-social") || "";
         const videoId = social.getAttribute("data-stay-video") || "";
+        const pick = social.closest(".stay-social")?.querySelector("[data-stay-social-pick]");
+        const messageId = pick?.value || "";
         const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
         const message = OUTREACH.find((item) => item.id === messageId);
-        if (!deal || !message) return;
+        if (!deal || !message) {
+          setStayBoardStatus("Διάλεξε μήνυμα.");
+          return;
+        }
         const text = stayOutreachText(message, deal);
         const href = /^https?:\/\//i.test(stayLeadFor(deal)?.social || "") ? stayLeadFor(deal).social : "";
         if (href) window.open(href, "_blank", "noopener");

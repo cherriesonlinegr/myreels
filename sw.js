@@ -1,6 +1,6 @@
 /* MyReels PWA Service Worker (admin-first) */
 
-const CACHE_VERSION = "myreels-admin-cache-v62";
+const CACHE_VERSION = "myreels-admin-cache-v69";
 const CORE_ASSETS = [
   "/admin",
   "/admin/index.html",

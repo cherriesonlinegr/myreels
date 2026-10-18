@@ -8,8 +8,6 @@
   const PERM_KEY = "myreels_admin_perms";
   const AUTH_USER = "Thereelproject";
   const AUTH_PASS = "reels4YOU";
-  const STAY_USER = "Nakis";
-  const STAY_PASS = "Terminator";
 
   // PWA: register the service worker so the admin can be installed as an app.
   if ("serviceWorker" in navigator) {
@@ -27,21 +25,25 @@
 
   const roleOf = (user, pass) => {
     if (user === AUTH_USER && pass === AUTH_PASS) return "admin";
-    if (user === STAY_USER && pass === STAY_PASS) return "stay";
     return "";
   };
   const currentRole = () => {
     const role = sessionStorage.getItem(ROLE_KEY);
-    if (role === "admin" || role === "stay" || role === "sub") return role;
+    if (role === "stay") {
+      sessionStorage.removeItem(AUTH_KEY);
+      sessionStorage.removeItem(ROLE_KEY);
+      return "";
+    }
+    if (role === "admin" || role === "sub") return role;
     return sessionStorage.getItem(AUTH_KEY) === "1" ? "admin" : "";
   };
-  const isStayUser = () => currentRole() === "stay";
+  const isStayUser = () => false;
   const isAuthed = () => Boolean(currentRole());
   const sessionCreds = () => {
     if (currentRole() === "sub") {
       return { user: sessionStorage.getItem(SUB_USER) || "", pass: sessionStorage.getItem(SUB_PASS) || "" };
     }
-    return isStayUser() ? { user: STAY_USER, pass: STAY_PASS } : { user: AUTH_USER, pass: AUTH_PASS };
+    return { user: AUTH_USER, pass: AUTH_PASS };
   };
 
   const stayPermissions = () => {
@@ -56,12 +58,12 @@
 
   const applyRole = () => {
     const role = currentRole();
-    document.body.classList.toggle("is-viewer", role === "stay" || role === "sub");
+    document.body.classList.toggle("is-viewer", role === "sub");
     document.body.classList.toggle("is-sub", role === "sub");
     const meta = document.querySelector(".sidebar__meta");
-    if (meta) meta.textContent = role === "sub" ? sessionStorage.getItem(SUB_USER) || "Χρήστης" : role === "stay" ? "Nakis" : "Admin";
+    if (meta) meta.textContent = role === "sub" ? sessionStorage.getItem(SUB_USER) || "Χρήστης" : "Admin";
     const note = document.getElementById("viewer-note");
-    if (note) note.hidden = role !== "stay";
+    if (note) note.hidden = true;
   };
 
   const rememberSession = (user, pass, found, remember) => {
@@ -1912,13 +1914,197 @@ MyReels`,
     return data;
   }
 
+  function stayMoney(net) {
+    const stay = window.MyReelsStay;
+    const value = Math.round(Number(net) * 100) / 100;
+    if (stay?.euro) return stay.euro(value);
+    return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(value || 0);
+  }
+
+  function stayGross(net) {
+    const stay = window.MyReelsStay;
+    if (stay?.grossOf) return stay.grossOf(net);
+    return Math.round(Number(net) * 1.24 * 100) / 100;
+  }
+
+  function stayFinanceFigures() {
+    const deals = stayBoard.deals || [];
+    const counts = { open: 0, interested: 0, warm: 0, declined: 0, bought: 0, pack5: 0, pack10: 0 };
+    let revenueNet = 0;
+    let revenueGross = 0;
+    const months = new Map();
+    const monthKey = (value) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit" }).format(date);
+      return parts.slice(0, 7);
+    };
+    const addMonth = (key, field, amount) => {
+      if (!key || !(amount > 0)) return;
+      const row = months.get(key) || { revenue: 0, cost: 0 };
+      row[field] = Math.round((row[field] + amount) * 100) / 100;
+      months.set(key, row);
+    };
+    for (const deal of deals) {
+      const stage = deal.stage;
+      const saidNo = (deal.outreach || []).some((item) => item.id === "n1" || item.id === "n2" || item.id === "n3");
+      const sawLink = (deal.outreach || []).some((item) => ["sm2", "w1", "w2", "w3"].includes(item.id));
+      let sale = 0;
+      if (stage === "bought") sale = Number(deal.net) || 0;
+      else if (stage === "pack5") sale = Number(deal.pack5) || 0;
+      else if (stage === "pack10") sale = Number(deal.pack10) || 0;
+      if (sale > 0) {
+        counts[stage] += 1;
+        counts.interested += 1;
+        revenueNet += sale;
+        revenueGross += stayGross(sale);
+        addMonth(monthKey(deal.stageAt || deal.updatedAt), "revenue", sale);
+        continue;
+      }
+      if (stage === "out" || saidNo) {
+        counts.declined += 1;
+        continue;
+      }
+      if (deal.archived) continue;
+      if (sawLink) {
+        counts.interested += 1;
+        counts.warm += 1;
+      } else counts.open += 1;
+    }
+    let costNet = 0;
+    let costGross = 0;
+    for (const cost of stayBoard.costs || []) {
+      const parts = stayCostParts(cost);
+      costNet += parts.net;
+      costGross += parts.gross;
+      addMonth(monthKey(cost.at), "cost", parts.net);
+    }
+    costNet = Math.round(costNet * 100) / 100;
+    costGross = Math.round(costGross * 100) / 100;
+    revenueNet = Math.round(revenueNet * 100) / 100;
+    revenueGross = Math.round(revenueGross * 100) / 100;
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Athens", year: "numeric", month: "2-digit" }).format(new Date());
+    const [year, month] = today.split("-").map(Number);
+    const labels = [];
+    for (let index = 5; index >= 0; index -= 1) {
+      const date = new Date(Date.UTC(year, month - 1 - index, 1));
+      labels.push(`${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`);
+    }
+    return {
+      counts,
+      revenueNet,
+      revenueGross,
+      costNet,
+      costGross,
+      profitNet: Math.round((revenueNet - costNet) * 100) / 100,
+      profitGross: Math.round((revenueGross - costGross) * 100) / 100,
+      months: labels.map((key) => ({ key, ...(months.get(key) || { revenue: 0, cost: 0 }) })),
+    };
+  }
+
+  function stayCostParts(cost) {
+    const amount = Number(cost?.amount ?? cost?.net) || 0;
+    if (cost?.vat) return { net: Math.round((amount / 1.24) * 100) / 100, gross: amount };
+    return { net: amount, gross: stayGross(amount) };
+  }
+
+  function stayBar(label, value, max, color) {
+    const width = max > 0 ? Math.max(value > 0 ? 4 : 0, Math.round((value / max) * 100)) : 0;
+    return `<div class="stay-bar"><span>${escapeHtml(label)}</span><i style="width:${width}%;background:${color}"></i><strong>${value}</strong></div>`;
+  }
+
+  function renderStayFinance() {
+    const host = document.getElementById("stay-finance");
+    if (!host) return;
+    const figures = stayFinanceFigures();
+    const counts = figures.counts;
+    const maxCount = Math.max(counts.open, counts.warm, counts.declined, counts.bought, counts.pack5, counts.pack10, 1);
+    const maxMoney = Math.max(...figures.months.map((item) => Math.max(item.revenue, item.cost)), 1);
+    const monthLabel = (key) => {
+      const [year, month] = key.split("-");
+      const date = new Date(Date.UTC(Number(year), Number(month) - 1, 1));
+      return date.toLocaleDateString("el-GR", { month: "short", timeZone: "UTC" });
+    };
+    const cards = [
+      ["Ενδιαφέρθηκαν", counts.interested],
+      ["Δεν ενδιαφέρθηκαν", counts.declined],
+      ["Σε εξέλιξη", counts.open],
+      ["Αγόρασαν 1", counts.bought],
+      ["Αγόρασαν 5", counts.pack5],
+      ["Αγόρασαν 10", counts.pack10],
+    ];
+    const moneyCards = [
+      ["Έσοδα χωρίς ΦΠΑ", stayMoney(figures.revenueNet)],
+      ["Έσοδα με ΦΠΑ", stayMoney(figures.revenueGross)],
+      ["Κόστη χωρίς ΦΠΑ", stayMoney(figures.costNet)],
+      ["Κόστη με ΦΠΑ", stayMoney(figures.costGross)],
+      ["Αποτέλεσμα χωρίς ΦΠΑ", stayMoney(figures.profitNet)],
+      ["Αποτέλεσμα με ΦΠΑ", stayMoney(figures.profitGross)],
+    ];
+    const costs = (stayBoard.costs || [])
+      .slice()
+      .sort((left, right) => String(right.at).localeCompare(String(left.at)));
+    host.innerHTML = `
+      <div class="stay-stats__cards">${cards.map(([label, value]) => `<article class="stay-stat"><strong>${value}</strong><span>${escapeHtml(label)}</span></article>`).join("")}</div>
+      <section class="stay-chart">
+        <h3>Πού βρίσκονται</h3>
+        <div class="stay-bars">
+          ${stayBar("Σε εξέλιξη", counts.open, maxCount, "#c7c7cc")}
+          ${stayBar("Είδαν το link", counts.warm, maxCount, "#ff5a5f")}
+          ${stayBar("Δεν ενδιαφέρθηκαν", counts.declined, maxCount, "#1d1d1f")}
+          ${stayBar("Αγόρασαν 1", counts.bought, maxCount, "#ff9f0a")}
+          ${stayBar("Αγόρασαν 5", counts.pack5, maxCount, "#0071e3")}
+          ${stayBar("Αγόρασαν 10", counts.pack10, maxCount, "#1d1d1f")}
+        </div>
+        <p class="stay-hint">Ενδιαφέρθηκαν όσοι αγόρασαν ή τους στάλθηκε το link και δεν είπαν όχι. Οι αγορές μετριούνται και μέσα στους ενδιαφερόμενους.</p>
+      </section>
+      <div class="stay-stats__cards">${moneyCards.map(([label, value]) => `<article class="stay-stat"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></article>`).join("")}</div>
+      <section class="stay-chart">
+        <h3>Έσοδα και κόστη, χωρίς ΦΠΑ</h3>
+        <div class="stay-month">${figures.months
+          .map((item) => {
+            const revenue = Math.round((item.revenue / maxMoney) * 100);
+            const cost = Math.round((item.cost / maxMoney) * 100);
+            return `<div class="stay-month__col"><b style="height:${revenue}%" title="${escapeHtml(stayMoney(item.revenue))}"></b><b class="is-cost" style="height:${cost}%" title="${escapeHtml(stayMoney(item.cost))}"></b><small>${escapeHtml(monthLabel(item.key))}</small></div>`;
+          })
+          .join("")}</div>
+        <p class="stay-hint"><i class="stay-swatch"></i> Έσοδα <i class="stay-swatch is-cost"></i> Κόστη</p>
+      </section>
+      <section class="stay-chart">
+        <h3>Νέο κόστος</h3>
+        <form class="stay-cost" id="stay-cost-form">
+          <label>Τι ήταν<input name="label" maxlength="80" required placeholder="π.χ. διαφήμιση" /></label>
+          <label>Ποσό<input name="amount" type="number" min="0.01" step="0.01" required /></label>
+          <label class="stay-cost__vat"><input name="vat" type="checkbox" /> Έχει ΦΠΑ</label>
+          <label>Ημερομηνία<input name="at" type="date" required /></label>
+          <button type="submit" class="btn">Καταχώριση</button>
+        </form>
+        <div class="stay-list">${costs.length
+          ? costs
+              .map(
+                (cost) => {
+                  const parts = stayCostParts(cost);
+                  const entered = cost.vat ? `${stayMoney(parts.gross)} με ΦΠΑ` : `${stayMoney(parts.net)} χωρίς ΦΠΑ`;
+                  const other = cost.vat ? `${stayMoney(parts.net)} χωρίς ΦΠΑ` : `${stayMoney(parts.gross)} με ΦΠΑ`;
+                  return `<article class="stay-row"><div><strong>${escapeHtml(cost.label)}</strong><small>${escapeHtml(cost.at.split("-").reverse().join("/"))} · ${escapeHtml(entered)} · ${escapeHtml(other)}</small></div><button type="button" class="btn btn--ghost btn--sm" data-stay-cost-remove="${escapeHtml(cost.id)}">Διαγραφή</button></article>`;
+                }
+              )
+              .join("")
+          : `<p class="stay-hint">Δεν έχει καταχωριστεί κόστος.</p>`}</div>
+      </section>`;
+    const date = host.querySelector('input[name="at"]');
+    if (date && !date.value) date.value = new Date().toISOString().slice(0, 10);
+  }
+
   function applyStayBoard(data) {
     stayBoard = {
       deals: data.deals || [],
       sequences: data.sequences || {},
       reviews: data.reviews || [],
       payments: data.payments || [],
+      costs: data.costs || [],
     };
+    renderStayFinance();
     const known = new Set((stayBoard.deals || []).map((deal) => deal.videoId));
     stayPick = new Set([...stayPick].filter((id) => known.has(id)));
     if (stayOpen && !known.has(stayOpen)) stayOpen = "";
@@ -2719,7 +2905,7 @@ MyReels`,
   }
 
   function showStayPanel(name) {
-    ["landings", "oldway", "leads", "pipeline", "sequences", "reviews", "settings"].forEach((id) => {
+    ["landings", "oldway", "leads", "pipeline", "sequences", "reviews", "finance", "settings"].forEach((id) => {
       const panel = document.getElementById(`stay-panel-${id}`);
       if (panel) panel.hidden = id !== name;
     });
@@ -2727,6 +2913,7 @@ MyReels`,
       button.classList.toggle("is-active", button.dataset.stayTab === name);
     });
     if (name === "leads") loadStayLeads();
+    if (name === "finance") renderStayFinance();
     if (name === "settings") loadStayUsers();
   }
 
@@ -2737,6 +2924,7 @@ MyReels`,
     leads: "Επαφές",
     sequences: "Emails",
     reviews: "Κριτικές",
+    finance: "Οικονομικά",
   };
 
   function canStayEdit(tab) {
@@ -3648,6 +3836,43 @@ MyReels`,
       if (button) button.disabled = false;
     });
 
+    document.getElementById("stay-panel-finance")?.addEventListener("submit", async (event) => {
+      if (event.target.id !== "stay-cost-form") return;
+      event.preventDefault();
+      const form = event.target;
+      const button = form.querySelector("button");
+      if (button) button.disabled = true;
+      const status = document.getElementById("stay-finance-status");
+      try {
+        const result = await stayBoardRequest({
+          action: "costSave",
+          label: form.elements.label?.value || "",
+          amount: form.elements.amount?.value || "",
+          vat: Boolean(form.elements.vat?.checked),
+          at: form.elements.at?.value || "",
+        });
+        applyStayBoard(result);
+        if (status) status.textContent = "Το κόστος καταχωρίστηκε.";
+      } catch (err) {
+        if (status) status.textContent = err?.message || "Το κόστος δεν καταχωρίστηκε.";
+        if (button) button.disabled = false;
+      }
+    });
+    document.getElementById("stay-panel-finance")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-stay-cost-remove]");
+      if (!button) return;
+      button.disabled = true;
+      const status = document.getElementById("stay-finance-status");
+      try {
+        const result = await stayBoardRequest({ action: "costRemove", id: button.getAttribute("data-stay-cost-remove") || "" });
+        applyStayBoard(result);
+        if (status) status.textContent = "Το κόστος διαγράφηκε.";
+      } catch (err) {
+        if (status) status.textContent = err?.message || "Το κόστος δεν διαγράφηκε.";
+        button.disabled = false;
+      }
+    });
+
     document.getElementById("stay-lead-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = document.getElementById("stay-lead-save");
@@ -4034,10 +4259,10 @@ MyReels`,
   // Init
   fillStageSelect("lead");
   fillServiceChecks([]);
+  setupStayTab();
   load();
   renderBoard();
   setupOnboardingTab();
-  setupStayTab();
   const googleParams = new URLSearchParams(location.search);
   const googleBack = googleParams.get("google");
   if (googleBack === "connected" || googleBack === "youtube" || googleBack === "drive") googleFlash = "connected";

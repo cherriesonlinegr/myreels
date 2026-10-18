@@ -4,7 +4,6 @@ function builtInAccess(body) {
   const adminUser = process.env.ADMIN_USER || "Thereelproject";
   const adminPass = process.env.ADMIN_PASS || "reels4YOU";
   if (user === adminUser && pass === adminPass) return { role: "admin" };
-  if (user === "Nakis" && pass === "Terminator") return { role: "stay" };
   return null;
 }
 
@@ -22,8 +21,8 @@ function openBoard(board, access) {
 }
 
 function actorOf(body, access) {
-  const user = (access.role === "stay" ? "Nakis" : String(body.user || "admin")).slice(0, 32);
-  const name = String(access.role === "admin" ? "Admin" : access.role === "stay" ? "Nakis" : access.name || user).slice(0, 80);
+  const user = String(body.user || "admin").slice(0, 32);
+  const name = String(access.role === "admin" ? "Admin" : access.name || user).slice(0, 80);
   return { user, name };
 }
 
@@ -48,9 +47,10 @@ function actionAllowed(access, action) {
     move: "pipeline",
     leadSave: "leads",
     leadMove: "leads",
+    costSave: "finance",
+    costRemove: "finance",
   }[action];
   if (!need) return true;
-  if (access.role === "stay") return true;
   if (need === "landings") return access.permissions?.landings === true || access.permissions?.oldway === true;
   return access.permissions?.[need] === true;
 }
@@ -69,6 +69,8 @@ export default async function handler(req, res) {
       markUninterested,
       markViber,
       markOutreach,
+      removeCost,
+      saveCost,
       setDealNote,
       updateDeal,
       ensureReviewToken,
@@ -235,6 +237,18 @@ export default async function handler(req, res) {
       const board = await saveBoard(result.board);
       const sheet = await noteLead(result.deal?.property, result.label, "", result.deal);
       return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
+    }
+    if (action === "costSave") {
+      const result = saveCost(await loadBoard(), body);
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+      const board = await saveBoard(result.board);
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
+    }
+    if (action === "costRemove") {
+      const result = removeCost(await loadBoard(), { id: body.id });
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+      const board = await saveBoard(result.board);
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "note") {
       const result = setDealNote(await loadBoard(), { videoId: body.videoId, note: body.note, actor });

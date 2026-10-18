@@ -2705,8 +2705,6 @@ MyReels`,
     document.querySelectorAll("[data-stay-tab]").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.stayTab === name);
     });
-    const sync = document.getElementById("stay-lead-sync");
-    if (sync) sync.hidden = name !== "leads";
     if (name === "leads") loadStayLeads();
     if (name === "settings") loadStayUsers();
   }

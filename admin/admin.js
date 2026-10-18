@@ -3,6 +3,9 @@
   const SEQ_KEY = "myreels_sequences";
   const AUTH_KEY = "myreels_admin_auth";
   const ROLE_KEY = "myreels_admin_role";
+  const SUB_USER = "myreels_admin_sub_user";
+  const SUB_PASS = "myreels_admin_sub_pass";
+  const PERM_KEY = "myreels_admin_perms";
   const AUTH_USER = "Thereelproject";
   const AUTH_PASS = "reels4YOU";
   const STAY_USER = "Nakis";
@@ -29,21 +32,70 @@
   };
   const currentRole = () => {
     const role = sessionStorage.getItem(ROLE_KEY);
-    if (role === "admin" || role === "stay") return role;
+    if (role === "admin" || role === "stay" || role === "sub") return role;
     return sessionStorage.getItem(AUTH_KEY) === "1" ? "admin" : "";
   };
   const isStayUser = () => currentRole() === "stay";
   const isAuthed = () => Boolean(currentRole());
-  const sessionCreds = () =>
-    isStayUser() ? { user: STAY_USER, pass: STAY_PASS } : { user: AUTH_USER, pass: AUTH_PASS };
+  const sessionCreds = () => {
+    if (currentRole() === "sub") {
+      return { user: sessionStorage.getItem(SUB_USER) || "", pass: sessionStorage.getItem(SUB_PASS) || "" };
+    }
+    return isStayUser() ? { user: STAY_USER, pass: STAY_PASS } : { user: AUTH_USER, pass: AUTH_PASS };
+  };
+
+  const stayPermissions = () => {
+    if (currentRole() !== "sub") return null;
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(PERM_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
 
   const applyRole = () => {
-    const stay = isStayUser();
-    document.body.classList.toggle("is-viewer", stay);
+    const role = currentRole();
+    document.body.classList.toggle("is-viewer", role === "stay" || role === "sub");
+    document.body.classList.toggle("is-sub", role === "sub");
     const meta = document.querySelector(".sidebar__meta");
-    if (meta) meta.textContent = stay ? "Nakis" : "Admin";
+    if (meta) meta.textContent = role === "sub" ? sessionStorage.getItem(SUB_USER) || "Χρήστης" : role === "stay" ? "Nakis" : "Admin";
     const note = document.getElementById("viewer-note");
-    if (note) note.hidden = !stay;
+    if (note) note.hidden = role !== "stay";
+  };
+
+  const rememberSession = (user, pass, found, remember) => {
+    sessionStorage.setItem(AUTH_KEY, "1");
+    sessionStorage.setItem(ROLE_KEY, found.role);
+    if (found.role === "sub") {
+      sessionStorage.setItem(SUB_USER, user);
+      sessionStorage.setItem(SUB_PASS, pass);
+      sessionStorage.setItem(PERM_KEY, JSON.stringify(found.permissions || {}));
+    } else {
+      sessionStorage.removeItem(SUB_USER);
+      sessionStorage.removeItem(SUB_PASS);
+      sessionStorage.removeItem(PERM_KEY);
+    }
+    if (remember) {
+      setCookie(COOKIE_USER, user, COOKIE_DAYS);
+      setCookie(COOKIE_PASS, pass, COOKIE_DAYS);
+    } else {
+      deleteCookie(COOKIE_USER);
+      deleteCookie(COOKIE_PASS);
+    }
+  };
+
+  const resolveLogin = async (user, pass) => {
+    const role = roleOf(user, pass);
+    if (role) return { role, permissions: null };
+    const response = await fetch("/api/stay-board", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "login", user, pass }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok || data.role !== "sub") return null;
+    return { role: "sub", permissions: data.permissions || {}, name: data.name || user };
   };
 
   const COOKIE_USER = "myreels_admin_user";
@@ -88,7 +140,10 @@
   const logout = () => {
     sessionStorage.removeItem(AUTH_KEY);
     sessionStorage.removeItem(ROLE_KEY);
-    document.body.classList.remove("is-viewer");
+    sessionStorage.removeItem(SUB_USER);
+    sessionStorage.removeItem(SUB_PASS);
+    sessionStorage.removeItem(PERM_KEY);
+    document.body.classList.remove("is-viewer", "is-sub");
     showLogin();
   };
 
@@ -102,56 +157,68 @@
     if (loginPassInput && savedPass) loginPassInput.value = savedPass;
     if (loginRememberInput && (savedUser || savedPass)) loginRememberInput.checked = true;
 
-    // Auto-login if cookies match the expected credentials.
     const remembered = roleOf(savedUser, savedPass);
     if (remembered) {
       sessionStorage.setItem(AUTH_KEY, "1");
       sessionStorage.setItem(ROLE_KEY, remembered);
+      sessionStorage.removeItem(SUB_USER);
+      sessionStorage.removeItem(SUB_PASS);
+      sessionStorage.removeItem(PERM_KEY);
     }
   })();
 
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = String(loginUserInput?.value || "").trim();
       const pass = String(loginPassInput?.value || "");
-      const role = roleOf(user, pass);
-      if (role) {
-        sessionStorage.setItem(AUTH_KEY, "1");
-        sessionStorage.setItem(ROLE_KEY, role);
-        if (window.__myreelsAdminReady) {
-          location.reload();
-          return;
-        }
-        applyRole();
-        if (loginError) loginError.hidden = true;
-        showAdmin();
-        initAdmin();
-
-        const remember = loginRememberInput ? loginRememberInput.checked : true;
-        if (remember) {
-          setCookie(COOKIE_USER, user, COOKIE_DAYS);
-          setCookie(COOKIE_PASS, pass, COOKIE_DAYS);
-        } else {
-          deleteCookie(COOKIE_USER);
-          deleteCookie(COOKIE_PASS);
-        }
+      const found = await resolveLogin(user, pass);
+      if (!found) {
+        if (loginError) loginError.hidden = false;
         return;
       }
-      if (loginError) loginError.hidden = false;
+      rememberSession(user, pass, found, loginRememberInput ? loginRememberInput.checked : true);
+      if (window.__myreelsAdminReady) {
+        location.reload();
+        return;
+      }
+      applyRole();
+      if (loginError) loginError.hidden = true;
+      showAdmin();
+      initAdmin();
     });
   }
 
   btnLogout?.addEventListener("click", logout);
 
-  if (!isAuthed()) {
-    showLogin();
-    return;
-  }
+  const startApp = () => {
+    applyRole();
+    showAdmin();
+    initAdmin();
+  };
 
-  applyRole();
-  showAdmin();
-  initAdmin();
+  if (isAuthed() && currentRole() !== "sub") {
+    startApp();
+  } else if (isAuthed() && currentRole() === "sub" && sessionStorage.getItem(SUB_USER)) {
+    startApp();
+  } else {
+    const savedUser = getCookie(COOKIE_USER);
+    const savedPass = getCookie(COOKIE_PASS);
+    if (savedUser && savedPass && !roleOf(savedUser, savedPass)) {
+      resolveLogin(savedUser, savedPass).then((found) => {
+        if (!found) {
+          showLogin();
+          return;
+        }
+        rememberSession(savedUser, savedPass, found, true);
+        startApp();
+      });
+    } else if (!isAuthed()) {
+      showLogin();
+    } else {
+      startApp();
+    }
+  }
 
   function initAdmin() {
     if (window.__myreelsAdminReady) return;
@@ -1812,8 +1879,16 @@ MyReels`,
     { id: "pack5", label: "Πακέτο 5", hint: "5 Reels συνολικά. Το tag λέει αν πέρασε από τα 10." },
     { id: "pack10", label: "Πακέτο 10", hint: "10 Reels και διαχείριση social για 2 μήνες" },
   ];
+  const STAY_BOARD_STAGES = [
+    ...STAY_STAGE_META,
+    { id: "out", label: "Δεν ενδιαφέρεται", hint: "Έφυγε από το Landing." },
+  ];
   let stayBoard = { deals: [], sequences: {} };
   let staySeqStage = "landing";
+  let stayPick = new Set();
+  let stayOpen = "";
+  let stayQuery = "";
+  let stayFocus = "landing";
 
   function setStayBoardStatus(message) {
     const status = document.getElementById("stay-board-status");
@@ -1828,7 +1903,7 @@ MyReels`,
     const response = await fetch("/api/stay-board", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...sessionCreds(), ...payload }),
+      body: JSON.stringify({ ...payload, ...sessionCreds() }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
@@ -1838,10 +1913,19 @@ MyReels`,
   }
 
   function applyStayBoard(data) {
-    stayBoard = { deals: data.deals || [], sequences: data.sequences || {}, reviews: data.reviews || [] };
+    stayBoard = {
+      deals: data.deals || [],
+      sequences: data.sequences || {},
+      reviews: data.reviews || [],
+      payments: data.payments || [],
+    };
+    const known = new Set((stayBoard.deals || []).map((deal) => deal.videoId));
+    stayPick = new Set([...stayPick].filter((id) => known.has(id)));
+    if (stayOpen && !known.has(stayOpen)) stayOpen = "";
     renderStayPipeline();
     renderStaySequences();
     renderStayReviews();
+    paintStaySheet();
   }
 
   async function loadStayBoard() {
@@ -1953,39 +2037,235 @@ MyReels`,
   }
 
   function viberButton(deal) {
-    if (deal.stage === "landing" || deal.reviewed) return "";
+    if (deal.stage === "landing" || deal.stage === "out" || deal.reviewed) return "";
     const phone = viberPhone(deal.phone);
     if (!phone) return "";
     return `<button type="button" class="btn btn--viber" data-viber-phone="${escapeHtml(phone)}" data-viber-name="${escapeHtml(deal.buyerName || "")}" data-viber-property="${escapeHtml(deal.property || "")}" data-viber-token="${escapeHtml(deal.reviewToken || "")}" data-viber-video="${escapeHtml(deal.videoId || "")}">Στείλε στο Viber</button>`;
   }
 
+  function stayDealName(videoId) {
+    return (stayBoard.deals || []).find((deal) => deal.videoId === videoId)?.property || "τη σελίδα";
+  }
+
+  function stayMoney(amount) {
+    const value = Number(amount);
+    if (!value) return "";
+    const digits = Math.round(value * 100) % 100 === 0 ? 0 : 2;
+    return `${new Intl.NumberFormat("el-GR", { minimumFractionDigits: digits, maximumFractionDigits: 2 }).format(value)}€`;
+  }
+
+  function stayWhen(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString("el-GR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function stayCard(deal) {
+    const id = escapeHtml(deal.videoId || "");
+    const name = escapeHtml(deal.property || "Χωρίς όνομα");
+    const picked = stayPick.has(deal.videoId) ? " checked" : "";
+    return `
+      <article class="stay-card is-${escapeHtml(deal.stage || "landing")}">
+        <div class="stay-card__head">
+          <input type="checkbox" data-stay-pick="${id}" aria-label="Επιλογή ${name}"${picked} />
+          <button type="button" class="stay-card__name" data-stay-open="${id}">${name}</button>
+        </div>
+        <textarea class="stay-card__note" rows="2" data-stay-note="${id}" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea>
+      </article>`;
+  }
+
+  function stayFill(text, deal) {
+    const property = deal.property || "";
+    const name = deal.buyerName || "";
+    return String(text || "")
+      .replaceAll("{property}", property)
+      .replaceAll("{name}", name)
+      .replaceAll("{hello}", name ? `Γεια σου ${name}` : "Γεια σου");
+  }
+
+  function stayMailRows(deal) {
+    const sent = deal.sent && typeof deal.sent === "object" ? deal.sent : {};
+    const known = new Map();
+    STAY_STAGE_META.forEach((stage) => {
+      (stayBoard.sequences?.[stage.id] || []).forEach((email) => {
+        known.set(email.id, { subject: stayFill(email.subject, deal), stage: stage.label });
+      });
+    });
+    return Object.entries(sent)
+      .map(([id, at]) => ({
+        subject: known.get(id)?.subject || "Email",
+        stage: known.get(id)?.stage || "",
+        at: String(at || ""),
+      }))
+      .sort((a, b) => a.at.localeCompare(b.at));
+  }
+
+  function stayPayRows(deal) {
+    const labels = { reel: "Πρώτο Reel", pack5: "Πακέτο 5", pack10: "Πακέτο 10" };
+    const status = { paid: "Πληρώθηκε", pending: "Εκκρεμεί", failed: "Απέτυχε" };
+    return (stayBoard.payments || [])
+      .filter((item) => item.videoId === deal.videoId || (deal.property && item.property === deal.property))
+      .map((item) => ({
+        label: labels[item.kind] || "Πληρωμή",
+        status: status[item.status] || "Εκκρεμεί",
+        amount: stayMoney(item.amountCents / 100),
+        when: stayWhen(item.paidAt || item.createdAt),
+        document: item.document === "invoice" ? `Τιμολόγιο${item.afm ? ` · ΑΦΜ ${item.afm}` : ""}` : "Απόδειξη",
+      }));
+  }
+
+  function staySheet(deal) {
+    const id = escapeHtml(deal.videoId || "");
+    const name = escapeHtml(deal.property || "Χωρίς όνομα");
+    const archived = deal.archived === true;
+    const stage = STAY_BOARD_STAGES.find((item) => item.id === deal.stage);
+    const mails = stayMailRows(deal);
+    const pays = stayPayRows(deal);
+    const vibers = Array.isArray(deal.viberAt) ? deal.viberAt : [];
+    const tools = archived
+      ? `<button type="button" class="btn btn--ghost btn--sm" data-stay-restore="${id}" data-stay-property="${name}">Επαναφορά</button>`
+      : `<button type="button" class="btn btn--ghost btn--sm" data-stay-archive="${id}" data-stay-property="${name}">Αρχειοθέτηση</button>`;
+    const moves = !archived && deal.stage === "landing"
+      ? `<div class="stay-card__move">
+          <button type="button" class="btn btn--ghost btn--sm" data-stay-move="bought" data-stay-video="${id}" data-stay-property="${name}">Αγόρασε το Reel</button>
+          <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack5" data-stay-video="${id}" data-stay-property="${name}">Πακέτο 5</button>
+          <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack10" data-stay-video="${id}" data-stay-property="${name}">Πακέτο 10</button>
+          <button type="button" class="btn btn--ghost btn--sm" data-stay-move="out" data-stay-video="${id}" data-stay-property="${name}">Δεν ενδιαφέρεται</button>
+        </div>`
+      : "";
+    const invoice = deal.document === "invoice";
+    return `
+      <header class="stay-sheet__head">
+        <h2>${name}</h2>
+        <button type="button" class="btn btn--ghost btn--sm" data-stay-close>Κλείσιμο</button>
+      </header>
+      <p class="stay-hint">${escapeHtml(stage?.label || "")}${archived ? " · Αρχείο" : ""}</p>
+      <div class="stay-card__tags">${funnelTag(deal)}${tenTag(deal)}${reviewTag(deal)}</div>
+      <form class="stay-edit" data-stay-edit="${id}">
+        <label>Κατάλυμα<input name="property" maxlength="80" required value="${name}" /></label>
+        <label>Όνομα<input name="buyerName" maxlength="120" value="${escapeHtml(deal.buyerName || "")}" /></label>
+        <label>Email<input name="email" maxlength="160" inputmode="email" autocomplete="off" value="${escapeHtml(deal.email || "")}" /></label>
+        <label>Τηλέφωνο<input name="phone" maxlength="20" inputmode="tel" autocomplete="off" value="${escapeHtml(deal.phone || "")}" /></label>
+        <div class="stay-edit__prices">
+          <label>1ο Reel<input name="net" inputmode="decimal" value="${deal.net ? escapeHtml(String(deal.net)) : ""}" /></label>
+          <label>Πακέτο 5<input name="pack5" inputmode="decimal" value="${deal.pack5 ? escapeHtml(String(deal.pack5)) : ""}" /></label>
+          <label>Πακέτο 10<input name="pack10" inputmode="decimal" value="${deal.pack10 ? escapeHtml(String(deal.pack10)) : ""}" /></label>
+        </div>
+        <label>Drive<input name="driveUrl" inputmode="url" placeholder="https://drive.google.com/…" value="${escapeHtml(deal.driveUrl || "")}" /></label>
+        <label>Παραστατικό
+          <select name="document">
+            <option value=""${deal.document ? "" : " selected"}>Χωρίς</option>
+            <option value="receipt"${deal.document === "receipt" ? " selected" : ""}>Απόδειξη</option>
+            <option value="invoice"${invoice ? " selected" : ""}>Τιμολόγιο</option>
+          </select>
+        </label>
+        <div class="stay-edit__invoice"${invoice ? "" : " hidden"}>
+          <label>ΑΦΜ<input name="afm" inputmode="numeric" maxlength="9" value="${escapeHtml(deal.afm || "")}" /></label>
+          <label>Επωνυμία<input name="companyName" maxlength="200" value="${escapeHtml(deal.companyName || "")}" /></label>
+          <label>Διακριτικός<input name="companyTitle" maxlength="120" value="${escapeHtml(deal.companyTitle || "")}" /></label>
+          <label>Διεύθυνση<input name="companyAddress" maxlength="300" value="${escapeHtml(deal.companyAddress || "")}" /></label>
+        </div>
+        <label>Σημείωση<textarea name="note" rows="3" maxlength="500" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea></label>
+        ${deal.landingUrl ? `<p class="stay-hint"><a href="${escapeHtml(deal.landingUrl)}" target="_blank" rel="noopener">Άνοιγμα σελίδας</a></p>` : ""}
+        <button type="submit" class="btn">Αποθήκευση</button>
+      </form>
+      <h3>Πληρωμές</h3>
+      ${pays.length ? `<ul class="stay-sheet__list">${pays.map((item) => `<li><strong>${escapeHtml(item.label)}</strong> ${escapeHtml(item.amount)} · ${escapeHtml(item.status)}<small>${escapeHtml(item.when)} · ${escapeHtml(item.document)}</small></li>`).join("")}</ul>` : `<p class="stay-hint">Καμία πληρωμή ακόμα.</p>`}
+      <h3>Emails</h3>
+      ${mails.length ? `<ul class="stay-sheet__list">${mails.map((item) => `<li><strong>${escapeHtml(item.subject)}</strong><small>${escapeHtml(item.stage)}${item.stage ? " · " : ""}${escapeHtml(stayWhen(item.at))}</small></li>`).join("")}</ul>` : `<p class="stay-hint">Κανένα email ακόμα.</p>`}
+      <h3>Viber</h3>
+      ${vibers.length ? `<ul class="stay-sheet__list">${vibers.map((at) => `<li><strong>Στάλθηκε μήνυμα</strong><small>${escapeHtml(stayWhen(at))}</small></li>`).join("")}</ul>` : `<p class="stay-hint">Δεν έχει καταγραφεί αποστολή.</p>`}
+      ${viberButton(deal)}
+      ${moves}
+      <div class="stay-card__tools">${tools}<button type="button" class="btn btn--ghost btn--sm btn--danger" data-stay-remove="${id}" data-stay-property="${name}">Διαγραφή</button></div>`;
+  }
+
+  function paintStaySheet() {
+    const sheet = document.getElementById("stay-sheet");
+    const body = document.getElementById("stay-sheet-body");
+    if (!sheet || !body) return;
+    const deal = (stayBoard.deals || []).find((item) => item.videoId === stayOpen);
+    if (!deal) {
+      sheet.hidden = true;
+      return;
+    }
+    body.innerHTML = staySheet(deal);
+    sheet.hidden = false;
+  }
+
+  function paintPick() {
+    const count = document.getElementById("stay-pick-count");
+    const archive = document.getElementById("stay-bulk-archive");
+    const remove = document.getElementById("stay-delete-picked");
+    const all = document.getElementById("stay-pick-all");
+    const ids = [...stayPick];
+    if (count) count.textContent = ids.length === 1 ? "1 επιλεγμένο" : `${ids.length} επιλεγμένα`;
+    if (archive) archive.disabled = ids.length === 0;
+    if (remove) remove.disabled = ids.length === 0;
+    const visible = [...document.querySelectorAll("#stay-board [data-stay-pick], #stay-archive [data-stay-pick]")];
+    if (all) {
+      all.checked = visible.length > 0 && visible.every((box) => box.checked);
+      all.indeterminate = !all.checked && visible.some((box) => box.checked);
+    }
+  }
+
+  function stayHit(deal, query) {
+    if (!query) return true;
+    const text = [deal.property, deal.buyerName, deal.email, deal.phone, deal.note, deal.afm, deal.companyName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (text.includes(query)) return true;
+    const digits = query.replace(/\D/g, "");
+    const phone = String(deal.phone || "").replace(/\D/g, "");
+    return digits.length >= 3 && phone.includes(digits);
+  }
+
   function renderStayPipeline() {
     const board = document.getElementById("stay-board");
     if (!board) return;
-    board.innerHTML = STAY_STAGE_META.map((stage) => {
-      const cards = (stayBoard.deals || []).filter((deal) => deal.stage === stage.id);
-      const body = cards.length
-        ? cards
-            .map(
-              (deal) => `
-                <article class="stay-card">
-                  <strong>${escapeHtml(deal.property || "Χωρίς όνομα")}</strong>
-                  <small>${escapeHtml(deal.buyerName || "Χωρίς ονοματεπώνυμο")}</small>
-                  <small>${escapeHtml(deal.email || "Χωρίς email")}</small>
-                  <small>${escapeHtml(deal.phone || "Χωρίς τηλέφωνο")}</small>
-                  <div class="stay-card__tags">${funnelTag(deal)}${tenTag(deal)}${reviewTag(deal)}</div>
-                  ${deal.stage === "landing" ? `<div class="stay-card__move">
-                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="bought" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Αγόρασε το Reel</button>
-                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack5" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Πακέτο 5</button>
-                    <button type="button" class="btn btn--ghost btn--sm" data-stay-move="pack10" data-stay-video="${escapeHtml(deal.videoId || "")}" data-stay-property="${escapeHtml(deal.property || "")}">Πακέτο 10</button>
-                  </div>` : ""}
-                  ${viberButton(deal)}
-                </article>`
-            )
-            .join("")
-        : `<p class="stay-hint">Κανένα ακόμα</p>`;
-      return `<section class="stay-col"><h2>${escapeHtml(stage.label)}</h2><p class="stay-hint">${escapeHtml(stage.hint)}</p>${body}</section>`;
-    }).join("");
+    const query = stayQuery.trim().toLowerCase();
+    const narrow = document.body.classList.contains("is-stay-narrow");
+    const deals = stayBoard.deals || [];
+    const active = deals.filter((deal) => !deal.archived && stayHit(deal, query));
+    const stages = !query && narrow
+      ? STAY_BOARD_STAGES.filter((stage) => stage.id === stayFocus)
+      : STAY_BOARD_STAGES;
+    const short = { landing: "Landing", bought: "Reel", pack5: "5", pack10: "10", out: "Όχι" };
+    const chips = document.getElementById("stay-stages");
+    if (chips) {
+      chips.innerHTML = STAY_BOARD_STAGES.map((stage) => {
+        const count = deals.filter((deal) => !deal.archived && deal.stage === stage.id).length;
+        const on = stage.id === stayFocus ? " is-active" : "";
+        return `<button type="button" class="stay-stage${on}" data-stay-focus="${escapeHtml(stage.id)}">${escapeHtml(short[stage.id] || stage.label)} <span>${count}</span></button>`;
+      }).join("");
+    }
+    board.classList.toggle("is-searching", Boolean(query));
+    const columns = stages
+      .map((stage) => {
+        const cards = active.filter((deal) => deal.stage === stage.id);
+        if (query && !cards.length) return "";
+        const body = cards.length
+          ? cards.map((deal) => stayCard(deal)).join("")
+          : `<p class="stay-hint">Κανένα ακόμα</p>`;
+        return `<section class="stay-col is-${escapeHtml(stage.id)}${stage.id === stayFocus ? " is-current" : ""}"><h2>${escapeHtml(stage.label)} <span class="stay-count">${cards.length}</span></h2><p class="stay-hint">${escapeHtml(stage.hint)}</p>${body}</section>`;
+      })
+      .filter(Boolean)
+      .join("");
+    board.innerHTML = columns || `<p class="stay-hint">Τίποτα με αυτό.</p>`;
+    const archivedAll = deals.filter((deal) => deal.archived);
+    const archived = archivedAll.filter((deal) => stayHit(deal, query));
+    const drawer = document.getElementById("stay-archive");
+    const toggle = document.getElementById("stay-archive-toggle");
+    if (toggle) toggle.textContent = `Αρχείο (${archivedAll.length})`;
+    if (drawer) {
+      drawer.hidden = Boolean(query) && archived.length === 0;
+      drawer.innerHTML = `
+        <h2>Αρχείο <span class="stay-count">${archived.length}</span></h2>
+        <p class="stay-hint">Ό,τι αρχειοθετείς εμφανίζεται εδώ, κάτω από τις στήλες.</p>
+        <div class="stay-archive__grid">${archived.length ? archived.map((deal) => stayCard(deal, true)).join("") : `<p class="stay-hint">Κανένα ακόμα</p>`}</div>`;
+    }
+    paintPick();
   }
 
   function readSeqForm() {
@@ -2249,7 +2529,7 @@ MyReels`,
   }
 
   function showStayPanel(name) {
-    ["landings", "oldway", "leads", "pipeline", "sequences", "reviews"].forEach((id) => {
+    ["landings", "oldway", "leads", "pipeline", "sequences", "reviews", "settings"].forEach((id) => {
       const panel = document.getElementById(`stay-panel-${id}`);
       if (panel) panel.hidden = id !== name;
     });
@@ -2257,6 +2537,86 @@ MyReels`,
       button.classList.toggle("is-active", button.dataset.stayTab === name);
     });
     if (name === "leads") loadStayLeads();
+    if (name === "settings") loadStayUsers();
+  }
+
+  const STAY_PERM_LABELS = {
+    pipeline: "Pipeline",
+    landings: "LandingPages",
+    oldway: "The Old Way upload",
+    leads: "Επαφές",
+    sequences: "Emails",
+    reviews: "Κριτικές",
+  };
+
+  function applyStayPerms() {
+    const role = currentRole();
+    const perms = stayPermissions();
+    document.querySelectorAll("[data-stay-tab]").forEach((button) => {
+      const tab = button.dataset.stayTab;
+      const allowed = tab === "settings" ? role === "admin" : role !== "sub" || perms?.[tab] === true;
+      button.hidden = !allowed;
+    });
+    if (role !== "sub") return;
+    const open = document.querySelector(".stay-panel:not([hidden])");
+    const id = open?.id?.replace("stay-panel-", "") || "";
+    if (perms?.[id] === true) return;
+    const first = Object.keys(STAY_PERM_LABELS).find((key) => perms?.[key] === true);
+    if (first) showStayPanel(first);
+  }
+
+  function stayUserStatus(text) {
+    const status = document.getElementById("stay-user-status");
+    if (status) status.textContent = text || "";
+  }
+
+  function renderStayUsers(users) {
+    const list = document.getElementById("stay-user-list");
+    if (!list) return;
+    const rows = Array.isArray(users) ? users : [];
+    list.innerHTML = rows.length
+      ? rows
+          .map((item) => {
+            const tags = Object.entries(STAY_PERM_LABELS)
+              .filter(([key]) => item.permissions?.[key])
+              .map(([, label]) => `<span>${escapeHtml(label)}</span>`)
+              .join("");
+            return `<article class="stay-user-row">
+              <div><strong>${escapeHtml(item.name || item.user)}</strong><small>${escapeHtml(item.user)}</small><div class="stay-user-row__tags">${tags}</div></div>
+              <div class="stay-card__tools">
+                <button type="button" class="btn btn--ghost btn--sm" data-user-edit="${escapeHtml(item.id)}">Επεξεργασία</button>
+                <button type="button" class="btn btn--ghost btn--sm btn--danger" data-user-remove="${escapeHtml(item.id)}" data-user-name="${escapeHtml(item.user)}">Διαγραφή</button>
+              </div>
+            </article>`;
+          })
+          .join("")
+      : `<p class="stay-hint">Δεν έχεις φτιάξει χρήστη ακόμα.</p>`;
+    list.querySelectorAll("[data-user-edit]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const item = rows.find((row) => row.id === button.getAttribute("data-user-edit"));
+        const form = document.getElementById("stay-user-form");
+        if (!item || !form) return;
+        form.dataset.userId = item.id;
+        form.elements.name.value = item.name || "";
+        form.elements.user.value = item.user || "";
+        form.elements.pass.value = "";
+        Object.keys(STAY_PERM_LABELS).forEach((key) => {
+          if (form.elements[key]) form.elements[key].checked = item.permissions?.[key] === true;
+        });
+        stayUserStatus(`Επεξεργασία του ${item.user}. Ο κωδικός μένει ο ίδιος αν τον αφήσεις κενό.`);
+      });
+    });
+  }
+
+  async function loadStayUsers() {
+    if (currentRole() !== "admin") return;
+    stayUserStatus("");
+    try {
+      const result = await stayBoardRequest({ action: "users" });
+      renderStayUsers(result.users || []);
+    } catch (err) {
+      stayUserStatus(err?.message || "Οι χρήστες δεν φορτώθηκαν.");
+    }
   }
 
   let googleFlash = "";
@@ -3019,6 +3379,70 @@ MyReels`,
     document.querySelectorAll("[data-stay-tab]").forEach((button) => {
       button.addEventListener("click", () => showStayPanel(button.dataset.stayTab));
     });
+    applyStayPerms();
+    document.getElementById("stay-user-clear")?.addEventListener("click", () => {
+      const form = document.getElementById("stay-user-form");
+      if (!form) return;
+      delete form.dataset.userId;
+      form.reset();
+      if (form.elements.pipeline) form.elements.pipeline.checked = true;
+      stayUserStatus("");
+    });
+    document.getElementById("stay-user-form")?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (currentRole() !== "admin") return;
+      const form = event.currentTarget;
+      const button = document.getElementById("stay-user-save");
+      if (button) button.disabled = true;
+      const fields = new FormData(form);
+      const permissions = {};
+      Object.keys(STAY_PERM_LABELS).forEach((key) => {
+        permissions[key] = Boolean(form.elements[key]?.checked);
+      });
+      try {
+        const result = await stayBoardRequest({
+          action: "saveUser",
+          id: form.dataset.userId || "",
+          name: fields.get("name") || "",
+          account: fields.get("user") || "",
+          password: fields.get("pass") || "",
+          permissions,
+        });
+        delete form.dataset.userId;
+        form.reset();
+        if (form.elements.pipeline) form.elements.pipeline.checked = true;
+        renderStayUsers(result.users || []);
+        stayUserStatus("Ο χρήστης αποθηκεύτηκε. Μπαίνει με αυτό το username και τον κωδικό.");
+      } catch (err) {
+        stayUserStatus(err?.message || "Ο χρήστης δεν αποθηκεύτηκε.");
+      }
+      if (button) button.disabled = false;
+    });
+    document.getElementById("stay-user-list")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-user-remove]");
+      if (!button) return;
+      const name = button.getAttribute("data-user-name") || "τον χρήστη";
+      if (!window.confirm(`Να διαγραφεί ο χρήστης ${name};`)) return;
+      button.disabled = true;
+      try {
+        const result = await stayBoardRequest({ action: "removeUser", id: button.getAttribute("data-user-remove") || "" });
+        renderStayUsers(result.users || []);
+        stayUserStatus("Ο χρήστης διαγράφηκε.");
+      } catch (err) {
+        stayUserStatus(err?.message || "Ο χρήστης δεν διαγράφηκε.");
+        button.disabled = false;
+      }
+    });
+    document.getElementById("stay-find")?.addEventListener("input", (event) => {
+      stayQuery = event.target.value || "";
+      renderStayPipeline();
+    });
+    document.getElementById("stay-stages")?.addEventListener("click", (event) => {
+      const chip = event.target.closest("[data-stay-focus]");
+      if (!chip) return;
+      stayFocus = chip.getAttribute("data-stay-focus") || "landing";
+      renderStayPipeline();
+    });
 
     document.getElementById("stay-lead-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -3068,11 +3492,96 @@ MyReels`,
     });
   }
 
-    document.getElementById("stay-board")?.addEventListener("click", async (event) => {
+    function forgetStayVideos(videoIds) {
+      const ids = new Set(videoIds.filter(Boolean));
+      if (!ids.size) return;
+      saveStays(loadStays().filter((item) => !ids.has(item.videoId)));
+      renderStayList();
+    }
+
+    async function runArchive(videoIds, archived) {
+      const ids = videoIds.filter(Boolean);
+      if (!ids.length) return;
+      const ask = archived
+        ? ids.length === 1
+          ? `Να αρχειοθετηθεί το «${stayDealName(ids[0])}»; Φεύγει από τις στήλες. Η σελίδα μένει ανοιχτή.`
+          : `Να αρχειοθετηθούν ${ids.length}; Φεύγουν από τις στήλες. Οι σελίδες μένουν ανοιχτές.`
+        : ids.length === 1
+          ? `Να γυρίσει το «${stayDealName(ids[0])}» στην πορεία;`
+          : `Να γυρίσουν ${ids.length} στην πορεία;`;
+      if (!window.confirm(ask)) return;
+      const result = await stayBoardRequest({ action: "archive", videoIds: ids, archived });
+      ids.forEach((id) => stayPick.delete(id));
+      applyStayBoard(result);
+      setStayBoardStatus(archived ? "Μπήκαν στο αρχείο." : "Γύρισαν στην πορεία.");
+    }
+
+    async function runRemove(videoIds) {
+      const ids = videoIds.filter(Boolean);
+      if (!ids.length) return;
+      const ask = ids.length === 1
+        ? `Να διαγραφεί το «${stayDealName(ids[0])}» από την πορεία; Η σελίδα σταματάει να ανοίγει.`
+        : `Να διαγραφούν ${ids.length} από την πορεία; Οι σελίδες σταματούν να ανοίγουν.`;
+      if (!window.confirm(ask)) return;
+      const result = await stayBoardRequest({ action: "removeDeals", videoIds: ids });
+      forgetStayVideos(ids);
+      ids.forEach((id) => stayPick.delete(id));
+      applyStayBoard(result);
+      setStayBoardStatus(ids.length === 1 ? "Διαγράφηκε από την πορεία." : `Διαγράφηκαν ${ids.length}.`);
+    }
+
+    function onPipelineClick(event) {
+      const archive = event.target.closest("[data-stay-archive]");
+      const restore = event.target.closest("[data-stay-restore]");
+      const remove = event.target.closest("[data-stay-remove]");
+      if (archive) {
+        runArchive([archive.getAttribute("data-stay-archive") || ""], true).catch((err) => {
+          setStayBoardStatus(err?.message || "Δεν αρχειοθετήθηκε.");
+        });
+        return true;
+      }
+      if (restore) {
+        runArchive([restore.getAttribute("data-stay-restore") || ""], false).catch((err) => {
+          setStayBoardStatus(err?.message || "Δεν γύρισε στην πορεία.");
+        });
+        return true;
+      }
+      if (remove) {
+        runRemove([remove.getAttribute("data-stay-remove") || ""]).catch((err) => {
+          setStayBoardStatus(err?.message || "Δεν διαγράφηκε.");
+        });
+        return true;
+      }
+      return false;
+    }
+
+    function onPipelinePick(event) {
+      const box = event.target.closest("[data-stay-pick]");
+      if (!box) return;
+      const id = box.getAttribute("data-stay-pick") || "";
+      if (box.checked) stayPick.add(id);
+      else stayPick.delete(id);
+      paintPick();
+    }
+
+    document.getElementById("stay-panel-pipeline")?.addEventListener("click", async (event) => {
+      if (event.target.id === "stay-sheet" || event.target.closest("[data-stay-close]")) {
+        stayOpen = "";
+        const sheet = document.getElementById("stay-sheet");
+        if (sheet) sheet.hidden = true;
+        return;
+      }
+      const opener = event.target.closest("[data-stay-open]");
+      if (opener) {
+        stayOpen = opener.getAttribute("data-stay-open") || "";
+        paintStaySheet();
+        return;
+      }
+      if (onPipelineClick(event)) return;
       const move = event.target.closest("[data-stay-move]");
       if (move) {
         const stage = move.getAttribute("data-stay-move") || "";
-        const labels = { bought: "Αγόρασε το Reel", pack5: "Πακέτο 5", pack10: "Πακέτο 10" };
+        const labels = { bought: "Αγόρασε το Reel", pack5: "Πακέτο 5", pack10: "Πακέτο 10", out: "Δεν ενδιαφέρεται" };
         const label = labels[stage];
         const property = move.getAttribute("data-stay-property") || "το κατάλυμα";
         const videoId = move.getAttribute("data-stay-video") || "";
@@ -3085,6 +3594,10 @@ MyReels`,
           if (result.sheet) {
             setStayBoardStatus(result.sheet);
             move.disabled = false;
+            return;
+          }
+          if (stage === "out") {
+            setStayBoardStatus(`Πέρασε στο «${label}».`);
             return;
           }
           const deal = (result.deals || []).find((item) => item.videoId === videoId);
@@ -3121,6 +3634,15 @@ MyReels`,
         const hello = name ? `Γεια σου ${name}` : "Γεια σου";
         const text = `${hello},\n\nΑν δεν μας έγραψες ακόμα δύο λόγια για την εμπειρία σου, θα μας βοηθούσε αφάνταστα αν αφιέρωνες μόλις 30 δευτερόλεπτα για να μας αφήσεις μια σύντομη αξιολόγηση.\n${location.origin}/review?t=${token}`;
         await navigator.clipboard.writeText(text);
+        const videoId = button.getAttribute("data-viber-video") || "";
+        if (videoId) {
+          try {
+            const marked = await stayBoardRequest({ action: "viber", videoId });
+            applyStayBoard(marked);
+          } catch (markErr) {
+            setStayBoardStatus(markErr?.message || "Το μήνυμα αντιγράφηκε, αλλά δεν καταγράφηκε.");
+          }
+        }
         const opener = document.createElement("a");
         opener.href = `viber://chat?number=+${button.getAttribute("data-viber-phone")}`;
         document.body.appendChild(opener);
@@ -3131,6 +3653,74 @@ MyReels`,
         setStayBoardStatus(err?.message || "Το Viber δεν άνοιξε.");
       }
       button.disabled = false;
+    });
+
+    document.getElementById("stay-board")?.addEventListener("change", onPipelinePick);
+    document.getElementById("stay-archive")?.addEventListener("change", onPipelinePick);
+    document.getElementById("stay-pick-all")?.addEventListener("change", (event) => {
+      const on = event.target.checked;
+      document.querySelectorAll("#stay-board [data-stay-pick], #stay-archive [data-stay-pick]").forEach((box) => {
+        const id = box.getAttribute("data-stay-pick") || "";
+        box.checked = on;
+        if (on) stayPick.add(id);
+        else stayPick.delete(id);
+      });
+      paintPick();
+    });
+    document.getElementById("stay-bulk-archive")?.addEventListener("click", () => {
+      runArchive([...stayPick], true).catch((err) => setStayBoardStatus(err?.message || "Δεν αρχειοθετήθηκε."));
+    });
+    document.getElementById("stay-delete-picked")?.addEventListener("click", () => {
+      runRemove([...stayPick]).catch((err) => setStayBoardStatus(err?.message || "Δεν διαγράφηκε."));
+    });
+    document.getElementById("stay-archive-toggle")?.addEventListener("click", () => {
+      document.getElementById("stay-archive")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    async function savePipelineNote(event) {
+      const field = event.target.closest("[data-stay-note]");
+      if (!field) return;
+      const videoId = field.getAttribute("data-stay-note") || "";
+      const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
+      const next = field.value.trim();
+      if (!deal || (deal.note || "") === next) return;
+      const previous = deal.note || "";
+      deal.note = next;
+      try {
+        const result = await stayBoardRequest({ action: "note", videoId, note: next });
+        const saved = (result.deals || []).find((item) => item.videoId === videoId);
+        deal.note = saved?.note || next;
+        setStayBoardStatus("Η σημείωση κρατήθηκε.");
+      } catch (err) {
+        deal.note = previous;
+        field.value = previous;
+        setStayBoardStatus(err?.message || "Η σημείωση δεν κρατήθηκε.");
+      }
+    }
+    document.getElementById("stay-board")?.addEventListener("focusout", savePipelineNote);
+    document.getElementById("stay-archive")?.addEventListener("focusout", savePipelineNote);
+    document.getElementById("stay-sheet")?.addEventListener("focusout", savePipelineNote);
+    document.getElementById("stay-sheet")?.addEventListener("change", (event) => {
+      if (event.target?.name !== "document") return;
+      const box = event.target.closest("form")?.querySelector(".stay-edit__invoice");
+      if (box) box.hidden = event.target.value !== "invoice";
+    });
+    document.getElementById("stay-sheet")?.addEventListener("submit", async (event) => {
+      const form = event.target.closest("[data-stay-edit]");
+      if (!form) return;
+      event.preventDefault();
+      const videoId = form.getAttribute("data-stay-edit") || "";
+      const data = Object.fromEntries(new FormData(form).entries());
+      const button = form.querySelector("[type=submit]");
+      if (button) button.disabled = true;
+      try {
+        const result = await stayBoardRequest({ action: "edit", videoId, ...data });
+        applyStayBoard(result);
+        setStayBoardStatus("Αποθηκεύτηκε.");
+      } catch (err) {
+        setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκε.");
+        if (button) button.disabled = false;
+      }
     });
 
     document.getElementById("stay-reviews")?.addEventListener("click", async (event) => {
@@ -3207,9 +3797,25 @@ MyReels`,
   if (googleParams.get("google") === "error") {
     googleFlash = googleParams.get("reason") || "Η σύνδεση δεν ολοκληρώθηκε.";
   }
+  const syncStayApp = () => {
+    const narrow = window.matchMedia("(max-width: 768px)").matches;
+    const installed =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      new URLSearchParams(location.search).get("app") === "stay";
+    document.body.classList.toggle("is-stay-app", narrow || installed);
+    document.body.classList.toggle("is-stay-narrow", narrow);
+  };
+  syncStayApp();
+  window.matchMedia("(max-width: 768px)").addEventListener("change", () => {
+    syncStayApp();
+    renderStayPipeline();
+  });
   if (googleParams.get("google")) {
     history.replaceState({}, "", location.pathname);
     switchTab("stays");
+  } else if (document.body.classList.contains("is-stay-app")) {
+    switchTab("stays");
+    showStayPanel("pipeline");
   }
   }
 })();

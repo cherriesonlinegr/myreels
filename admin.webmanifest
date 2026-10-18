@@ -1,12 +1,13 @@
 {
-  "name": "MyReels Admin",
-  "short_name": "MyReels Admin",
-  "description": "Διαχείριση leads & sequences MyReels.",
-  "start_url": "/admin",
+  "name": "LuxuryStayReels",
+  "short_name": "StayReels",
+  "description": "Πορεία, σελίδες και πελάτες LuxuryStayReels.",
+  "id": "/admin?app=stay",
+  "start_url": "/admin?app=stay",
   "scope": "/admin",
   "display": "standalone",
   "background_color": "#f5f5f7",
-  "theme_color": "#0071e3",
+  "theme_color": "#ff5a5f",
   "icons": [
     {
       "src": "/favicon.png",

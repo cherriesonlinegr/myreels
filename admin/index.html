@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>MyReels Admin</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png" type="image/png" />
@@ -10,10 +10,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=36" />
-  <meta name="theme-color" content="#0071e3" />
+  <link rel="stylesheet" href="/admin/admin.css?v=45" />
+  <meta name="theme-color" content="#ff5a5f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="MyReels Admin" />
+  <meta name="apple-mobile-web-app-title" content="LuxuryStayReels" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/admin.webmanifest" />
 </head>
@@ -144,22 +144,23 @@
             <svg class="stay-mark stay-mark--lg" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
             LuxuryStayReels
           </h1>
-          <p class="topbar__sub">Σελίδες, πορεία, emails και κριτικές.</p>
+          <p class="topbar__sub">Pipeline, landing pages, emails και κριτικές.</p>
         </div>
       </header>
 
       <div class="stay-subtabs" role="tablist">
-        <button type="button" class="stay-subtab is-active" data-stay-tab="landings">Σελίδες</button>
-        <button type="button" class="stay-subtab" data-stay-tab="oldway">Με links</button>
+        <button type="button" class="stay-subtab is-active" data-stay-tab="pipeline">Pipeline</button>
+        <button type="button" class="stay-subtab" data-stay-tab="landings">LandingPages</button>
+        <button type="button" class="stay-subtab" data-stay-tab="oldway">The Old Way upload</button>
         <button type="button" class="stay-subtab" data-stay-tab="leads">Επαφές</button>
-        <button type="button" class="stay-subtab" data-stay-tab="pipeline">Πορεία</button>
         <button type="button" class="stay-subtab" data-stay-tab="sequences">Emails</button>
         <button type="button" class="stay-subtab" data-stay-tab="reviews">Κριτικές</button>
+        <button type="button" class="stay-subtab" data-stay-tab="settings">Ρυθμίσεις</button>
       </div>
 
-      <div id="stay-panel-landings" class="stay-panel">
+      <div id="stay-panel-landings" class="stay-panel" hidden>
       <header class="stay-panel__head">
-        <h2>Σελίδες</h2>
+        <h2>LandingPages</h2>
         <p>Νέο Reel από αρχείο, ή μία landing που υπάρχει ήδη.</p>
       </header>
       <div class="stay-landings">
@@ -244,7 +245,7 @@
 
       <div id="stay-panel-oldway" class="stay-panel" hidden>
       <header class="stay-panel__head">
-        <h2>Με links</h2>
+        <h2>The Old Way upload</h2>
         <p>Εφεδρικός τρόπος, αν το YouTube ή το Drive πιάσουν όριο.</p>
       </header>
       <div class="onboard-admin">
@@ -442,12 +443,27 @@
         </div>
       </div>
 
-      <div id="stay-panel-pipeline" class="stay-panel" hidden>
+      <div id="stay-panel-pipeline" class="stay-panel">
         <header class="stay-panel__head">
-          <h2>Πορεία</h2>
+          <h2>Pipeline</h2>
           <p class="stay-hint" id="stay-board-status"></p>
         </header>
+        <label class="stay-find">
+          <input type="search" id="stay-find" placeholder="Όνομα, τηλέφωνο, email…" autocomplete="off" enterkeyhint="search" />
+        </label>
+        <div class="stay-stages" id="stay-stages"></div>
+        <div class="stay-bulk">
+          <label class="stay-bulk__all"><input type="checkbox" id="stay-pick-all" /> Όλα</label>
+          <span id="stay-pick-count">0 επιλεγμένα</span>
+          <button type="button" class="btn btn--ghost btn--sm" id="stay-bulk-archive" disabled>Αρχειοθέτηση</button>
+          <button type="button" class="btn btn--ghost btn--sm btn--danger" id="stay-delete-picked" disabled>Διαγραφή</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="stay-archive-toggle">Αρχείο (0)</button>
+        </div>
         <div class="stay-board" id="stay-board"></div>
+        <div class="stay-archive" id="stay-archive" hidden></div>
+        <div class="stay-sheet" id="stay-sheet" hidden>
+          <div class="stay-sheet__card" id="stay-sheet-body"></div>
+        </div>
       </div>
 
       <div id="stay-panel-sequences" class="stay-panel" hidden>
@@ -469,6 +485,42 @@
         </header>
         <div class="stay-reviews" id="stay-reviews"></div>
       </div>
+
+      <div id="stay-panel-settings" class="stay-panel" hidden>
+        <header class="stay-panel__head">
+          <h2>Ρυθμίσεις</h2>
+          <p>Φτιάξε έναν χρήστη και διάλεξε τι ανοίγει μέσα στο LuxuryStayReels.</p>
+          <p class="stay-hint" id="stay-user-status"></p>
+        </header>
+        <form class="stay-user" id="stay-user-form">
+          <label>Όνομα<input name="name" maxlength="80" placeholder="π.χ. Μαρία" /></label>
+          <label>Username<input name="user" maxlength="32" autocomplete="off" placeholder="maria" required /></label>
+          <label>Κωδικός<input name="pass" type="password" maxlength="80" autocomplete="new-password" placeholder="Τουλάχιστον 6 χαρακτήρες" /></label>
+          <div class="stay-perms">
+            <label><input type="checkbox" name="pipeline" checked /> Pipeline</label>
+            <label><input type="checkbox" name="landings" /> LandingPages</label>
+            <label><input type="checkbox" name="oldway" /> The Old Way upload</label>
+            <label><input type="checkbox" name="leads" /> Επαφές</label>
+            <label><input type="checkbox" name="sequences" /> Emails</label>
+            <label><input type="checkbox" name="reviews" /> Κριτικές</label>
+          </div>
+          <div class="stay-card__tools">
+            <button type="submit" class="btn" id="stay-user-save">Αποθήκευση</button>
+            <button type="button" class="btn btn--ghost" id="stay-user-clear">Νέος</button>
+          </div>
+        </form>
+        <div class="stay-user-list" id="stay-user-list"></div>
+      </div>
+
+      <nav class="stay-phone" id="stay-phone" aria-label="LuxuryStayReels">
+        <button type="button" data-stay-tab="pipeline">Pipeline</button>
+        <button type="button" data-stay-tab="landings">LandingPages</button>
+        <button type="button" data-stay-tab="oldway">The Old Way<small>upload</small></button>
+        <button type="button" data-stay-tab="leads">Επαφές</button>
+        <button type="button" data-stay-tab="sequences">Emails</button>
+        <button type="button" data-stay-tab="reviews">Κριτικές</button>
+        <button type="button" data-stay-tab="settings">Ρυθμίσεις</button>
+      </nav>
     </section>
 
     <!-- PAYMENTS TAB -->
@@ -747,6 +799,6 @@
   <script src="/services-data.js"></script>
   <script src="/stay-reel.js?v=3"></script>
   <script type="module" src="/admin/reel-upload.js?v=6"></script>
-  <script src="/admin/admin.js?v=49"></script>
+  <script src="/admin/admin.js?v=58"></script>
 </body>
 </html>

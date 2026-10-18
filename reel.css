@@ -587,8 +587,9 @@ h1 {
   }
 
   .page {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
     grid-template-columns: minmax(0, 1fr);
-    max-width: calc(100% - 40px);
   }
 
   .intro,
@@ -597,6 +598,10 @@ h1 {
   .work {
     min-width: 0;
     max-width: 100%;
+  }
+
+  .stage {
+    width: 100%;
   }
 
   .intro {

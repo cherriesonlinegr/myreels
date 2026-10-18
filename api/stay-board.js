@@ -8,10 +8,23 @@ function builtInAccess(body) {
   return null;
 }
 
-function openBoard(board) {
-  if (!board || typeof board !== "object" || !Object.prototype.hasOwnProperty.call(board, "users")) return board;
+function openBoard(board, access) {
+  if (!board || typeof board !== "object") return board;
   const { users, ...rest } = board;
-  return rest;
+  if (access?.role === "admin" || !Array.isArray(rest.deals)) return rest;
+  return {
+    ...rest,
+    deals: rest.deals.map((deal) => {
+      const { log, noteBy, noteByName, noteAt, uploadedBy, uploadedAt, ...pub } = deal;
+      return pub;
+    }),
+  };
+}
+
+function actorOf(body, access) {
+  const user = (access.role === "stay" ? "Nakis" : String(body.user || "admin")).slice(0, 32);
+  const name = String(access.role === "admin" ? "Admin" : access.role === "stay" ? "Nakis" : access.name || user).slice(0, 80);
+  return { user, name };
 }
 
 function actionAllowed(access, action) {
@@ -32,7 +45,6 @@ function actionAllowed(access, action) {
     removeDeals: "pipeline",
     viber: "pipeline",
     edit: "pipeline",
-    note: "pipeline",
     move: "pipeline",
     leads: "leads",
     leadSave: "leads",
@@ -84,10 +96,11 @@ export default async function handler(req, res) {
     let access = builtInAccess(body);
     if (!access) {
       const found = loginStayUser(await loadBoard(), body);
-      if (found.ok) access = { role: "sub", permissions: found.permissions };
+      if (found.ok) access = { role: "sub", name: found.name, permissions: found.permissions };
     }
     if (!access) return res.status(401).json({ ok: false, error: "Δεν έχεις πρόσβαση." });
     if (!actionAllowed(access, action)) return res.status(403).json({ ok: false, error: "Δεν έχεις αυτό το δικαίωμα." });
+    const actor = actorOf(body, access);
     if (action === "users") {
       return res.status(200).json({ ok: true, users: publicUsers(await loadBoard()) });
     }
@@ -105,47 +118,47 @@ export default async function handler(req, res) {
     }
     if (action === "load") {
       const board = await loadBoard();
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "seed") {
       let board = await loadBoard();
       for (const deal of Array.isArray(body.deals) ? body.deals : []) {
-        board = upsertLanding(board, deal);
+        board = upsertLanding(board, { ...deal, actor, record: false });
       }
       board = await saveBoard(board);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "saveCopy") {
       const board = await saveBoard(savePublicCopy(await loadBoard(), body.copy));
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "upsert") {
       const before = await loadBoard();
       const videoId = String(body.deal?.videoId || "").trim();
       const existed = before.deals.some((item) => item.videoId === videoId);
-      const board = await saveBoard(upsertLanding(before, body.deal || {}));
+      const board = await saveBoard(upsertLanding(before, { ...(body.deal || {}), actor, record: true }));
       let sheet = "";
       if (!existed && videoId) {
         const deal = board.deals.find((item) => item.videoId === videoId);
         sheet = await noteLead(deal?.property, "Δημιουργήθηκε landing", deal?.landingUrl || "");
       }
-      return res.status(200).json({ ok: true, sheet, ...openBoard(board) });
+      return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
     }
     if (action === "remove") {
       const board = await saveBoard(removeLanding(await loadBoard(), String(body.videoId || "")));
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "sequences") {
       const current = await loadBoard();
       current.sequences = body.sequences || current.sequences;
       const board = await saveBoard(current);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "resetSequences") {
       const current = await loadBoard();
       current.sequences = defaultSequences();
       const board = await saveBoard(current);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "test") {
       const result = await sendTest({
@@ -169,51 +182,51 @@ export default async function handler(req, res) {
       ensureReviewToken(deal);
       const board = await saveBoard(current);
       const saved = board.deals.find((item) => item.id === deal.id);
-      return res.status(200).json({ ok: true, token: saved?.reviewToken || "", ...openBoard(board) });
+      return res.status(200).json({ ok: true, token: saved?.reviewToken || "", ...openBoard(board, access) });
     }
     if (action === "moderate") {
       const current = await loadBoard();
       const result = moderateReview(current, { id: body.id, status: body.status });
       if (!result.ok) return res.status(400).json({ ok: false, error: "Δεν βρέθηκε η κριτική." });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "archive") {
-      const result = setArchived(await loadBoard(), { videoIds: body.videoIds, archived: body.archived !== false });
+      const result = setArchived(await loadBoard(), { videoIds: body.videoIds, archived: body.archived !== false, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, count: result.count, ...openBoard(board) });
+      return res.status(200).json({ ok: true, count: result.count, ...openBoard(board, access) });
     }
     if (action === "removeDeals") {
       const result = removeDeals(await loadBoard(), { videoIds: body.videoIds });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, count: result.count, ...openBoard(board) });
+      return res.status(200).json({ ok: true, count: result.count, ...openBoard(board, access) });
     }
     if (action === "viber") {
-      const result = markViber(await loadBoard(), { videoId: body.videoId });
+      const result = markViber(await loadBoard(), { videoId: body.videoId, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "edit") {
-      const result = updateDeal(await loadBoard(), body);
+      const result = updateDeal(await loadBoard(), { ...body, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "note") {
-      const result = setDealNote(await loadBoard(), { videoId: body.videoId, note: body.note });
+      const result = setDealNote(await loadBoard(), { videoId: body.videoId, note: body.note, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      return res.status(200).json({ ok: true, ...openBoard(board) });
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "move") {
       const current = await loadBoard();
       const passing = body.stage === "out";
       const result = passing
-        ? markUninterested(current, { videoId: body.videoId })
-        : advanceLanding(current, { videoId: body.videoId, stage: body.stage });
+        ? markUninterested(current, { videoId: body.videoId, actor })
+        : advanceLanding(current, { videoId: body.videoId, stage: body.stage, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       if (result.changed && !passing) await sendDue(result.board, { onlyDay: 0 });
       const board = await saveBoard(result.board);
@@ -223,7 +236,7 @@ export default async function handler(req, res) {
         const label = stage === "pack10" ? "Αγόρασε 10 Reels" : stage === "pack5" ? "Αγόρασε 5 Reels" : "Αγόρασε 1 Reel";
         sheet = await noteLead(result.deal?.property, label, "");
       }
-      return res.status(200).json({ ok: true, sheet, ...openBoard(board) });
+      return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
     }
     if (action === "leads" || action === "leadSave" || action === "leadMove") {
       const { listLeads, saveLead, logMovement } = await import("../lib/lead-sheet.mjs");
@@ -247,7 +260,7 @@ export default async function handler(req, res) {
       const current = await loadBoard();
       const count = await sendOne(current, String(body.stage || ""), String(body.emailId || ""));
       const board = await saveBoard(current);
-      return res.status(200).json({ ok: true, sent: count, ...openBoard(board) });
+      return res.status(200).json({ ok: true, sent: count, ...openBoard(board, access) });
     }
     return res.status(400).json({ ok: false, error: "Άγνωστη ενέργεια." });
   } catch (err) {

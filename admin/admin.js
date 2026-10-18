@@ -1937,6 +1937,10 @@ MyReels`,
         localStorage.setItem(STAY_COPY_KEY, JSON.stringify(pages));
         fillStayCopyForm(pages);
       }
+      if (!canStayEdit("landings") && !canStayEdit("oldway")) {
+        applyStayBoard(loaded);
+        return;
+      }
       const stay = window.MyReelsStay;
       const stays = withStaySlugs(loadStays());
       saveStays(stays);
@@ -2071,6 +2075,7 @@ MyReels`,
           <button type="button" class="stay-card__name" data-stay-open="${id}">${name}</button>
         </div>
         <textarea class="stay-card__note" rows="2" data-stay-note="${id}" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea>
+        ${deal.noteByName ? `<small class="stay-card__by">${escapeHtml(deal.noteByName)}</small>` : ""}
       </article>`;
   }
 
@@ -2165,10 +2170,11 @@ MyReels`,
           <label>Διακριτικός<input name="companyTitle" maxlength="120" value="${escapeHtml(deal.companyTitle || "")}" /></label>
           <label>Διεύθυνση<input name="companyAddress" maxlength="300" value="${escapeHtml(deal.companyAddress || "")}" /></label>
         </div>
-        <label>Σημείωση<textarea name="note" rows="3" maxlength="500" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea></label>
+        <label>Σημείωση<textarea name="note" rows="3" maxlength="500" data-stay-note="${id}" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea></label>
         ${deal.landingUrl ? `<p class="stay-hint"><a href="${escapeHtml(deal.landingUrl)}" target="_blank" rel="noopener">Άνοιγμα σελίδας</a></p>` : ""}
         <button type="submit" class="btn">Αποθήκευση</button>
       </form>
+      ${stayWho(deal)}
       <h3>Πληρωμές</h3>
       ${pays.length ? `<ul class="stay-sheet__list">${pays.map((item) => `<li><strong>${escapeHtml(item.label)}</strong> ${escapeHtml(item.amount)} · ${escapeHtml(item.status)}<small>${escapeHtml(item.when)} · ${escapeHtml(item.document)}</small></li>`).join("")}</ul>` : `<p class="stay-hint">Καμία πληρωμή ακόμα.</p>`}
       <h3>Emails</h3>
@@ -2178,6 +2184,33 @@ MyReels`,
       ${viberButton(deal)}
       ${moves}
       <div class="stay-card__tools">${tools}<button type="button" class="btn btn--ghost btn--sm btn--danger" data-stay-remove="${id}" data-stay-property="${name}">Διαγραφή</button></div>`;
+  }
+
+  function stayWho(deal) {
+    const labels = {
+      note: "Σημείωση",
+      upload: "Ανέβασμα",
+      edit: "Αλλαγή",
+      move: "Μετακίνηση",
+      out: "Δεν ενδιαφέρεται",
+      viber: "Viber",
+      archive: "Αρχείο",
+    };
+    const lines = [];
+    const log = Array.isArray(deal.log) ? deal.log : [];
+    if (deal.uploadedBy && !log.some((item) => item.kind === "upload")) {
+      lines.push(`<li><strong>Ανέβασμα</strong><small>${escapeHtml(deal.uploadedBy)}${deal.uploadedAt ? ` · ${escapeHtml(stayWhen(deal.uploadedAt))}` : ""}</small></li>`);
+    }
+    log
+      .slice()
+      .reverse()
+      .forEach((item) => {
+        const label = labels[item.kind] || "Αλλαγή";
+        const extra = item.text && item.text !== label ? ` · ${escapeHtml(item.text)}` : "";
+        lines.push(`<li><strong>${escapeHtml(label)}</strong><small>${escapeHtml(item.name || item.user)}${extra} · ${escapeHtml(stayWhen(item.at))}</small></li>`);
+      });
+    if (!lines.length) return "";
+    return `<h3>Ποιος</h3><ul class="stay-sheet__list">${lines.join("")}</ul>`;
   }
 
   function paintStaySheet() {
@@ -2549,20 +2582,19 @@ MyReels`,
     reviews: "Κριτικές",
   };
 
+  function canStayEdit(tab) {
+    if (currentRole() !== "sub") return true;
+    return stayPermissions()?.[tab] === true;
+  }
+
   function applyStayPerms() {
     const role = currentRole();
-    const perms = stayPermissions();
     document.querySelectorAll("[data-stay-tab]").forEach((button) => {
-      const tab = button.dataset.stayTab;
-      const allowed = tab === "settings" ? role === "admin" : role !== "sub" || perms?.[tab] === true;
-      button.hidden = !allowed;
+      button.hidden = button.dataset.stayTab === "settings" && role !== "admin";
     });
-    if (role !== "sub") return;
-    const open = document.querySelector(".stay-panel:not([hidden])");
-    const id = open?.id?.replace("stay-panel-", "") || "";
-    if (perms?.[id] === true) return;
-    const first = Object.keys(STAY_PERM_LABELS).find((key) => perms?.[key] === true);
-    if (first) showStayPanel(first);
+    Object.keys(STAY_PERM_LABELS).forEach((id) => {
+      document.getElementById(`stay-panel-${id}`)?.classList.toggle("is-readonly", !canStayEdit(id));
+    });
   }
 
   function stayUserStatus(text) {
@@ -3714,9 +3746,11 @@ MyReels`,
       const button = form.querySelector("[type=submit]");
       if (button) button.disabled = true;
       try {
-        const result = await stayBoardRequest({ action: "edit", videoId, ...data });
+        const result = canStayEdit("pipeline")
+          ? await stayBoardRequest({ action: "edit", videoId, ...data })
+          : await stayBoardRequest({ action: "note", videoId, note: data.note || "" });
         applyStayBoard(result);
-        setStayBoardStatus("Αποθηκεύτηκε.");
+        setStayBoardStatus(canStayEdit("pipeline") ? "Αποθηκεύτηκε." : "Η σημείωση κρατήθηκε.");
       } catch (err) {
         setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκε.");
         if (button) button.disabled = false;
@@ -3813,7 +3847,7 @@ MyReels`,
   if (googleParams.get("google")) {
     history.replaceState({}, "", location.pathname);
     switchTab("stays");
-  } else if (document.body.classList.contains("is-stay-app")) {
+  } else if (document.body.classList.contains("is-stay-app") || currentRole() === "sub") {
     switchTab("stays");
     showStayPanel("pipeline");
   }

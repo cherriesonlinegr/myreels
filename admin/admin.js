@@ -1939,6 +1939,7 @@ MyReels`,
       }
       if (!canStayEdit("landings") && !canStayEdit("oldway")) {
         applyStayBoard(loaded);
+        loadStayLeads().catch(() => {});
         return;
       }
       const stay = window.MyReelsStay;
@@ -1964,6 +1965,7 @@ MyReels`,
       });
       const seeded = await stayBoardRequest({ action: "seed", deals });
       applyStayBoard(seeded);
+      loadStayLeads().catch(() => {});
     } catch (err) {
       setStayBoardStatus(err?.message || "Το pipeline δεν φορτώθηκε.");
     }
@@ -2064,6 +2066,124 @@ MyReels`,
     return date.toLocaleString("el-GR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
+  let stayLeads = { leads: [], moves: [], canWrite: false };
+
+  const OUTREACH = [
+    {
+      id: "sm1",
+      group: "Πρώτη επαφή",
+      label: "1ο μήνυμα",
+      text: "Καλησπέρα! Εντυπωσιάστηκα με το {property}, τι υπέροχος χώρος!\nΜε την ομάδα μου φτιάξαμε ένα Reel για το κατάλυμά σας, χρησιμοποιώντας αποκλειστικά το υλικό που έχετε online (χωρίς γυρίσματα).\n\nΝα σας στείλω το link να πάρετε μια γεύση;",
+    },
+    {
+      id: "sm2",
+      group: "Πρώτη επαφή",
+      label: "Link landing",
+      text: "Ορίστε! Μπορείτε να το δείτε εδώ: {link}\n\nΡίξτε του μια ματιά και πείτε μου πώς σας φαίνεται η αισθητική του! Αν σας αρέσει, είναι έτοιμο να το κατεβάσετε.",
+    },
+    {
+      id: "g1",
+      group: "Δεν απάντησε",
+      label: "Follow-up 1",
+      hint: "Μετά από 2–3 μέρες",
+      text: "Καλησπέρα! Υποθέτω ότι τρέχετε και δεν προλάβατε να δείτε το μήνυμα μου. Σας έστειλα πριν λίγες μέρες για το Reel που φτιάξαμε για το {property} από τις φωτογραφίες σας.\n\nΘέλετε να σας το στείλω να το δείτε με την ησυχία σας;",
+    },
+    {
+      id: "g2",
+      group: "Δεν απάντησε",
+      label: "Follow-up 2",
+      hint: "Μετά από 4–5 μέρες",
+      text: "Καλησπέρα! Μια γρήγορη υπενθύμιση. Το Reel για το {property} είναι αποθηκευμένο στους servers μας, αλλά σύντομα θα προχωρήσουμε σε νέα καταλύματα περιοχή.\n\nΝα το αφήσω να το δείτε τώρα ή δεν σας ενδιαφέρει, να το κατεβάσουμε.",
+    },
+    {
+      id: "g3",
+      group: "Δεν απάντησε",
+      label: "Follow-up 3",
+      hint: "Μετά από 7 μέρες",
+      text: "Καλησπέρα! Υποθέτω ότι η προβολή στα social media δεν είναι στα άμεσα πλάνα σας αυτή την περίοδο, οπότε δεν θα σας ξαναενοχλήσω.\n\nΑν το ξανασκεφτείτε στο μέλλον και θέλετε να δείτε πώς μετατρέπουμε τις φωτογραφίες σας σε βίντεο με επαγγελματικό μοντάζ και προσθέσαμε τα ψηφιακά μας μοντέλα να περιηγούνται στον χώρο, δίνοντας στον ταξιδιώτη να νιώσει αμέσως την εμπειρία της διαμονής, πριν καν κάνει κράτηση. Χωρίς συνεργεία, χωρίς ραντεβού, χωρίς να χρειαστεί να εμφανιστείς εσύ. Καλή συνέχεια με τις κρατήσεις σας!",
+    },
+    {
+      id: "w1",
+      group: "Είδε το link",
+      label: "Follow-up 1",
+      hint: "Μετά από 24 ώρες",
+      text: "Καλησπέρα! Ρίξατε μια ματιά στο Reel για το {property};\n\nΠώς σας φάνηκε η αισθητική; Αν θέλετε να κάνουμε κάποια μικρή διόρθωση πριν το κατεβάσετε, πείτε μου!",
+    },
+    {
+      id: "w2",
+      group: "Είδε το link",
+      label: "Follow-up 2",
+      hint: "Μετά από 3 μέρες",
+      text: "Καλησπέρα! Καταλαβαίνω ότι ο φόρτος εργασίας σας είναι τεράστιος. Γι' αυτό ακριβώς φτιάξαμε αυτό το Reel: για να αποκτήσετε επαγγελματικό βίντεο στα social χωρίς να αφιερώσετε ούτε λεπτό από τον χρόνο σας σε γυρίσματα.\n\nΜε 40€ (+ΦΠΑ), είναι έτοιμο να μπει κατευθείαν στο προφίλ σας. Θέλετε να σας στείλω απευθείας το link ενεργοποίησης;",
+    },
+    {
+      id: "w3",
+      group: "Είδε το link",
+      label: "Follow-up 3",
+      hint: "Μετά από 5–6 μέρες",
+      text: "Καλησπέρα! Επειδή κλείνουμε τον κύκλο της προσφοράς για την περιοχή σας αυτή την εβδομάδα, το Reel για το {property} θα παραμείνει διαθέσιμο για λίγες ακόμα ώρες.\n\nΑν θέλετε να το κατοχυρώσετε και να το ανεβάσετε άμεσα, μπορείτε να το πάρετε εδώ: {link}. Αν όχι, ελπίζω τουλάχιστον να πήρατε μια καλή ιδέα για το πώς μπορούμε να παρουσιάσουμε το χώρο σας! Καλή συνέχεια!",
+    },
+  ];
+
+  function stayPropertyKey(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function stayLeadFor(deal) {
+    const name = stayPropertyKey(deal?.property);
+    if (!name) return null;
+    return (stayLeads.leads || []).find((lead) => stayPropertyKey(lead.name) === name) || null;
+  }
+
+  function stayOutreachText(message, deal) {
+    return String(message.text || "")
+      .replaceAll("{property}", deal.property || "")
+      .replaceAll("{link}", deal.landingUrl || "");
+  }
+
+  function stayOutreachLatest(deal) {
+    const latest = new Map();
+    for (const item of Array.isArray(deal?.outreach) ? deal.outreach : []) {
+      if (item?.id && item?.at) latest.set(item.id, item.at);
+    }
+    return latest;
+  }
+
+  function staySentList(deal) {
+    if (deal.stage !== "landing") return "";
+    const latest = stayOutreachLatest(deal);
+    const rows = OUTREACH.filter((message) => latest.has(message.id));
+    if (!rows.length) return "";
+    return `<ul class="stay-card__sent">${rows
+      .map((message) => `<li>${escapeHtml(message.label)} <time>${escapeHtml(stayWhen(latest.get(message.id)))}</time></li>`)
+      .join("")}</ul>`;
+  }
+
+  function staySocialBlock(deal) {
+    if (deal.stage !== "landing" || deal.archived) return "";
+    const lead = stayLeadFor(deal);
+    const href = /^https?:\/\//i.test(lead?.social || "") ? lead.social : "";
+    const where = /instagram\.com/i.test(href) ? "Instagram" : /facebook\.com/i.test(href) ? "Facebook" : "Social";
+    const latest = stayOutreachLatest(deal);
+    const id = escapeHtml(deal.videoId || "");
+    const groups = ["Πρώτη επαφή", "Δεν απάντησε", "Είδε το link"];
+    const blocks = groups
+      .map((group) => {
+        const buttons = OUTREACH.filter((message) => message.group === group)
+          .map((message) => {
+            const when = latest.get(message.id);
+            return `<button type="button" class="btn btn--ghost btn--sm stay-social__btn" data-stay-social="${message.id}" data-stay-video="${id}">${escapeHtml(message.label)}${message.hint ? ` <small>${escapeHtml(message.hint)}</small>` : ""}${when ? ` <time>${escapeHtml(stayWhen(when))}</time>` : ""}</button>`;
+          })
+          .join("");
+        return `<div class="stay-social__group"><p class="stay-hint">${escapeHtml(group)}</p>${buttons}</div>`;
+      })
+      .join("");
+    const link = href
+      ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${where}</a>`
+      : "Δεν βρέθηκε social στο Sheet με αυτό ακριβώς το όνομα.";
+    return `<section class="stay-social"><h3>Social</h3><p class="stay-hint">${link}</p>${blocks}<p class="stay-hint">Το κλικ αντιγράφει το μήνυμα και ανοίγει το προφίλ.</p></section>`;
+  }
+
   function stayCard(deal) {
     const id = escapeHtml(deal.videoId || "");
     const name = escapeHtml(deal.property || "Χωρίς όνομα");
@@ -2074,6 +2194,7 @@ MyReels`,
           <input type="checkbox" data-stay-pick="${id}" aria-label="Επιλογή ${name}"${picked} />
           <button type="button" class="stay-card__name" data-stay-open="${id}">${name}</button>
         </div>
+        ${staySentList(deal)}
         <textarea class="stay-card__note" rows="2" data-stay-note="${id}" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea>
         ${deal.noteByName ? `<small class="stay-card__by">${escapeHtml(deal.noteByName)}</small>` : ""}
       </article>`;
@@ -2145,6 +2266,7 @@ MyReels`,
         <button type="button" class="btn btn--ghost btn--sm" data-stay-close>Κλείσιμο</button>
       </header>
       <p class="stay-hint">${escapeHtml(stage?.label || "")}${archived ? " · Αρχείο" : ""}</p>
+      ${staySocialBlock(deal)}
       <div class="stay-card__tags">${funnelTag(deal)}${tenTag(deal)}${reviewTag(deal)}</div>
       <form class="stay-edit" data-stay-edit="${id}">
         <label>Κατάλυμα<input name="property" maxlength="80" required value="${name}" /></label>
@@ -2479,15 +2601,27 @@ MyReels`,
     });
   }
 
-  let stayLeads = { leads: [], moves: [], canWrite: false };
-
   function setStayLeadsStatus(message) {
     const status = document.getElementById("stay-leads-status");
     if (status) status.textContent = message || "";
   }
 
   function leadMeta(lead) {
-    return [lead.region, lead.channel, lead.email, lead.phone].filter(Boolean).join(" · ");
+    return [lead.channel, lead.region, lead.phone].filter(Boolean).join(" · ");
+  }
+
+  function leadSocial(lead) {
+    const href = /^https?:\/\//i.test(lead.social || "") ? lead.social : "";
+    if (!href) return "";
+    const label = /instagram\.com/i.test(href) ? "Instagram" : /facebook\.com/i.test(href) ? "Facebook" : "Social";
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${label}</a>`;
+  }
+
+  function leadSyncLabel(iso) {
+    if (!iso) return "Δεν έχει συγχρονιστεί ακόμα.";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "";
+    return `Τελευταίος συγχρονισμός ${date.toLocaleString("el-GR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.`;
   }
 
   function renderStayLeads() {
@@ -2505,6 +2639,7 @@ MyReels`,
                 <div>
                   <strong>${lead.order ? `${escapeHtml(lead.order)}. ` : ""}${escapeHtml(lead.name)}</strong>
                   <small>${escapeHtml(leadMeta(lead) || "Χωρίς στοιχεία επικοινωνίας")}</small>
+                  ${leadSocial(lead) ? `<div class="stay-row__links">${leadSocial(lead)}</div>` : ""}
                 </div>
                 <button type="button" class="btn btn--ghost" data-lead-sent="${escapeHtml(lead.name)}">Στάλθηκε</button>
               </article>`
@@ -2524,7 +2659,7 @@ MyReels`,
                 <div>
                   <strong>${escapeHtml(lead.name)}</strong>
                   <small>${escapeHtml([lead.status || "Νέο", leadMeta(lead)].filter(Boolean).join(" · "))}</small>
-                  ${site ? `<div class="stay-row__links">${site}</div>` : ""}
+                  ${leadSocial(lead) || site ? `<div class="stay-row__links">${leadSocial(lead)}${site}</div>` : ""}
                 </div>
               </article>`;
             })
@@ -2553,9 +2688,10 @@ MyReels`,
     try {
       stayLeads = await stayBoardRequest({ action: "leads" });
       renderStayLeads();
-      if (!stayLeads.canWrite) {
-        setStayLeadsStatus("Βλέπεις το Google Sheet. Για να γράφεται από εδώ η ουρά, η landing και η αγορά, το Sheet μοιράζεται με τον λογαριασμό του site.");
-      }
+      const write = stayLeads.canWrite ? "" : " Οι κινήσεις δεν γράφονται ακόμα στο Sheet.";
+      setStayLeadsStatus(`${leadSyncLabel(stayLeads.syncedAt)}${write}`);
+      if (stayOpen) paintStaySheet();
+      renderStayPipeline();
     } catch (err) {
       setStayLeadsStatus(err?.message || "Οι επαφές δεν φορτώθηκαν.");
     }
@@ -3476,6 +3612,21 @@ MyReels`,
       renderStayPipeline();
     });
 
+    document.getElementById("stay-lead-sync")?.addEventListener("click", async () => {
+      const button = document.getElementById("stay-lead-sync");
+      if (button) button.disabled = true;
+      setStayLeadsStatus("Συγχρονισμός…");
+      try {
+        stayLeads = await stayBoardRequest({ action: "leadSync" });
+        renderStayLeads();
+        const write = stayLeads.canWrite ? "" : " Οι κινήσεις δεν γράφονται ακόμα στο Sheet.";
+        setStayLeadsStatus(`${leadSyncLabel(stayLeads.syncedAt)} ${stayLeads.leads?.length || 0} επαφές.${write}`);
+      } catch (err) {
+        setStayLeadsStatus(err?.message || "Ο συγχρονισμός δεν ολοκληρώθηκε.");
+      }
+      if (button) button.disabled = false;
+    });
+
     document.getElementById("stay-lead-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = document.getElementById("stay-lead-save");
@@ -3601,6 +3752,33 @@ MyReels`,
         stayOpen = "";
         const sheet = document.getElementById("stay-sheet");
         if (sheet) sheet.hidden = true;
+        return;
+      }
+      const social = event.target.closest("[data-stay-social]");
+      if (social) {
+        const messageId = social.getAttribute("data-stay-social") || "";
+        const videoId = social.getAttribute("data-stay-video") || "";
+        const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
+        const message = OUTREACH.find((item) => item.id === messageId);
+        if (!deal || !message) return;
+        const text = stayOutreachText(message, deal);
+        const href = /^https?:\/\//i.test(stayLeadFor(deal)?.social || "") ? stayLeadFor(deal).social : "";
+        if (href) window.open(href, "_blank", "noopener");
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          setStayBoardStatus("Το μήνυμα δεν αντιγράφηκε.");
+          return;
+        }
+        social.disabled = true;
+        try {
+          const result = await stayBoardRequest({ action: "outreach", videoId, id: messageId });
+          applyStayBoard(result);
+          setStayBoardStatus(result.sheet || (href ? "Αντιγράφηκε και άνοιξε το προφίλ." : "Αντιγράφηκε. Δεν υπάρχει social στο Sheet."));
+        } catch (err) {
+          setStayBoardStatus(err?.message || "Δεν καταγράφηκε.");
+          social.disabled = false;
+        }
         return;
       }
       const opener = event.target.closest("[data-stay-open]");

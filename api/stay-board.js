@@ -10,7 +10,7 @@ function builtInAccess(body) {
 
 function openBoard(board, access) {
   if (!board || typeof board !== "object") return board;
-  const { users, ...rest } = board;
+  const { users, leadSync, ...rest } = board;
   if (access?.role === "admin" || !Array.isArray(rest.deals)) return rest;
   return {
     ...rest,
@@ -46,7 +46,6 @@ function actionAllowed(access, action) {
     viber: "pipeline",
     edit: "pipeline",
     move: "pipeline",
-    leads: "leads",
     leadSave: "leads",
     leadMove: "leads",
   }[action];
@@ -69,6 +68,7 @@ export default async function handler(req, res) {
       loginStayUser,
       markUninterested,
       markViber,
+      markOutreach,
       setDealNote,
       updateDeal,
       ensureReviewToken,
@@ -86,6 +86,7 @@ export default async function handler(req, res) {
       sendDue,
       sendOne,
       sendTest,
+      syncLeadSheet,
       upsertLanding,
     } = await import("../lib/stay-board.mjs");
     if (action === "login") {
@@ -140,7 +141,7 @@ export default async function handler(req, res) {
       let sheet = "";
       if (!existed && videoId) {
         const deal = board.deals.find((item) => item.videoId === videoId);
-        sheet = await noteLead(deal?.property, "Δημιουργήθηκε landing", deal?.landingUrl || "");
+        sheet = await noteLead(deal?.property, "Δημιουργήθηκε landing", deal?.landingUrl || "", deal);
       }
       return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
     }
@@ -189,12 +190,23 @@ export default async function handler(req, res) {
       const result = moderateReview(current, { id: body.id, status: body.status });
       if (!result.ok) return res.status(400).json({ ok: false, error: "Δεν βρέθηκε η κριτική." });
       const board = await saveBoard(result.board);
+      const review = board.reviews.find((item) => item.id === String(body.id || ""));
+      if (review) {
+        await noteLead(review.property, review.status === "approved" ? "Κριτική στη σελίδα" : "Κριτική εκτός σελίδας", "", board.deals.find((item) => item.property === review.property));
+      }
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "archive") {
-      const result = setArchived(await loadBoard(), { videoIds: body.videoIds, archived: body.archived !== false, actor });
+      const before = await loadBoard();
+      const ids = new Set((Array.isArray(body.videoIds) ? body.videoIds : []).map((id) => String(id || "")));
+      const archived = body.archived !== false;
+      const result = setArchived(before, { videoIds: body.videoIds, archived, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
+      for (const deal of before.deals) {
+        if (!ids.has(deal.videoId) || deal.archived === archived) continue;
+        await noteLead(deal.property, archived ? "Αρχειοθέτηση" : "Επαναφορά", "", deal);
+      }
       return res.status(200).json({ ok: true, count: result.count, ...openBoard(board, access) });
     }
     if (action === "removeDeals") {
@@ -207,18 +219,28 @@ export default async function handler(req, res) {
       const result = markViber(await loadBoard(), { videoId: body.videoId, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
+      await noteLead(result.deal?.property, "Viber", "", result.deal);
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "edit") {
       const result = updateDeal(await loadBoard(), { ...body, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
+      await noteLead(result.deal?.property, "Στοιχεία πελάτη", "", result.deal);
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
+    }
+    if (action === "outreach") {
+      const result = markOutreach(await loadBoard(), { videoId: body.videoId, id: body.id });
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+      const board = await saveBoard(result.board);
+      const sheet = await noteLead(result.deal?.property, result.label, "", result.deal);
+      return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
     }
     if (action === "note") {
       const result = setDealNote(await loadBoard(), { videoId: body.videoId, note: body.note, actor });
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
+      await noteLead(result.deal?.property, "Σημείωση", result.deal?.note || "", result.deal);
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "move") {
@@ -231,15 +253,17 @@ export default async function handler(req, res) {
       if (result.changed && !passing) await sendDue(result.board, { onlyDay: 0 });
       const board = await saveBoard(result.board);
       let sheet = "";
-      if (result.changed && !passing) {
+      if (result.changed && passing) {
+        sheet = await noteLead(result.deal?.property, "Δεν ενδιαφέρεται", "", result.deal);
+      } else if (result.changed) {
         const stage = result.deal?.stage;
         const label = stage === "pack10" ? "Αγόρασε 10 Reels" : stage === "pack5" ? "Αγόρασε 5 Reels" : "Αγόρασε 1 Reel";
-        sheet = await noteLead(result.deal?.property, label, "");
+        sheet = await noteLead(result.deal?.property, label, "", result.deal);
       }
       return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
     }
-    if (action === "leads" || action === "leadSave" || action === "leadMove") {
-      const { listLeads, saveLead, logMovement } = await import("../lib/lead-sheet.mjs");
+    if (action === "leads" || action === "leadSync" || action === "leadSave" || action === "leadMove") {
+      const { saveLead, logMovement, movesFromLeadNotes } = await import("../lib/lead-sheet.mjs");
       if (action === "leadSave") await saveLead(body.lead || {});
       if (action === "leadMove") {
         const logged = await logMovement({
@@ -247,14 +271,25 @@ export default async function handler(req, res) {
           move: body.move,
           detail: body.detail,
         });
-        if (logged.skipped) {
-          return res.status(503).json({
+        if (logged.skipped || logged.error) {
+          return res.status(logged.skipped ? 503 : 400).json({
             ok: false,
-            error: "Η κίνηση δεν γράφτηκε. Το Sheet πρέπει να είναι μοιρασμένο με τον λογαριασμό του site.",
+            error: logged.error || "Η κίνηση δεν γράφτηκε. Το Sheet πρέπει να είναι μοιρασμένο με τον λογαριασμό του site.",
           });
         }
       }
-      return res.status(200).json({ ok: true, ...(await listLeads()) });
+      const fresh = action === "leads" ? await loadBoard() : null;
+      const at = Date.parse(fresh?.leadSync?.at || "");
+      if (fresh?.leadSync?.leads?.length && Number.isFinite(at) && Date.now() - at < 22 * 60 * 60 * 1000) {
+        return res.status(200).json({
+          ok: true,
+          leads: fresh.leadSync.leads,
+          moves: movesFromLeadNotes(fresh.leadSync.leads),
+          canWrite: fresh.leadSync.canWrite === true,
+          syncedAt: fresh.leadSync.at,
+        });
+      }
+      return res.status(200).json({ ok: true, ...(await syncLeadSheet()) });
     }
     if (action === "send") {
       const current = await loadBoard();

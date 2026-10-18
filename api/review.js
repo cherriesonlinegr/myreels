@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   try {
-    const { loadBoard, publicReviews, reviewForm, saveBoard, submitReview } = await import("../lib/stay-board.mjs");
+    const { loadBoard, noteLead, publicReviews, reviewForm, saveBoard, submitReview } = await import("../lib/stay-board.mjs");
     if (req.method === "GET" && String(req.query?.list || "") === "1") {
       return res.status(200).json({ ok: true, reviews: publicReviews(await loadBoard()) });
     }
@@ -19,7 +19,12 @@ export default async function handler(req, res) {
     if (String(body.website || "").trim()) return res.status(200).json({ ok: true });
     const result = submitReview(await loadBoard(), body);
     if (!result.ok) return res.status(400).json({ ok: false, error: result.error || "Δεν στάλθηκε." });
-    if (!result.already) await saveBoard(result.board);
+    if (!result.already) {
+      await saveBoard(result.board);
+      const review = result.board.reviews[0];
+      const deal = result.board.deals.find((item) => item.id === review?.dealId);
+      await noteLead(review?.property, "Κριτική", "", deal);
+    }
     return res.status(200).json({ ok: true, already: result.already === true });
   } catch (err) {
     console.error("[myreels/review]", err?.message || err);

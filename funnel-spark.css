@@ -455,6 +455,9 @@
     min-width: 0;
     max-width: 100%;
     margin: 18px 0 2px;
+    padding: 16px 14px 14px;
+    border-radius: 28px;
+    background: rgba(255, 90, 95, 0.07);
     overflow: hidden;
   }
 
@@ -465,7 +468,7 @@
     letter-spacing: -0.04em;
     font-size: 22px;
     font-weight: 650;
-    color: #1d1d1f;
+    color: #ff5a5f;
   }
 
   .sell > .quotes + .order {

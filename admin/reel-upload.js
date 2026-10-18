@@ -151,7 +151,7 @@ async function watermarked(file, markUrl, onProgress) {
   onEncode = (progress) => onProgress({ phase: "encode", ratio: Math.max(0, Math.min(1, progress || 0)) });
   const ext = (/\.([a-z0-9]{2,4})$/i.exec(file.name || "") || [])[1]?.toLowerCase() || "mp4";
   const inputName = `in.${ext}`;
-  const markW = Math.max(240, Math.round((info.width * 0.72) / 2) * 2);
+  const markW = Math.max(180, Math.round((info.width * 0.5) / 2) * 2);
   await ffmpeg.writeFile(inputName, await fetchFile(file));
   await ffmpeg.writeFile("mark.png", await fetchFile(markUrl));
   await ffmpeg.writeFile("voice1.mp3", await fetchFile("/admin/brand/1-demo.mp3"));

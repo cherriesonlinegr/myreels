@@ -1656,19 +1656,17 @@ body.is-viewer #btn-copy-onboarding-lead {
 
 .stay-row__links {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px 14px;
   margin-top: 8px;
+  min-width: 0;
 }
 
 .stay-row__links a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  color: #0071e3;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .stay-row__links svg {
@@ -3086,6 +3084,17 @@ body.is-viewer #btn-copy-onboarding-lead {
   border-radius: 11px;
   font-size: 13px;
   box-shadow: none;
+}
+
+#view-stays > .topbar {
+  align-items: center;
+}
+
+#view-stays #stay-lead-sync {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 980px;
 }
 
 #view-stays .btn--ghost {

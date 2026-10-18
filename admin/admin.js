@@ -2885,7 +2885,7 @@ MyReels`,
       try {
         const uploaded = await window.MyReelsUpload.run({
           file,
-          markUrl: "/admin/brand/watermark.png?v=2",
+          markUrl: "/admin/brand/watermark.png?v=3",
           name: stay.cleanName(name),
           creds: sessionCreds(),
           onProgress: ({ phase, ratio }) => {

@@ -1,36 +1,3 @@
-import {
-  defaultSequences,
-  defaultSequencesEn,
-  defaultMessages,
-  advanceLanding,
-  loginStayUser,
-  markUninterested,
-  markViber,
-  markOutreach,
-  saveOutreachTemplate,
-  removeCost,
-  saveCost,
-  setDealNote,
-  updateDeal,
-  ensureReviewToken,
-  loadBoard,
-  moderateReview,
-  noteLead,
-  publicUsers,
-  removeDeals,
-  removeStayUser,
-  removeLanding,
-  saveStayUser,
-  setArchived,
-  saveBoard,
-  savePublicCopy,
-  sendDue,
-  sendOne,
-  sendTest,
-  syncLeadSheet,
-  upsertLanding,
-} from "../lib/stay-board.mjs";
-
 function builtInAccess(body) {
   const user = String(body.user || "");
   const pass = String(body.pass || "");
@@ -95,6 +62,38 @@ export default async function handler(req, res) {
   const action = String(body.action || "load");
 
   try {
+    const {
+      defaultSequences,
+      defaultSequencesEn,
+      defaultMessages,
+      advanceLanding,
+      loginStayUser,
+      markUninterested,
+      markViber,
+      markOutreach,
+      saveOutreachTemplate,
+      removeCost,
+      saveCost,
+      setDealNote,
+      updateDeal,
+      ensureReviewToken,
+      loadBoard,
+      moderateReview,
+      noteLead,
+      publicUsers,
+      removeDeals,
+      removeStayUser,
+      removeLanding,
+      saveStayUser,
+      setArchived,
+      saveBoard,
+      savePublicCopy,
+      sendDue,
+      sendOne,
+      sendTest,
+      syncLeadSheet,
+      upsertLanding,
+    } = await import("../lib/stay-board.mjs");
     if (action === "login") {
       const result = loginStayUser(await loadBoard(), body);
       if (!result.ok) return res.status(401).json({ ok: false, error: "Δεν έχεις πρόσβαση." });

@@ -1781,7 +1781,7 @@ MyReels`,
 
   function stayLandingUrl(item) {
     const stay = window.MyReelsStay;
-    return stay.buildLandingUrl(window.location.origin, item.slug || stay.landingSlug(item.name, []));
+    return stay.buildLandingUrl(window.location.origin, item.slug || stay.landingSlug(item.name, []), item.lang === "en" ? "en" : "el");
   }
 
   function loadStays() {
@@ -1885,10 +1885,12 @@ MyReels`,
     ...STAY_STAGE_META,
     { id: "out", label: "Δεν ενδιαφέρεται", hint: "Έφυγε από το Landing." },
   ];
-  let stayBoard = { deals: [], sequences: {} };
+  let stayBoard = { deals: [], sequences: {}, sequencesEn: {}, messages: {}, outreachTexts: {} };
   let staySeqStage = "landing";
+  let staySeqLang = "el";
   let stayPick = new Set();
   let stayOpen = "";
+  let staySocialId = "";
   let stayQuery = "";
   let stayFocus = "landing";
 
@@ -2100,6 +2102,9 @@ MyReels`,
     stayBoard = {
       deals: data.deals || [],
       sequences: data.sequences || {},
+      sequencesEn: data.sequencesEn || {},
+      messages: data.messages || {},
+      outreachTexts: data.outreachTexts || {},
       reviews: data.reviews || [],
       payments: data.payments || [],
       costs: data.costs || [],
@@ -2141,6 +2146,7 @@ MyReels`,
           slug: item.slug,
           copy: stay?.encodeCopy(item.copy ? copyWithoutSampleOverrides(item.copy) : null) || "",
           landingUrl: stayLandingUrl(item),
+          lang: item.lang === "en" ? "en" : "el",
           driveUrl: item.driveUrl || stay?.driveFileUrl(item.driveId),
           createdAt: new Date(item.createdAt).toISOString(),
         };
@@ -2232,7 +2238,7 @@ MyReels`,
     if (deal.stage === "landing" || deal.stage === "out" || deal.reviewed) return "";
     const phone = viberPhone(deal.phone);
     if (!phone) return "";
-    return `<button type="button" class="btn btn--viber" data-viber-phone="${escapeHtml(phone)}" data-viber-name="${escapeHtml(deal.buyerName || "")}" data-viber-property="${escapeHtml(deal.property || "")}" data-viber-token="${escapeHtml(deal.reviewToken || "")}" data-viber-video="${escapeHtml(deal.videoId || "")}">Στείλε στο Viber</button>`;
+    return `<button type="button" class="btn btn--viber" data-viber-phone="${escapeHtml(phone)}" data-viber-name="${escapeHtml(deal.buyerName || "")}" data-viber-property="${escapeHtml(deal.property || "")}" data-viber-token="${escapeHtml(deal.reviewToken || "")}" data-viber-video="${escapeHtml(deal.videoId || "")}" data-viber-lang="${deal.lang === "en" ? "en" : "el"}">Στείλε στο Viber</button>`;
   }
 
   function stayDealName(videoId) {
@@ -2339,18 +2345,75 @@ MyReels`,
     return (stayLeads.leads || []).find((lead) => stayPropertyKey(lead.name) === name) || null;
   }
 
+  function stayTemplateOf(message) {
+    const saved = stayBoard.outreachTexts?.[message.id];
+    return typeof saved === "string" && saved.trim() ? saved : String(message.text || "");
+  }
+
   function stayOutreachText(message, deal) {
     const person = String(deal?.buyerName || "").trim().split(/\s+/)[0] || "";
-    return String(message.text || "")
-      .replaceAll("{property}", deal.property || "")
-      .replaceAll("{link}", deal.landingUrl || "")
+    return stayTemplateOf(message)
+      .replaceAll("{property}", deal?.property || "")
+      .replaceAll("{link}", deal?.landingUrl || "")
       .replaceAll("{name}", person ? `, ${person}` : "");
+  }
+
+  function stayTemplateFromEdit(message, deal, filled) {
+    let text = String(filled || "").replace(/\r\n/g, "\n").trim();
+    const link = String(deal?.landingUrl || "");
+    const property = String(deal?.property || "").trim();
+    const person = String(deal?.buyerName || "").trim().split(/\s+/)[0] || "";
+    const nameBit = person ? `, ${person}` : "";
+    if (link.length > 8) text = text.split(link).join("{link}");
+    if (property.length >= 2) text = text.split(property).join("{property}");
+    if (nameBit.length > 2) text = text.split(nameBit).join("{name}");
+    return text.slice(0, 2000);
+  }
+
+  const STAY_CHANNELS = [
+    ["viber", "Viber"],
+    ["email", "Email"],
+    ["whatsapp", "WhatsApp"],
+    ["facebook", "Facebook"],
+    ["instagram", "Instagram"],
+  ];
+
+  function stayChannelLabel(id) {
+    return STAY_CHANNELS.find((item) => item[0] === id)?.[1] || "";
+  }
+
+  function stayMessageText(message, deal) {
+    return stayOutreachText(message, deal);
+  }
+
+  function stayPipelineLocked() {
+    return document.getElementById("stay-panel-pipeline")?.classList.contains("is-readonly") === true;
+  }
+
+  function paintSocialDraft(root, deal, message) {
+    if (!root) return;
+    const preview = root.querySelector("[data-stay-social-preview]");
+    const bar = root.querySelector(".stay-social__bar");
+    const viaBox = root.querySelector(".stay-social__via");
+    const show = Boolean(message);
+    if (preview) {
+      preview.hidden = !show;
+      preview.value = message && deal ? stayMessageText(message, deal) : "";
+    }
+    if (bar) bar.hidden = !show;
+    if (viaBox) {
+      viaBox.hidden = !show;
+      const on = new Set(message ? stayOutreachLatest(deal).get(message.id)?.via || [] : []);
+      viaBox.querySelectorAll("[data-stay-via]").forEach((button) => {
+        button.setAttribute("aria-pressed", on.has(button.getAttribute("data-stay-via")) ? "true" : "false");
+      });
+    }
   }
 
   function stayOutreachLatest(deal) {
     const latest = new Map();
     for (const item of Array.isArray(deal?.outreach) ? deal.outreach : []) {
-      if (item?.id && item?.at) latest.set(item.id, item.at);
+      if (item?.id && item?.at) latest.set(item.id, item);
     }
     return latest;
   }
@@ -2361,7 +2424,10 @@ MyReels`,
     const rows = OUTREACH.filter((message) => latest.has(message.id));
     if (!rows.length) return "";
     return `<ul class="stay-card__sent">${rows
-      .map((message) => `<li>${escapeHtml(message.label)} <time>${escapeHtml(stayWhen(latest.get(message.id)))}</time></li>`)
+      .map((message) => {
+        const item = latest.get(message.id);
+        return `<li>${escapeHtml(message.label)} <time>${escapeHtml(stayWhen(item.at))}</time></li>`;
+      })
       .join("")}</ul>`;
   }
 
@@ -2377,9 +2443,12 @@ MyReels`,
       .map((group) => {
         const items = OUTREACH.filter((message) => message.group === group)
           .map((message) => {
-            const when = latest.get(message.id);
-            const extra = [message.hint, when ? stayWhen(when) : ""].filter(Boolean).join(" · ");
-            return `<option value="${message.id}">${escapeHtml(message.label)}${extra ? ` · ${escapeHtml(extra)}` : ""}</option>`;
+            const item = latest.get(message.id);
+            const when = item?.at || "";
+            const via = (item?.via || []).map(stayChannelLabel).filter(Boolean).join(", ");
+            const extra = [message.hint, when ? stayWhen(when) : "", via].filter(Boolean).join(" · ");
+            const selected = message.id === staySocialId ? " selected" : "";
+            return `<option value="${message.id}"${selected}>${escapeHtml(message.label)}${extra ? ` · ${escapeHtml(extra)}` : ""}</option>`;
           })
           .join("");
         return `<optgroup label="${escapeHtml(group)}">${items}</optgroup>`;
@@ -2388,7 +2457,26 @@ MyReels`,
     const link = href
       ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${where}</a>`
       : "Δεν βρέθηκε social στο Sheet με αυτό ακριβώς το όνομα.";
-    return `<section class="stay-social"><h3>Social</h3><p class="stay-hint">${link}</p><label class="stay-social__pick"><span>Μήνυμα</span><select data-stay-social-pick data-stay-video="${id}"><option value="">Διάλεξε για προεπισκόπηση</option>${options}</select></label><pre class="stay-social__preview" data-stay-social-preview>Διάλεξε μήνυμα για να το δεις.</pre><button type="button" class="btn" data-stay-social-send data-stay-video="${id}">Αντιγραφή και άνοιγμα</button></section>`;
+    const picked = OUTREACH.find((message) => message.id === staySocialId);
+    const preview = picked ? stayMessageText(picked, deal) : "";
+    const sent = picked ? latest.get(picked.id) : null;
+    const via = new Set(sent?.via || []);
+    const channels = STAY_CHANNELS.map(
+      ([channel, label]) =>
+        `<button type="button" class="stay-via" data-stay-via="${channel}" aria-pressed="${via.has(channel) ? "true" : "false"}">${label}</button>`,
+    ).join("");
+    return `<section class="stay-social"><h3>Social</h3><p class="stay-hint">${link}</p><label class="stay-social__pick"><span>Μήνυμα</span><select data-stay-social-pick data-stay-video="${id}"><option value="">Διάλεξε για προεπισκόπηση</option>${options}</select></label><textarea class="stay-social__preview" data-stay-social-preview rows="7"${picked ? "" : " hidden"}>${escapeHtml(preview)}</textarea><div class="stay-social__bar"${picked ? "" : " hidden"}><button type="button" class="btn btn--ghost btn--sm" data-stay-social-default>Set as default</button><button type="button" class="btn btn--sm" data-stay-social-send data-stay-video="${id}">Αντιγραφή</button></div><div class="stay-social__via" role="group" aria-label="Πού στάλθηκε"${picked ? "" : " hidden"}>${channels}</div></section>`;
+  }
+
+  function stayCardChannels(deal) {
+    const on = new Set();
+    for (const item of stayOutreachLatest(deal).values()) {
+      for (const channel of item?.via || []) on.add(channel);
+    }
+    const chips = STAY_CHANNELS.filter(([channel]) => on.has(channel))
+      .map(([channel, label]) => `<span class="stay-chip" data-stay-via="${channel}">${label}</span>`)
+      .join("");
+    return chips ? `<div class="stay-card__via">${chips}</div>` : "";
   }
 
   function stayCard(deal) {
@@ -2402,6 +2490,7 @@ MyReels`,
           <button type="button" class="stay-card__name" data-stay-open="${id}">${name}</button>
         </div>
         ${staySentList(deal)}
+        ${stayCardChannels(deal)}
         <textarea class="stay-card__note" rows="2" data-stay-note="${id}" placeholder="Σημείωση">${escapeHtml(deal.note || "")}</textarea>
         ${deal.noteByName ? `<small class="stay-card__by">${escapeHtml(deal.noteByName)}</small>` : ""}
       </article>`;
@@ -2630,11 +2719,50 @@ MyReels`,
     paintPick();
   }
 
-  function readSeqForm() {
+  function seqLang() {
+    return staySeqLang === "en" ? "en" : "el";
+  }
+
+  function seqPack() {
+    if (seqLang() === "en") {
+      if (!stayBoard.sequencesEn) stayBoard.sequencesEn = {};
+      return stayBoard.sequencesEn;
+    }
     if (!stayBoard.sequences) stayBoard.sequences = {};
+    return stayBoard.sequences;
+  }
+
+  function messagePack() {
+    const lang = seqLang();
+    if (!stayBoard.messages || typeof stayBoard.messages !== "object") stayBoard.messages = {};
+    if (!stayBoard.messages[lang]) stayBoard.messages[lang] = {};
+    return stayBoard.messages[lang];
+  }
+
+  function isMessageStage(stage) {
+    return stage === "viber" || stage === "review";
+  }
+
+  function seqPayload() {
+    return {
+      action: "sequences",
+      sequences: stayBoard.sequences || {},
+      sequencesEn: stayBoard.sequencesEn || {},
+      messages: stayBoard.messages || {},
+    };
+  }
+
+  function readSeqForm() {
+    if (isMessageStage(staySeqStage)) {
+      const box = document.querySelector("#stay-seq-editor [data-seq-message]");
+      if (!box) return;
+      messagePack()[staySeqStage] = box.value;
+      return;
+    }
+    const pack = seqPack();
     const cards = document.querySelectorAll("#stay-seq-editor [data-seq-index]");
-    if (!cards.length && !(stayBoard.sequences[staySeqStage] || []).length) return;
-    const current = stayBoard.sequences[staySeqStage] || [];
+    if (!cards.length && !(pack[staySeqStage] || []).length) return;
+    const current = pack[staySeqStage] || [];
     const list = [];
     cards.forEach((card, index) => {
       list.push({
@@ -2645,18 +2773,99 @@ MyReels`,
         active: Boolean(card.querySelector("[data-seq-active]")?.checked),
       });
     });
-    if (cards.length) stayBoard.sequences[staySeqStage] = list;
+    if (cards.length) pack[staySeqStage] = list;
+  }
+
+  async function saveSeqEdits(done) {
+    readSeqForm();
+    setStayBoardStatus("Αποθήκευση…");
+    try {
+      applyStayBoard(await stayBoardRequest(seqPayload()));
+      setStayBoardStatus(done || "Αποθηκεύτηκε.");
+    } catch (err) {
+      setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκαν.");
+    }
+  }
+
+  async function resetSeqEdits() {
+    const english = seqLang() === "en";
+    const message = isMessageStage(staySeqStage);
+    const ask = message
+      ? english
+        ? "Να γυρίσει αυτό το English μήνυμα στο έτοιμο κείμενο; Τα ελληνικά μένουν ως έχουν."
+        : "Να γυρίσει αυτό το ελληνικό μήνυμα στο έτοιμο κείμενο; Τα English μένουν ως έχουν."
+      : english
+        ? "Να γυρίσουν τα English emails στο έτοιμο κείμενο; Τα ελληνικά μένουν ως έχουν."
+        : "Να γυρίσουν τα ελληνικά emails στο έτοιμο κείμενο; Τα English μένουν ως έχουν.";
+    if (!confirm(ask)) return;
+    try {
+      applyStayBoard(
+        await stayBoardRequest({
+          action: "resetSequences",
+          lang: seqLang(),
+          part: message ? staySeqStage : "",
+        })
+      );
+      setStayBoardStatus("Γύρισε το έτοιμο κείμενο.");
+    } catch (err) {
+      setStayBoardStatus(err?.message || "Δεν έγινε επαναφορά.");
+    }
+  }
+
+  function renderStayMessage(editor) {
+    const pack = messagePack();
+    const kind = staySeqStage === "viber" ? "viber" : "review";
+    const text = pack[kind] || "";
+    const hint =
+      kind === "viber"
+        ? "Αυτό αντιγράφεται όταν πατάς «Στείλε στο Viber». Το {link} είναι η φόρμα της κριτικής."
+        : "Αυτή η πρόταση μπαίνει στη θέση του {review}, στα emails μετά την αγορά. Το link της φόρμας προστίθεται από κάτω.";
+    const tokens =
+      kind === "viber"
+        ? "<code>{hello}</code> <code>{name}</code> <code>{property}</code> <code>{link}</code>"
+        : "Χωρίς μεταβλητές. Το link μπαίνει μόνο του.";
+    editor.innerHTML = `
+      <div class="stay-seq__bar">
+        <button type="button" class="btn" id="stay-seq-save">Αποθήκευση</button>
+        <button type="button" class="btn btn--ghost" id="stay-seq-reset">Επαναφορά</button>
+      </div>
+      <p class="stay-hint">${hint} ${seqLang() === "en" ? "Πάει σε καταλύματα από την Αγγλία." : "Πάει σε ελληνικά καταλύματα."}</p>
+      <p class="stay-hint">${tokens}</p>
+      <label class="field"><span>${kind === "viber" ? "Μήνυμα Viber" : "Πρόταση κριτικής"}</span><textarea rows="8" data-seq-message>${escapeHtml(text)}</textarea></label>`;
+    document.getElementById("stay-seq-save")?.addEventListener("click", () => saveSeqEdits("Το μήνυμα αποθηκεύτηκε."));
+    document.getElementById("stay-seq-reset")?.addEventListener("click", () => resetSeqEdits());
   }
 
   function renderStaySequences() {
     const stages = document.getElementById("stay-seq-stages");
     const editor = document.getElementById("stay-seq-editor");
     if (!stages || !editor) return;
-    stages.innerHTML = STAY_STAGE_META.map((stage) => {
-      const count = (stayBoard.sequences?.[stage.id] || []).length;
-      const active = stage.id === staySeqStage ? " is-active" : "";
-      return `<button type="button" class="stay-subtab${active}" data-seq-stage="${stage.id}">${escapeHtml(stage.label)} <small>${count}</small></button>`;
-    }).join("");
+    const langBar = document.getElementById("stay-seq-lang");
+    if (langBar && langBar.dataset.bound !== "1") {
+      langBar.dataset.bound = "1";
+      langBar.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-seq-lang]");
+        if (!button) return;
+        readSeqForm();
+        staySeqLang = button.dataset.seqLang === "en" ? "en" : "el";
+        renderStaySequences();
+      });
+    }
+    langBar?.querySelectorAll("[data-seq-lang]").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.seqLang === seqLang());
+    });
+    const messageStages = [
+      { id: "viber", label: "Viber" },
+      { id: "review", label: "Κριτική" },
+    ];
+    const pack = seqPack();
+    stages.innerHTML = [...STAY_STAGE_META, ...messageStages]
+      .map((stage) => {
+        const count = isMessageStage(stage.id) ? "" : ` <small>${(pack[stage.id] || []).length}</small>`;
+        const active = stage.id === staySeqStage ? " is-active" : "";
+        return `<button type="button" class="stay-subtab${active}" data-seq-stage="${stage.id}">${escapeHtml(stage.label)}${count}</button>`;
+      })
+      .join("");
     stages.querySelectorAll("[data-seq-stage]").forEach((button) => {
       button.addEventListener("click", () => {
         readSeqForm();
@@ -2664,7 +2873,11 @@ MyReels`,
         renderStaySequences();
       });
     });
-    const emails = stayBoard.sequences?.[staySeqStage] || [];
+    if (isMessageStage(staySeqStage)) {
+      renderStayMessage(editor);
+      return;
+    }
+    const emails = pack[staySeqStage] || [];
     editor.innerHTML = `
       <div class="stay-seq__bar">
         <button type="button" class="btn" id="stay-seq-save">Αποθήκευση</button>
@@ -2675,7 +2888,11 @@ MyReels`,
           <input type="email" id="stay-seq-test-email" placeholder="το email σου" autocomplete="email" value="${escapeHtml(sessionStorage.getItem("myreels_seq_test_to") || "")}" />
         </label>
       </div>
-      <p class="stay-hint" id="stay-seq-status">Ημέρα 0 φεύγει μόνη της μόλις το κατάλυμα μπει στο στάδιο και έχουμε email. Οι επόμενες μέρες φεύγουν μόνες τους.</p>
+      <p class="stay-hint" id="stay-seq-status">${
+        staySeqStage === "bought"
+          ? "Η ημέρα 0 είναι το email με το αρχείο μετά την πληρωμή. Φεύγει στη γλώσσα του καταλύματος."
+          : "Ημέρα 0 φεύγει μόνη της μόλις το κατάλυμα μπει στο στάδιο και έχουμε email. Οι επόμενες μέρες φεύγουν μόνες τους."
+      } ${seqLang() === "en" ? "Αυτά τα κείμενα πάνε μόνο σε καταλύματα από την Αγγλία." : "Αυτά τα κείμενα πάνε μόνο σε ελληνικά καταλύματα."}</p>
       <details class="stay-details">
         <summary>Μεταβλητές</summary>
       <div class="stay-tokens-wrap">
@@ -2684,7 +2901,7 @@ MyReels`,
             <tr><th>Μεταβλητή</th><th>Τι μπαίνει</th><th>Παράδειγμα</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>{hello}</code></td><td>Χαιρετισμός. Με ονοματεπώνυμο γίνεται «Γεια σου» και το όνομα. Χωρίς όνομα μένει «Γεια σου».</td><td>Γεια σου Μαρία Γεωργίου</td></tr>
+            <tr><td><code>{hello}</code></td><td>Χαιρετισμός. Στα ελληνικά είναι «Γεια σου» και το όνομα. Στα English είναι «Hello» και το όνομα.</td><td>${seqLang() === "en" ? "Hello Maria Georgiou" : "Γεια σου Μαρία Γεωργίου"}</td></tr>
             <tr><td><code>{name}</code></td><td>Ονοματεπώνυμο αγοραστή.</td><td>Μαρία Γεωργίου</td></tr>
             <tr><td><code>{property}</code></td><td>Όνομα καταλύματος.</td><td>Ηλιοπετρόσπιτο</td></tr>
             <tr><td><code>{email}</code></td><td>Email αγοραστή.</td><td>maria@example.com</td></tr>
@@ -2722,41 +2939,26 @@ MyReels`,
     });
     document.getElementById("stay-seq-add")?.addEventListener("click", () => {
       readSeqForm();
-      stayBoard.sequences[staySeqStage] = stayBoard.sequences[staySeqStage] || [];
-      stayBoard.sequences[staySeqStage].push({
+      const pack = seqPack();
+      pack[staySeqStage] = pack[staySeqStage] || [];
+      pack[staySeqStage].push({
         id: `mail-${Date.now()}`,
         day: 0,
         active: true,
-        subject: "Νέο email για το {property}",
+        subject: seqLang() === "en" ? "A note about {property}" : "Νέο email για το {property}",
         body: "{hello},\n\n",
       });
       renderStaySequences();
     });
-    document.getElementById("stay-seq-save")?.addEventListener("click", async () => {
-      readSeqForm();
-      setStayBoardStatus("Αποθήκευση…");
-      try {
-        applyStayBoard(await stayBoardRequest({ action: "sequences", sequences: stayBoard.sequences }));
-        setStayBoardStatus("Τα emails αποθηκεύτηκαν.");
-      } catch (err) {
-        setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκαν.");
-      }
-    });
-    document.getElementById("stay-seq-reset")?.addEventListener("click", async () => {
-      if (!confirm("Να γυρίσουν όλα τα emails στο έτοιμο κείμενο;")) return;
-      try {
-        applyStayBoard(await stayBoardRequest({ action: "resetSequences" }));
-        setStayBoardStatus("Γύρισαν τα έτοιμα emails.");
-      } catch (err) {
-        setStayBoardStatus(err?.message || "Δεν έγινε επαναφορά.");
-      }
-    });
+    document.getElementById("stay-seq-save")?.addEventListener("click", () => saveSeqEdits("Τα emails αποθηκεύτηκαν."));
+    document.getElementById("stay-seq-reset")?.addEventListener("click", () => resetSeqEdits());
     editor.querySelectorAll("[data-seq-delete]").forEach((button) => {
       button.addEventListener("click", () => {
         const card = button.closest("[data-seq-index]");
         const index = Number(card?.dataset.seqIndex);
         readSeqForm();
-        stayBoard.sequences[staySeqStage] = (stayBoard.sequences[staySeqStage] || []).filter((_, i) => i !== index);
+        const pack = seqPack();
+        pack[staySeqStage] = (pack[staySeqStage] || []).filter((_, i) => i !== index);
         renderStaySequences();
       });
     });
@@ -2773,7 +2975,15 @@ MyReels`,
         const text = card?.querySelector("[data-seq-body]")?.value || "";
         button.disabled = true;
         try {
-          const result = await stayBoardRequest({ action: "test", to, subject, body: text, stage: staySeqStage });
+          const result = await stayBoardRequest({
+            action: "test",
+            to,
+            subject,
+            body: text,
+            stage: staySeqStage,
+            lang: seqLang(),
+            review: messagePack().review || "",
+          });
           const box = card?.querySelector("[data-seq-preview]");
           if (box) {
             box.hidden = false;
@@ -2792,7 +3002,7 @@ MyReels`,
         readSeqForm();
         button.disabled = true;
         try {
-          await stayBoardRequest({ action: "sequences", sequences: stayBoard.sequences });
+          await stayBoardRequest(seqPayload());
           const result = await stayBoardRequest({
             action: "send",
             stage: staySeqStage,
@@ -3482,11 +3692,13 @@ MyReels`,
       const encodedCopy = stay.encodeCopy(copy);
       if (encodedCopy.length > 20000) return fail("Το κείμενο είναι πολύ μεγάλο. Σύντομεψέ το.");
       const previous = loadStays();
+      const kept = previous.find((item) => item.videoId === videoId);
+      const lang = kept ? (kept.lang === "en" ? "en" : "el") : input.lang === "en" ? "en" : "el";
       const taken = previous
         .filter((item) => item.videoId !== videoId)
         .map((item) => item.slug || item.name);
       const slug = stay.landingSlug(name, taken);
-      const url = stay.buildLandingUrl(window.location.origin, slug);
+      const url = stay.buildLandingUrl(window.location.origin, slug, lang);
       const items = previous.filter(
         (item) =>
           !(
@@ -3505,6 +3717,7 @@ MyReels`,
         youtubeUrl: String(input.youtubeUrl || "").trim(),
         posterAt: input.posterAt != null ? input.posterAt : readStayPoster(),
         mobile: input.mobile === "b" ? "b" : "a",
+        lang,
         driveId,
         driveUrl: stay.driveFileUrl(driveId),
         copy,
@@ -3531,6 +3744,7 @@ MyReels`,
           driveUrl: item.driveUrl,
           posterAt: item.posterAt || 0,
           mobile: input.mobile === "b" ? "b" : "a",
+          lang,
           createdAt: new Date(item.createdAt).toISOString(),
         },
       })
@@ -3559,6 +3773,7 @@ MyReels`,
         pack5: pack5Input?.value,
         pack10: pack10Input?.value,
         mobile: document.querySelector('input[name="stay-mobile"]:checked')?.value,
+        lang: document.querySelector('input[name="stay-lang"]:checked')?.value,
         errorTarget: errorEl,
       });
     });
@@ -3642,6 +3857,7 @@ MyReels`,
           pack10: document.getElementById("reel-pack10")?.value,
           posterAt: 0,
           mobile: document.querySelector('input[name="reel-mobile"]:checked')?.value,
+          lang: document.querySelector('input[name="reel-lang"]:checked')?.value,
           errorTarget: reelError,
         });
         if (!item) {
@@ -3996,11 +4212,12 @@ MyReels`,
     document.getElementById("stay-panel-pipeline")?.addEventListener("change", (event) => {
       const pick = event.target.closest("[data-stay-social-pick]");
       if (!pick) return;
-      const preview = pick.closest(".stay-social")?.querySelector("[data-stay-social-preview]");
+      const root = pick.closest(".stay-social");
       const videoId = pick.getAttribute("data-stay-video") || "";
       const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
-      const message = OUTREACH.find((item) => item.id === pick.value);
-      if (preview) preview.textContent = message && deal ? stayOutreachText(message, deal) : "Διάλεξε μήνυμα για να το δεις.";
+      staySocialId = pick.value || "";
+      const message = OUTREACH.find((item) => item.id === staySocialId);
+      paintSocialDraft(root, deal, message);
     });
 
     document.getElementById("stay-panel-pipeline")?.addEventListener("click", async (event) => {
@@ -4012,16 +4229,16 @@ MyReels`,
       }
       const social = event.target.closest("[data-stay-social-send]");
       if (social) {
+        const root = social.closest(".stay-social");
         const videoId = social.getAttribute("data-stay-video") || "";
-        const pick = social.closest(".stay-social")?.querySelector("[data-stay-social-pick]");
-        const messageId = pick?.value || "";
+        const message = OUTREACH.find((item) => item.id === staySocialId);
         const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
-        const message = OUTREACH.find((item) => item.id === messageId);
+        const preview = root?.querySelector("[data-stay-social-preview]");
         if (!deal || !message) {
           setStayBoardStatus("Διάλεξε μήνυμα.");
           return;
         }
-        const text = stayOutreachText(message, deal);
+        const text = preview?.value || stayMessageText(message, deal);
         const href = /^https?:\/\//i.test(stayLeadFor(deal)?.social || "") ? stayLeadFor(deal).social : "";
         if (href) window.open(href, "_blank", "noopener");
         try {
@@ -4030,14 +4247,50 @@ MyReels`,
           setStayBoardStatus("Το μήνυμα δεν αντιγράφηκε.");
           return;
         }
-        social.disabled = true;
+        setStayBoardStatus(href ? "Αντιγράφηκε και άνοιξε το προφίλ." : "Αντιγράφηκε. Δεν υπάρχει social στο Sheet.");
+        return;
+      }
+      const reset = event.target.closest("[data-stay-social-default]");
+      if (reset) {
+        const root = reset.closest(".stay-social");
+        const deal = (stayBoard.deals || []).find((item) => item.videoId === (root?.querySelector("[data-stay-social-pick]")?.getAttribute("data-stay-video") || ""));
+        const message = OUTREACH.find((item) => item.id === staySocialId);
+        const preview = root?.querySelector("[data-stay-social-preview]");
+        if (!deal || !message || !preview || stayPipelineLocked()) return;
+        const text = stayTemplateFromEdit(message, deal, preview.value);
+        if (text.length < 2) {
+          setStayBoardStatus("Το μήνυμα είναι άδειο.");
+          return;
+        }
+        reset.disabled = true;
         try {
-          const result = await stayBoardRequest({ action: "outreach", videoId, id: messageId });
+          const result = await stayBoardRequest({ action: "outreachTemplate", id: message.id, text });
           applyStayBoard(result);
-          setStayBoardStatus(result.sheet || (href ? "Αντιγράφηκε και άνοιξε το προφίλ." : "Αντιγράφηκε. Δεν υπάρχει social στο Sheet."));
+          setStayBoardStatus("Έγινε το default για όλα τα καταλύματα.");
         } catch (err) {
-          setStayBoardStatus(err?.message || "Δεν καταγράφηκε.");
-          social.disabled = false;
+          setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκε.");
+          reset.disabled = false;
+        }
+        return;
+      }
+      const via = event.target.closest("[data-stay-via]");
+      if (via) {
+        const root = via.closest(".stay-social");
+        const videoId = root?.querySelector("[data-stay-social-pick]")?.getAttribute("data-stay-video") || "";
+        const deal = (stayBoard.deals || []).find((item) => item.videoId === videoId);
+        const message = OUTREACH.find((item) => item.id === staySocialId);
+        if (!deal || !message || stayPipelineLocked()) return;
+        const next = via.getAttribute("aria-pressed") !== "true";
+        via.setAttribute("aria-pressed", next ? "true" : "false");
+        const channels = [...root.querySelectorAll("[data-stay-via][aria-pressed='true']")].map((button) => button.getAttribute("data-stay-via"));
+        try {
+          const result = await stayBoardRequest({ action: "outreach", videoId, id: message.id, channels });
+          applyStayBoard(result);
+          const names = channels.map(stayChannelLabel).filter(Boolean).join(", ");
+          setStayBoardStatus(names ? `Στάλθηκε: ${names}.` : "Καμία αποστολή σε αυτό το μήνυμα.");
+        } catch (err) {
+          via.setAttribute("aria-pressed", next ? "false" : "true");
+          setStayBoardStatus(err?.message || "Δεν αποθηκεύτηκε.");
         }
         return;
       }
@@ -4100,9 +4353,19 @@ MyReels`,
           applyStayBoard(linked);
         }
         const name = button.getAttribute("data-viber-name") || "";
-        const property = button.getAttribute("data-viber-property") || "το κατάλυμα";
-        const hello = name ? `Γεια σου ${name}` : "Γεια σου";
-        const text = `${hello},\n\nΑν δεν μας έγραψες ακόμα δύο λόγια για την εμπειρία σου, θα μας βοηθούσε αφάνταστα αν αφιέρωνες μόλις 30 δευτερόλεπτα για να μας αφήσεις μια σύντομη αξιολόγηση.\n${location.origin}/review?t=${token}`;
+        const property = button.getAttribute("data-viber-property") || "";
+        const lang = button.getAttribute("data-viber-lang") === "en" ? "en" : "el";
+        const hello = name ? (lang === "en" ? `Hello ${name}` : `Γεια σου ${name}`) : lang === "en" ? "Hello" : "Γεια σου";
+        const template =
+          stayBoard.messages?.[lang]?.viber ||
+          (lang === "en"
+            ? "{hello},\n\nIf you haven't told us how it went yet, it would help us a lot if you took 30 seconds to leave a short rating.\n{link}"
+            : "{hello},\n\nΑν δεν μας έγραψες ακόμα δύο λόγια για την εμπειρία σου, θα μας βοηθούσε αφάνταστα αν αφιέρωνες μόλις 30 δευτερόλεπτα για να μας αφήσεις μια σύντομη αξιολόγηση.\n{link}");
+        const text = template
+          .replaceAll("{hello}", hello)
+          .replaceAll("{name}", name)
+          .replaceAll("{property}", property)
+          .replaceAll("{link}", `${location.origin}/review?t=${token}`);
         await navigator.clipboard.writeText(text);
         const videoId = button.getAttribute("data-viber-video") || "";
         if (videoId) {

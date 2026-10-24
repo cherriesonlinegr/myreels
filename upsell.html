@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/upsell.css?v=9" />
-  <link rel="stylesheet" href="/funnel-spark.css?v=14" />
+  <link rel="stylesheet" href="/upsell.css?v=18" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=20" />
 </head>
 <body>
   <div class="spark" aria-hidden="true">
@@ -64,15 +64,15 @@
         <fieldset class="bill">
           <label>
             <input type="radio" name="bill" value="receipt" checked />
-            <span>Απόδειξη</span>
+            <span data-ui="receipt">Απόδειξη</span>
           </label>
           <label>
             <input type="radio" name="bill" value="invoice" />
-            <span>Τιμολόγιο</span>
+            <span data-ui="invoice">Τιμολόγιο</span>
           </label>
         </fieldset>
         <div id="bill-afm" hidden>
-          <label class="field">ΑΦΜ
+          <label class="field"><span data-ui="afm">ΑΦΜ</span>
             <input type="text" id="buyer-afm" name="afm" inputmode="numeric" maxlength="9" autocomplete="off" />
           </label>
           <p class="bill__company" id="bill-company" hidden></p>
@@ -88,18 +88,18 @@
       <svg class="banner__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
       <div>
         <p class="banner__brand">LuxuryStayReels</p>
-        <p class="banner__line">Η παραγγελία σου</p>
+        <p class="banner__line" data-ui="orderLine">Η παραγγελία σου</p>
       </div>
     </header>
     <h1 id="done-title"></h1>
     <p id="done-text"></p>
     <section class="rate" id="rate">
-      <h2>Αξιολόγησε το Reel</h2>
-      <p class="rate__lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.</p>
+      <h2 data-ui="rateTitle">Αξιολόγησε το Reel</h2>
+      <p class="rate__lead" data-ui="rateLead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.</p>
       <form id="rate-form">
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <fieldset class="score">
-          <legend>Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ</legend>
+          <legend data-ui="rateLegend">Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ</legend>
           <div class="stars">
             <label data-star="1"><input type="radio" name="stars" value="1" /><span aria-hidden="true">★</span></label>
             <label data-star="2"><input type="radio" name="stars" value="2" /><span aria-hidden="true">★</span></label>
@@ -107,23 +107,16 @@
             <label data-star="4"><input type="radio" name="stars" value="4" /><span aria-hidden="true">★</span></label>
             <label data-star="5"><input type="radio" name="stars" value="5" /><span aria-hidden="true">★</span></label>
           </div>
-          <small data-star-hint>Διάλεξε αστέρια</small>
+          <small data-star-hint data-ui="pickStars">Πώς σου φάνηκε η εμπειρία; 5 αστεράκια και ένα όμορφο review είναι ό,τι καλύτερο.</small>
         </fieldset>
-        <label class="field">Το μήνυμά σου
-          <span class="note">Προαιρετικό.</span>
-          <textarea name="message" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
+        <label class="field"><span data-ui="yourMessage">Το μήνυμά σου</span>
+          <span class="note" data-ui="optional">Προαιρετικό.</span>
+          <textarea name="message" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»" data-ui-placeholder="messagePh"></textarea>
         </label>
-        <label class="field">Ονοματεπώνυμο
-          <input id="rate-name" type="text" readonly />
-        </label>
-        <label class="field">Κατάλυμα
+        <label class="field"><span data-ui="placeLabel">Κατάλυμα</span>
           <input id="rate-property" type="text" readonly />
         </label>
-        <label class="privacy">
-          <input type="checkbox" name="hideName" />
-          <span>Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.</span>
-        </label>
-        <button type="submit">Υποβολή αξιολόγησης</button>
+        <button type="submit" data-ui="submitReview">Υποβολή αξιολόγησης</button>
         <p class="form-error" id="rate-error" hidden></p>
       </form>
       <p class="rate__thanks" id="rate-thanks" hidden></p>
@@ -135,19 +128,19 @@
       <svg class="banner__mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="13" fill="#FF5A5F"/><path fill="#fff" d="M9 19.2 20 10l11 9.2V30.2c0 1.1-.9 2-2 2H11c-1.1 0-2-.9-2-2V19.2z"/><path fill="#FF5A5F" d="M17.2 32.2v-5.4a2.8 2.8 0 0 1 5.6 0v5.4"/></svg>
       <div>
         <p class="banner__brand">LuxuryStayReels</p>
-        <p class="banner__line">Συνέχεια παραγγελίας</p>
+        <p class="banner__line" data-ui="continueOrder">Συνέχεια παραγγελίας</p>
       </div>
     </header>
-    <h1>Αυτό το link δεν είναι πλήρες.</h1>
-    <p>Χρειάζεται το όνομα του καταλύματος.</p>
+    <h1 data-ui="linkIncomplete">Αυτό το link δεν είναι πλήρες.</h1>
+    <p data-ui="needName">Χρειάζεται το όνομα του καταλύματος.</p>
     <div class="wait" id="wait-loader" hidden aria-hidden="true"><span></span><span></span><span></span></div>
     <p class="wait-face" id="wait-face" hidden>😔</p>
   </main>
 
   <section class="work" id="work" hidden></section>
   <a class="dock" id="dock" href="#offer-yes" hidden>Ναι, θέλω τα 10 και τη διαχείριση — 384,40€ με ΦΠΑ</a>
-  <script src="/cookies.js"></script>
-  <script src="/stay-reel.js?v=7"></script>
-  <script src="/upsell.js?v=7"></script>
+  <script src="/cookies.js?v=4"></script>
+  <script src="/stay-reel.js?v=13"></script>
+  <script src="/upsell.js?v=11"></script>
 </body>
 </html>

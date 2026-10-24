@@ -1,5 +1,6 @@
 (() => {
   const stay = window.MyReelsStay;
+  stay.applyChrome();
   const params = new URLSearchParams(window.location.search);
   const name = stay.cleanName(params.get("name"));
   let firstNet = stay.parseNet(params.get("p")) ?? stay.NET;
@@ -30,7 +31,7 @@
       copyRaw = "";
     }
   }
-  const pages = stay.resolvePages(copyRaw);
+  const pages = stay.resolvePages(copyRaw, stay.currentLang());
   const dock = document.getElementById("dock");
   dock?.addEventListener("click", (event) => {
     event.preventDefault();
@@ -80,7 +81,7 @@
     const token = ++lookupToken;
     if (companyEl) {
       companyEl.hidden = false;
-      companyEl.textContent = "Ψάχνω τα στοιχεία…";
+      companyEl.textContent = stay.t("afmLooking");
     }
     try {
       const response = await fetch("/api/viva", {
@@ -90,7 +91,7 @@
       });
       const payload = await response.json().catch(() => ({}));
       if (token !== lookupToken) return;
-      if (!response.ok || !payload.name) throw new Error(payload.error || "Δεν βρέθηκαν στοιχεία για αυτό το ΑΦΜ.");
+      if (!response.ok || !payload.name) throw new Error(payload.error || stay.t("afmMissing"));
       billing = {
         document: "invoice",
         afm: payload.afm || afm,
@@ -101,7 +102,7 @@
       };
     } catch (err) {
       if (token !== lookupToken) return;
-      billing.error = err?.message || "Η αναζήτηση ΑΦΜ δεν απάντησε. Δοκίμασε ξανά.";
+      billing.error = stay.localError(err?.message, "afmDown");
     }
     paintCompany();
   };
@@ -152,7 +153,7 @@
     if (paidId) confirmReel(paidId);
     if (params.get("cancelled") === "1") {
       showError(
-        "Η πληρωμή δεν ολοκληρώθηκε. Το αρχικό σου Reel παραμένει αγορασμένο. Μπορείς να δοκιμάσεις ξανά ή να συνεχίσεις μόνο με την αρχική παραγγελία."
+        stay.t("packNotPaid")
       );
     }
   }
@@ -243,7 +244,7 @@
   }
 
   function render() {
-    const place = property || "κατάλυμά σου";
+    const place = property || stay.t("yourPlace");
     const owned = document.getElementById("owned-line");
     const kicker = document.getElementById("kicker-text");
     const title = document.getElementById("offer-title");
@@ -255,9 +256,9 @@
     const packNet = step === 10 ? pack10 : pack5;
     const extra = extraOf(packNet);
     const page = step === 10 ? pages.up10 : pages.up5;
-    const factory = step === 10 ? stay.COPY_PAGES.find((item) => item.id === "up10").copy : stay.COPY_PAGES.find((item) => item.id === "up5").copy;
+    const factory = stay.resolvePages("", stay.currentLang())[step === 10 ? "up10" : "up5"];
     const tokens = tokensFor(packNet, extra);
-    document.title = `Συνέχεια για το ${place} · MyReels`;
+    document.title = `${stay.fillTokens(stay.t("continueFor"), { name: place })} · LuxuryStayReels`;
     ready.classList.toggle("is-five", step === 5);
     setText(kicker, stay.fillTokens(page.kicker, tokens));
     setText(title, stay.fillTokens(page.title, tokens));
@@ -270,7 +271,7 @@
     if (!extra) {
       if (context) {
         context.hidden = false;
-        context.textContent = "Αυτή η αναβάθμιση δεν είναι διαθέσιμη για αυτή την τιμή.";
+        context.textContent = stay.t("upgradeUnavailable");
       }
       if (netNode) netNode.textContent = "";
       if (grossNode) grossNode.textContent = "";
@@ -284,7 +285,7 @@
     if (yes) yes.hidden = false;
     setText(context, stay.fillTokens(page.context, tokens));
     if (netNode) netNode.textContent = stay.euro(extra.extraNet);
-    if (grossNode) grossNode.textContent = `${stay.euro(extra.extraGross)} με ΦΠΑ`;
+    if (grossNode) grossNode.textContent = `${stay.euro(extra.extraGross)} ${stay.t("vat")}`;
     if (yes) yes.textContent = stay.fillTokens(page.yes, tokens).trim() || stay.fillTokens(factory.yes, tokens);
     if (no) no.textContent = stay.fillTokens(page.no, tokens).trim() || stay.fillTokens(factory.no, tokens);
     paintWork(step === 10 ? "up10" : "up5");
@@ -294,7 +295,7 @@
   async function confirmReel(id) {
     const order = await readOrder(id);
     if (!order || order.kind !== "reel") {
-      showError("Η πληρωμή του πρώτου Reel δεν ολοκληρώθηκε.");
+      showError(stay.t("firstNotPaid"));
       return;
     }
     reelSessionId = id;
@@ -318,7 +319,7 @@
       ready.hidden = false;
       render();
       showError(
-        "Η πληρωμή δεν ολοκληρώθηκε. Το αρχικό σου Reel παραμένει αγορασμένο. Μπορείς να δοκιμάσεις ξανά ή να συνεχίσεις μόνο με την αρχική παραγγελία."
+        stay.t("packNotPaid")
       );
       return;
     }
@@ -350,12 +351,12 @@
     if (errorEl) errorEl.hidden = true;
     const choice = chosenBill();
     if (choice.document === "invoice" && (billing.afm !== choice.afm || !billing.name)) {
-      showError(billing.error || "Βάλε ένα σωστό ΑΦΜ για να βρεθούν τα στοιχεία του τιμολογίου.");
+      showError(billing.error || stay.t("afmInvalid"));
       return;
     }
     if (yes) {
       yes.disabled = true;
-      yes.textContent = "Μετάβαση στην πληρωμή…";
+      yes.textContent = stay.t("paying");
     }
     if (no) no.disabled = true;
     try {
@@ -370,18 +371,19 @@
           property,
           document: choice.document,
           afm: choice.afm,
+          lang: stay.currentLang(),
         }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.url) {
-        throw new Error(payload.error || "Η πληρωμή δεν άνοιξε.");
+        throw new Error(payload.error || stay.t("payClosed"));
       }
       window.location.assign(payload.url);
     } catch (err) {
       if (yes) yes.disabled = false;
       if (no) no.disabled = false;
       render();
-      showError(err?.message || "Κάτι πήγε στραβά. Δοκίμασε ξανά.");
+      showError(stay.localError(err?.message, "payFailed"));
     }
   }
 
@@ -390,7 +392,7 @@
     const text = missing.querySelector("h1 + p");
     const line = missing.querySelector(".banner__line");
     const loader = document.getElementById("wait-loader");
-    if (line) line.textContent = "Το πρώτο Reel είναι δικό σου";
+    if (line) line.textContent = stay.t("yoursLine");
     if (text) {
       text.textContent = "";
       text.hidden = true;
@@ -398,10 +400,10 @@
     if (loader) loader.hidden = false;
     missing.hidden = false;
     const beatText = () => [
-      "Η πληρωμή σου ολοκληρώθηκε.",
-      stay.fillTokens("Το Reel για το «{name}» είναι δικό σου!", { name: property }),
-      "Μην κλείσεις τη σελίδα.",
-      "Έχουμε μια πρόταση που, ειλικρινά, δεν πρέπει να χάσεις!",
+      stay.t("beat1"),
+      stay.fillTokens(stay.t("beat2"), { name: property }),
+      stay.t("beat3"),
+      stay.t("beat4"),
     ];
     let beat = 0;
     let hold = true;
@@ -459,12 +461,10 @@
     if (!paid) {
       const face = document.getElementById("wait-face");
       if (face) face.hidden = false;
-      if (title) title.textContent = "Η πληρωμή δεν επιβεβαιώθηκε.";
+      if (title) title.textContent = stay.t("payUnconfirmed");
       if (text) {
         text.hidden = false;
-        text.textContent = last?.status === "failed"
-          ? "Δεν ολοκληρώθηκε. Γύρνα στη σελίδα του καταλύματος και δοκίμασε ξανά."
-          : "Αν την ολοκλήρωσες, ανανέωσε σε λίγο.";
+        text.textContent = last?.status === "failed" ? stay.t("payBack") : stay.t("payRefresh");
       }
       return;
     }
@@ -524,7 +524,9 @@
     const text = document.getElementById("done-text");
     const tokens = tokensFor(0, null);
     const key = count === 10 ? "ten" : count === 5 ? "five" : "one";
-    setText(title, stay.fillTokens(pages.done[`${key}Title`], tokens));
+    const doneTitle = stay.fillTokens(pages.done[`${key}Title`], tokens);
+    document.title = `${doneTitle} · LuxuryStayReels`;
+    setText(title, doneTitle);
     setText(text, stay.fillTokens(pages.done[`${key}Text`], tokens));
     done.hidden = false;
     paintWork(count === 10 ? "done10" : count === 5 ? "done5" : "done1");
@@ -551,7 +553,7 @@
       if (!rate) return;
       rate.replaceChildren();
       const heading = document.createElement("h2");
-      heading.textContent = "Ευχαριστούμε.";
+      heading.textContent = stay.t("thanks");
       const note = document.createElement("p");
       note.className = "rate__thanks";
       note.innerHTML = withPlace(text);
@@ -568,7 +570,7 @@
           if (!ok || !data?.ok) return;
           if (nameInput && data.buyerName) nameInput.value = data.buyerName;
           if (propertyInput && data.property) propertyInput.value = data.property;
-          if (data.reviewed) finish("Την έχουμε ήδη.");
+          if (data.reviewed) finish(stay.t("reviewHave"));
         })
         .catch(() => {});
     }
@@ -579,8 +581,6 @@
       form.querySelectorAll(".stars label").forEach((label) => {
         label.classList.toggle("is-on", Number(label.dataset.star) <= picked);
       });
-      const hint = form.querySelector("[data-star-hint]");
-      if (hint) hint.textContent = picked ? `${picked} από 5` : "Διάλεξε αστέρια";
     };
     form.addEventListener("change", paintStars);
     form.addEventListener("submit", async (event) => {
@@ -592,7 +592,7 @@
       if (!stars) {
         if (error) {
           error.hidden = false;
-          error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
+          error.textContent = stay.t("pickStarsError");
         }
         return;
       }
@@ -607,18 +607,18 @@
             property: propertyInput?.value || property,
             stars,
             message,
-            hideName: form.hideName.checked,
+            hideName: false,
             website: form.website.value,
           }),
         });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.ok === false) throw new Error(payload.error || "Δεν στάλθηκε.");
-        finish(payload.already ? "Την έχουμε ήδη." : "Την είδαμε. Αν την εγκρίνουμε, θα φανεί πάνω από τα δείγματα.");
+        if (!response.ok || payload.ok === false) throw new Error(payload.error || stay.t("notSent"));
+        finish(payload.already ? stay.t("reviewHave") : stay.t("reviewSeen"));
       } catch (err) {
         if (button) button.disabled = false;
         if (error) {
           error.hidden = false;
-          error.textContent = err?.message || "Δεν στάλθηκε.";
+          error.textContent = stay.localError(err?.message, "notSent");
         }
       }
     });

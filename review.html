@@ -28,6 +28,64 @@
   <script>
     const token = new URLSearchParams(location.search).get("t") || "";
     const card = document.getElementById("card");
+    const COPY = {
+      el: {
+        title: "Αξιολόγησε το Reel — MyReels",
+        h1: "Αξιολόγησε το Reel",
+        lead: "Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.",
+        thanks: "Ευχαριστούμε.",
+        of: "από 5",
+        pick: "Διάλεξε αστέρια",
+        legend: "Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ",
+        message: "Το μήνυμά σου",
+        optional: "Προαιρετικό.",
+        placeholder: "Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»",
+        name: "Ονοματεπώνυμο",
+        property: "Κατάλυμα",
+        hide: "Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.",
+        submit: "Υποβολή αξιολόγησης",
+        privacy: "Πολιτική Απορρήτου",
+        privacyHref: "/privacy.html",
+        pickError: "Διάλεξε από 1 έως 5 αστέρια.",
+        tooLong: "Το κείμενο είναι πολύ μεγάλο.",
+        notSent: "Δεν στάλθηκε.",
+        already: "Την έχουμε ήδη.",
+        seen: "Την είδαμε. Αν την εγκρίνουμε, θα φανεί πάνω από τα δείγματα.",
+        badLink: "Αυτός ο σύνδεσμος δεν ανοίγει φόρμα.",
+        failed: "Η φόρμα δεν άνοιξε. Ξαναπροσπάθησε σε λίγο.",
+      },
+      en: {
+        title: "Rate the Reel — MyReels",
+        h1: "Rate the Reel",
+        lead: "How was it? From 1 to 5 stars. The text is optional.",
+        thanks: "Thank you.",
+        of: "of 5",
+        pick: "Pick stars",
+        legend: "YOUR RATING",
+        message: "Your message",
+        optional: "Optional.",
+        placeholder: "For example, “The Reel caught the property exactly.”",
+        name: "Full name",
+        property: "Property",
+        hide: "I prefer my full name not to appear on the website.",
+        submit: "Submit rating",
+        privacy: "Privacy policy",
+        privacyHref: "/en/privacy",
+        pickError: "Pick from 1 to 5 stars.",
+        tooLong: "The text is too long.",
+        notSent: "It wasn't sent.",
+        already: "We already have it.",
+        seen: "We saw it. If we approve it, it will appear above the samples.",
+        badLink: "This link does not open a form.",
+        failed: "The form didn't open. Try again in a moment.",
+      },
+    };
+    let L = COPY.el;
+    function useLang(lang) {
+      L = lang === "en" ? COPY.en : COPY.el;
+      document.documentElement.lang = lang === "en" ? "en" : "el";
+      document.title = L.title;
+    }
 
     const escapeHtml = (value) =>
       String(value ?? "")
@@ -37,7 +95,7 @@
         .replace(/"/g, "&quot;");
 
     function showDone(text) {
-      card.innerHTML = `<div class="done"><h1>Ευχαριστούμε.</h1><p>${escapeHtml(text)}</p></div>`;
+      card.innerHTML = `<div class="done"><h1>${escapeHtml(L.thanks)}</h1><p>${escapeHtml(text)}</p></div>`;
       if (typeof placeDock === "function") placeDock();
     }
 
@@ -47,38 +105,38 @@
         label.classList.toggle("is-on", Number(label.dataset.star) <= picked);
       });
       const hint = form.querySelector("[data-star-hint]");
-      if (hint) hint.textContent = picked ? `${picked} από 5` : "Επίλεξε αστέρια";
+      if (hint) hint.textContent = picked ? `${picked} ${L.of}` : L.pick;
     }
 
     function showForm(data) {
       card.innerHTML = `
-        <h1>Αξιολόγησε το Reel</h1>
-        <p class="lead">Πώς σου φάνηκε; Από 1 έως 5 αστέρια. Το κείμενο είναι προαιρετικό.</p>
+        <h1>${escapeHtml(L.h1)}</h1>
+        <p class="lead">${escapeHtml(L.lead)}</p>
         <form id="review-form">
           <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <fieldset class="score">
-            <legend>Η ΒΑΘΜΟΛΟΓΙΑ ΣΟΥ</legend>
+            <legend>${escapeHtml(L.legend)}</legend>
             <div class="stars">
               ${[1, 2, 3, 4, 5].map((star) => `<label data-star="${star}"><input type="radio" name="stars" value="${star}" /><span aria-hidden="true">★</span></label>`).join("")}
             </div>
-            <small data-star-hint>Διάλεξε αστέρια</small>
+            <small data-star-hint>${escapeHtml(L.pick)}</small>
           </fieldset>
-          <label class="field">Το μήνυμά σου
-            <span class="note">Προαιρετικό.</span>
-            <textarea name="message" maxlength="800" placeholder="Π.χ. «Το Reel έπιασε ακριβώς το κατάλυμα.»"></textarea>
+          <label class="field">${escapeHtml(L.message)}
+            <span class="note">${escapeHtml(L.optional)}</span>
+            <textarea name="message" maxlength="800" placeholder="${escapeHtml(L.placeholder)}"></textarea>
           </label>
-          <label class="field">Ονοματεπώνυμο
+          <label class="field">${escapeHtml(L.name)}
             <input type="text" readonly value="${escapeHtml(data.buyerName || "")}" />
           </label>
-          <label class="field">Κατάλυμα
+          <label class="field">${escapeHtml(L.property)}
             <input class="is-place" type="text" readonly value="${escapeHtml(data.property || "")}" />
           </label>
           <label class="privacy">
             <input type="checkbox" name="hideName" />
-            <span>Προτιμώ να μην φαίνεται το ονοματεπώνυμό μου στην ιστοσελίδα.</span>
+            <span>${escapeHtml(L.hide)}</span>
           </label>
-          <button type="submit">Υποβολή αξιολόγησης</button>
-          <p class="lead"><a href="/privacy.html" target="_blank" rel="noopener">Πολιτική Απορρήτου</a></p>
+          <button type="submit">${escapeHtml(L.submit)}</button>
+          <p class="lead"><a href="${L.privacyHref}" target="_blank" rel="noopener">${escapeHtml(L.privacy)}</a></p>
           <p class="form-error" id="form-error" hidden></p>
         </form>
       `;
@@ -92,12 +150,12 @@
         error.hidden = true;
         if (!stars) {
           error.hidden = false;
-          error.textContent = "Διάλεξε από 1 έως 5 αστέρια.";
+          error.textContent = L.pickError;
           return;
         }
         if (message.length > 800) {
           error.hidden = false;
-          error.textContent = "Το κείμενο είναι πολύ μεγάλο.";
+          error.textContent = L.tooLong;
           return;
         }
         const button = form.querySelector("button");
@@ -115,11 +173,11 @@
             }),
           });
           const payload = await response.json().catch(() => ({}));
-          if (!response.ok || payload.ok === false) throw new Error(payload.error || "Δεν στάλθηκε.");
-          showDone(payload.already ? "Την έχουμε ήδη." : "Την είδαμε. Αν την εγκρίνουμε, θα φανεί πάνω από τα δείγματα.");
+          if (!response.ok || payload.ok === false) throw new Error(L === COPY.en ? L.notSent : payload.error || L.notSent);
+          showDone(payload.already ? L.already : L.seen);
         } catch (err) {
           error.hidden = false;
-          error.textContent = err?.message || "Δεν στάλθηκε.";
+          error.textContent = err?.message || L.notSent;
           button.disabled = false;
         }
       });
@@ -130,7 +188,7 @@
     dock.className = "dock";
     dock.href = "#review-form";
     dock.hidden = true;
-    dock.textContent = "Υποβολή αξιολόγησης";
+    dock.textContent = L.submit;
     document.body.append(dock);
     const placeDock = () => {
       const button = document.querySelector("#review-form button[type='submit']");
@@ -141,7 +199,7 @@
       const box = button.getBoundingClientRect();
       const buttonShown = box.top < window.innerHeight - 12 && box.bottom > 48;
       dock.hidden = buttonShown;
-      dock.textContent = button.textContent.trim() || "Υποβολή αξιολόγησης";
+      dock.textContent = button.textContent.trim() || L.submit;
     };
     dock.addEventListener("click", (event) => {
       event.preventDefault();
@@ -155,16 +213,18 @@
       .then((response) => response.json().then((payload) => ({ ok: response.ok, payload })))
       .then(({ ok, payload }) => {
         if (!ok || payload.ok === false) {
-          showDone("Αυτός ο σύνδεσμος δεν ανοίγει φόρμα.");
+          useLang("el");
+          showDone(L.badLink);
           return;
         }
+        useLang(payload.lang);
         if (payload.reviewed) {
-          showDone("Την έχουμε ήδη.");
+          showDone(L.already);
           return;
         }
         showForm(payload);
       })
-      .catch(() => showDone("Η φόρμα δεν άνοιξε. Ξαναπροσπάθησε σε λίγο."));
+      .catch(() => showDone(L.failed));
   </script>
 </body>
 </html>

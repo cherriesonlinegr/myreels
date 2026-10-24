@@ -20,12 +20,27 @@
     document.dispatchEvent(new CustomEvent("myreels-cookies", { detail: value }));
   };
 
+  const english = (() => {
+    try {
+      const path = location.pathname || "";
+      if (/^\/en(\/|$)/.test(path)) return true;
+      if (/^\/(?:luxurystayreels|myairbnbreels)(\/|$)/.test(path)) return false;
+      return sessionStorage.getItem("myreels_lang") === "en";
+    } catch {
+      return false;
+    }
+  })();
   const bar = document.createElement("aside");
   bar.className = "cookie-bar";
   bar.hidden = true;
   bar.setAttribute("role", "dialog");
   bar.setAttribute("aria-label", "Cookies");
-  bar.innerHTML = `
+  bar.innerHTML = english
+    ? `
+    <p>We use cookies. <a href="/en/privacy">Privacy policy</a></p>
+    <button type="button" class="cookie-bar__yes" data-cookies="all">Accept</button>
+  `
+    : `
     <p>Χρησιμοποιούμε cookies. <a href="/privacy.html">Πολιτική Απορρήτου</a></p>
     <button type="button" class="cookie-bar__yes" data-cookies="all">Αποδοχή</button>
   `;

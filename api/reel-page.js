@@ -17,21 +17,18 @@ function cleanName(value) {
     .slice(0, 80);
 }
 
-function euroLabel(value) {
-  const amount = Number(String(value || "").replace(",", "."));
-  if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) return "40€";
-  const cents = Math.round(amount * 100);
-  return `${new Intl.NumberFormat("el-GR", {
-    minimumFractionDigits: cents % 100 ? 2 : 0,
-    maximumFractionDigits: 2,
-  }).format(amount)}€`;
-}
-
-export function reelPreviewHtml(html, { name, videoId, net, pageUrl, image }) {
-  const title = name
-    ? `Το Reel του «${name}» είναι ήδη έτοιμο`
-    : "Το Reel του καταλύματός σου είναι ήδη έτοιμο";
-  const description = `Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online. ${euroLabel(net)} χωρίς ΦΠΑ.`;
+export function reelPreviewHtml(html, { name, videoId, pageUrl, image, lang }) {
+  const english = lang === "en";
+  const title = english
+    ? name
+      ? `The Reel for «${name}» is ready`
+      : "Your Reel is ready"
+    : name
+      ? `Το Reel του «${name}» είναι ήδη έτοιμο`
+      : "Το Reel του καταλύματός σου είναι ήδη έτοιμο";
+  const description = english
+    ? "We made it from the photos you already have online."
+    : "Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online.";
   const tags = `
   <meta property="og:type" content="website" />
   <meta property="og:url" content="${esc(pageUrl)}" />
@@ -46,6 +43,7 @@ export function reelPreviewHtml(html, { name, videoId, net, pageUrl, image }) {
   <meta name="twitter:image" content="${esc(image)}" />`;
 
   return html
+    .replace(/<html lang="el">/, `<html lang="${english ? "en" : "el"}">`)
     .replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(title)} · MyReels</title>`)
     .replace(
       /<meta name="description" content="[^"]*" \/>/,
@@ -66,7 +64,7 @@ export default async function handler(req, res) {
   const pathName = cleanName(req.query?.name);
   let name = pathName;
   let videoId = /^[\w-]{11}$/.test(String(req.query?.v || "")) ? String(req.query.v) : "";
-  let net = req.query?.p;
+  let lang = req.query?.lang === "en" ? "en" : "el";
   if (name && !videoId) {
     try {
       const { loadBoard, publicLanding } = await import("../lib/stay-board.mjs");
@@ -74,7 +72,7 @@ export default async function handler(req, res) {
       if (found) {
         name = found.property || name;
         videoId = found.videoId;
-        net = found.net;
+        lang = found.lang === "en" ? "en" : "el";
       }
     } catch (err) {
       console.error("[myreels/reel-page]", err?.message || err);
@@ -86,18 +84,19 @@ export default async function handler(req, res) {
     .trim();
   const params = new URLSearchParams();
   Object.entries(req.query || {}).forEach(([key, value]) => {
-    if (key === "name" || typeof value !== "string") return;
+    if (key === "name" || key === "lang" || typeof value !== "string") return;
     params.set(key, value);
   });
   const query = params.toString();
+  const prefix = lang === "en" ? "/en" : "";
   const pageUrl = pathName
-    ? `${proto}://${host}/luxurystayreels/${encodeURIComponent(pathName)}${query ? `?${query}` : ""}`
-    : `${proto}://${host}/reel${query ? `?${query}` : ""}`;
+    ? `${proto}://${host}${prefix}/luxurystayreels/${encodeURIComponent(pathName)}${query ? `?${query}` : ""}`
+    : `${proto}://${host}${prefix}/reel${query ? `?${query}` : ""}`;
   const image = videoId
     ? `${proto}://${host}/api/reel-thumb?v=${videoId}`
     : `${proto}://${host}/favicon.png`;
   const html = readFileSync(join(process.cwd(), "templates", "reel.html"), "utf8");
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
-  res.status(200).send(reelPreviewHtml(html, { name, videoId, net, pageUrl, image }));
+  res.status(200).send(reelPreviewHtml(html, { name, videoId, pageUrl, image, lang }));
 }

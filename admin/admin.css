@@ -1168,6 +1168,45 @@ body.is-viewer #btn-copy-onboarding-lead {
   color: #1d1d1f;
 }
 
+.stay-card__via {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.stay-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.stay-chip[data-stay-via="viber"] {
+  background: #7360f2;
+}
+
+.stay-chip[data-stay-via="email"] {
+  background: #ea4335;
+}
+
+.stay-chip[data-stay-via="whatsapp"] {
+  background: #25d366;
+}
+
+.stay-chip[data-stay-via="facebook"] {
+  background: #1877f2;
+}
+
+.stay-chip[data-stay-via="instagram"] {
+  background: linear-gradient(45deg, #f9ce34, #ee2a7b 52%, #6228d7);
+}
+
 .stay-social {
   display: grid;
   gap: 10px;
@@ -1196,16 +1235,101 @@ body.is-viewer #btn-copy-onboarding-lead {
 }
 
 .stay-social__preview {
+  width: 100%;
+  box-sizing: border-box;
   margin: 0;
-  min-height: 96px;
+  min-height: 140px;
   padding: 12px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
-  background: #f6f6f8;
+  background: #fff;
   color: #1d1d1f;
   font: inherit;
   font-size: 14px;
   line-height: 1.45;
   white-space: pre-wrap;
+  resize: vertical;
+}
+
+.stay-social__bar,
+.stay-social__via {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stay-social__preview[hidden],
+.stay-social__bar[hidden],
+.stay-social__via[hidden] {
+  display: none;
+}
+
+.stay-via {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stay-via[data-stay-via="viber"] {
+  border-color: #7360f2;
+  background: #f4f1ff;
+  color: #5a46d6;
+}
+
+.stay-via[data-stay-via="viber"][aria-pressed="true"] {
+  background: #7360f2;
+  color: #fff;
+}
+
+.stay-via[data-stay-via="email"] {
+  border-color: #ea4335;
+  background: #fdeceb;
+  color: #c5221f;
+}
+
+.stay-via[data-stay-via="email"][aria-pressed="true"] {
+  background: #ea4335;
+  color: #fff;
+}
+
+.stay-via[data-stay-via="whatsapp"] {
+  border-color: #25d366;
+  background: #e9f9ef;
+  color: #0d8a45;
+}
+
+.stay-via[data-stay-via="whatsapp"][aria-pressed="true"] {
+  background: #25d366;
+  color: #fff;
+}
+
+.stay-via[data-stay-via="facebook"] {
+  border-color: #1877f2;
+  background: #e8f1fe;
+  color: #1464cc;
+}
+
+.stay-via[data-stay-via="facebook"][aria-pressed="true"] {
+  background: #1877f2;
+  color: #fff;
+}
+
+.stay-via[data-stay-via="instagram"] {
+  border-color: #e1306c;
+  background: #fdeef3;
+  color: #c13584;
+}
+
+.stay-via[data-stay-via="instagram"][aria-pressed="true"] {
+  border-color: transparent;
+  background: linear-gradient(45deg, #f9ce34, #ee2a7b 52%, #6228d7);
+  color: #fff;
 }
 
 #view-stays .stay-panel.is-readonly > .stay-panel__head::after {
@@ -1427,6 +1551,13 @@ body.is-viewer #btn-copy-onboarding-lead {
   display: grid;
   align-content: start;
   gap: 8px;
+}
+
+.stay-seq__lang {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .stay-seq__bar {

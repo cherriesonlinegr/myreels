@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Το Reel του καταλύματός σου — MyReels</title>
   <meta name="robots" content="noindex" />
-  <meta name="description" content="Το Reel του καταλύματός σου είναι ήδη έτοιμο. 40€ χωρίς ΦΠΑ (49,60€ με ΦΠΑ)." />
+  <meta name="description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online." />
   <meta property="og:title" content="Το Reel του καταλύματός σου είναι ήδη έτοιμο" />
-  <meta property="og:description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online. 40€ χωρίς ΦΠΑ." />
+  <meta property="og:description" content="Το φτιάξαμε από τις φωτογραφίες που έχεις ήδη online." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/reel.css?v=20" />
-  <link rel="stylesheet" href="/funnel-spark.css?v=14" />
+  <link rel="stylesheet" href="/reel.css?v=24" />
+  <link rel="stylesheet" href="/funnel-spark.css?v=20" />
 </head>
 <body>
   <div class="spark" aria-hidden="true">
@@ -63,13 +63,13 @@
       <div class="frame" id="frame">
         <img class="frame__poster" id="frame-poster" alt="" />
         <div id="player"></div>
-        <button type="button" class="frame__hit" id="frame-hit" aria-label="Παίξε το Reel"></button>
+        <button type="button" class="frame__hit" id="frame-hit" aria-label="Παίξε το Reel" data-ui-label="play"></button>
         <span class="reel-tile__badge frame__badge" aria-hidden="true"></span>
-        <button type="button" class="sound sound--mini" id="sound-btn" aria-label="Κλείσε τον ήχο">
+        <button type="button" class="sound sound--mini" id="sound-btn" aria-label="Κλείσε τον ήχο" data-ui-label="mute">
           <svg class="sound__icon" viewBox="0 0 24 24" aria-hidden="true">
             <path id="sound-path" fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4zm11.5 3a3.5 3.5 0 0 0-2-3.15v6.3a3.5 3.5 0 0 0 2-3.15zM14 4.23v2.06a6 6 0 0 1 0 11.42v2.06a8 8 0 0 0 0-15.54z"/>
           </svg>
-          <span class="sound__label">Άνοιξε τον ήχο</span>
+          <span class="sound__label" data-ui="unmute">Άνοιξε τον ήχο</span>
         </button>
       </div>
     </div>
@@ -83,7 +83,7 @@
 
       <h2 class="ask" data-copy="priceTitle">Και πόσο;</h2>
       <p class="amount" data-stay-net>40€</p>
-      <p class="breakdown"><span data-stay-gross>49,60€</span> με ΦΠΑ</p>
+      <p class="breakdown"><span data-stay-gross>49,60€</span> <span data-ui="vat">με ΦΠΑ</span></p>
       <p class="yes" data-copy="priceYes">Ναι. Για ολόκληρο το Reel.</p>
       <p class="honest" data-copy="priceNote">
         Δεν είναι έκπτωση από κάποια «αρχική τιμή».
@@ -97,34 +97,34 @@
         <p class="order__sub" data-copy="formSub">Συμπλήρωσε τα στοιχεία σου και πλήρωσε με κάρτα. Μόλις ολοκληρωθεί η πληρωμή, σου στέλνουμε το τελικό αρχείο.</p>
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <label>
-          <span>Ονοματεπώνυμο</span>
+          <span data-ui="fullName">Ονοματεπώνυμο</span>
           <input type="text" id="buyer-name" name="name" required autocomplete="name" maxlength="80" />
         </label>
         <label>
-          <span>Όνομα καταλύματος</span>
+          <span data-ui="property">Όνομα καταλύματος</span>
           <input type="text" id="buyer-property" name="property" required maxlength="80" readonly />
         </label>
         <label>
-          <span>Email</span>
+          <span data-ui="email">Email</span>
           <input type="email" id="buyer-email" name="email" required autocomplete="email" />
         </label>
         <label>
-          <span>Τηλέφωνο</span>
-          <input type="tel" id="buyer-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="69xxxxxxxx" />
+          <span data-ui="phone">Τηλέφωνο</span>
+          <input type="tel" id="buyer-phone" name="phone" required autocomplete="tel" inputmode="tel" maxlength="20" placeholder="69xxxxxxxx" data-ui-placeholder="phonePh" />
         </label>
         <fieldset class="bill">
           <label>
             <input type="radio" name="bill" value="receipt" checked />
-            <span>Απόδειξη</span>
+            <span data-ui="receipt">Απόδειξη</span>
           </label>
           <label>
             <input type="radio" name="bill" value="invoice" />
-            <span>Τιμολόγιο</span>
+            <span data-ui="invoice">Τιμολόγιο</span>
           </label>
         </fieldset>
         <div id="bill-afm" hidden>
           <label>
-            <span>ΑΦΜ</span>
+            <span data-ui="afm">ΑΦΜ</span>
             <input type="text" id="buyer-afm" name="afm" inputmode="numeric" maxlength="9" autocomplete="off" />
           </label>
           <p class="bill__company" id="bill-company" hidden></p>
@@ -132,11 +132,11 @@
             <p class="policy__accept">
               <label>
                 <input type="checkbox" id="buyer-privacy" name="privacy" />
-                <span>Αποδέχομαι την <a href="/privacy.html" target="_blank" rel="noopener">Πολιτική Απορρήτου</a>.</span>
+                <span data-ui="privacy" data-ui-html>Αποδέχομαι την <a href="/privacy.html" target="_blank" rel="noopener">Πολιτική Απορρήτου</a>.</span>
               </label>
             </p>
         <button type="submit" class="buy" id="buy-btn">Θέλω το Reel — 49,60€ με ΦΠΑ</button>
-        <p class="pay-note">Η πληρωμή γίνεται με κάρτα, στο επόμενο βήμα.</p>
+        <p class="pay-note" data-ui="payNote">Η πληρωμή γίνεται με κάρτα, στο επόμενο βήμα.</p>
         <p class="form-error" id="form-error" hidden></p>
       </form>
 
@@ -155,18 +155,18 @@
       </svg>
       <span class="logo__word">LuxuryStayReels</span>
     </p>
-    <h1>Αυτή η σελίδα δεν ανοίγει για πληρωμή.</h1>
-    <p>Το κατάλυμα δεν είναι αποθηκευμένο σε αυτό το site. Άνοιξε το link από το admin, με το «Άνοιγμα σελίδας».</p>
+    <h1 data-ui="missingTitle">Αυτή η σελίδα δεν ανοίγει για πληρωμή.</h1>
+    <p data-ui="missingText">Το κατάλυμα δεν είναι αποθηκευμένο σε αυτό το site. Άνοιξε το link από το admin, με το «Άνοιγμα σελίδας».</p>
   </main>
 
   <a class="dock" id="dock" href="#order" hidden>Θέλω το Reel — 49,60€ με ΦΠΑ</a>
 
   <footer class="site-foot">
-    <p>&copy; 2026 LuxuryStayReels | Powered by <a href="https://www.myreels.gr">myreels.gr</a> · <a href="/privacy.html">Πολιτική Απορρήτου</a> · επικοινωνία στο <a href="mailto:contact@myreels.gr">contact@myreels.gr</a> <a href="viber://chat?number=%2B306947447407">viber</a>/<a href="https://wa.me/306947447407">whatsapp</a> <a href="tel:+306947447407">+306947447407</a></p>
+    <p>&copy; 2026 LuxuryStayReels | Powered by <a href="https://www.myreels.gr">myreels.gr</a> · <a href="/privacy.html" data-privacy-href data-ui="privacyName">Πολιτική Απορρήτου</a> · <span data-ui="contact">επικοινωνία στο</span> <a href="mailto:contact@myreels.gr">contact@myreels.gr</a> <a href="viber://chat?number=%2B306947447407">viber</a>/<a href="https://wa.me/306947447407">whatsapp</a> <a href="tel:+306947447407">+306947447407</a></p>
   </footer>
 
-  <script src="/cookies.js"></script>
-  <script src="/stay-reel.js?v=7"></script>
-  <script src="/reel.js?v=10"></script>
+  <script src="/cookies.js?v=4"></script>
+  <script src="/stay-reel.js?v=13"></script>
+  <script src="/reel.js?v=12"></script>
 </body>
 </html>

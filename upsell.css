@@ -1,13 +1,15 @@
 :root {
-  --bg: #f5f5f7;
-  --text: #1d1d1f;
-  --muted: #6e6e73;
-  --line: rgba(0, 0, 0, 0.08);
+  --bg: #120d0e;
+  --ink: #1d1d1f;
+  --text: #f8f4f3;
+  --muted: rgba(248, 244, 243, 0.72);
+  --line: rgba(255, 255, 255, 0.14);
   --blue: #0071e3;
   --blue-hover: #0077ed;
   --coral: #ff5a5f;
   --coral-hover: #e84c51;
   --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 *,
@@ -30,7 +32,9 @@ body {
   min-height: 100vh;
   font-family: var(--font);
   color: var(--text);
-  background: var(--bg);
+  background:
+    radial-gradient(900px 520px at 80% -10%, rgba(255, 90, 95, 0.22), transparent 60%),
+    linear-gradient(180deg, #140e10 0%, #2a1618 48%, #120d0e 100%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -52,13 +56,9 @@ body {
   margin-bottom: 22px;
   padding: 14px 16px;
   border-radius: 24px;
-  background:
-    radial-gradient(140px 90px at 0% 0%, rgba(255, 90, 95, 0.28), transparent 72%),
-    linear-gradient(180deg, #fff 0%, #fff6f6 100%);
-  border: 1px solid rgba(255, 90, 95, 0.22);
-  box-shadow:
-    0 1px 2px rgba(255, 90, 95, 0.06),
-    0 14px 32px rgba(255, 90, 95, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
 }
 
 .banner__mark {
@@ -69,10 +69,11 @@ body {
 }
 
 .banner__brand {
-  font-size: 22px;
+  font-family: var(--display);
+  font-size: 20px;
   font-weight: 600;
-  letter-spacing: -0.045em;
-  color: var(--coral);
+  letter-spacing: -0.03em;
+  color: #fff;
   line-height: 1;
 }
 
@@ -108,17 +109,18 @@ body {
   display: grid;
   place-items: center;
   background: var(--coral);
-  color: #fff;
+  color: var(--ink);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0;
 }
 
 h1 {
-  font-size: 40px;
-  font-weight: 600;
+  font-family: var(--display);
+  font-size: clamp(32px, 6vw, 44px);
+  font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 1.05;
+  line-height: 1.1;
   margin-bottom: 14px;
 }
 
@@ -152,10 +154,11 @@ h1 {
 .next h2,
 .close h2,
 .rate h2 {
-  font-size: 32px;
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   margin-bottom: 8px;
 }
 
@@ -193,12 +196,11 @@ h1 {
   align-items: stretch;
   gap: 4px;
   padding: 20px 18px 18px;
-  border-radius: 24px;
+  border-radius: 28px;
   background: #fff;
+  color: var(--ink);
   border: 1px solid transparent;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 12px 32px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
 }
 
 .pack--best {
@@ -224,15 +226,21 @@ h1 {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--muted);
+  color: #6e6e73;
 }
 
 .pack__gross {
+  font-family: var(--display);
   font-size: clamp(56px, 12vw, 76px);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: #fff;
   margin: 2px 0 4px;
+}
+
+.pack .pack__gross {
+  color: var(--ink);
 }
 
 .pack__net,
@@ -240,7 +248,12 @@ h1 {
   font-size: 17px;
   font-weight: 500;
   line-height: 1.35;
-  color: var(--muted);
+  color: rgba(247, 250, 246, 0.72);
+}
+
+.pack .pack__net,
+.pack .pack__each {
+  color: #6e6e73;
 }
 
 .perks {
@@ -262,7 +275,6 @@ h1 {
   position: absolute;
   left: 0;
   color: var(--coral);
-  font-weight: 700;
 }
 
 .bill {
@@ -326,16 +338,17 @@ h1 {
 
 .buy {
   width: 100%;
-  min-height: 50px;
+  min-height: 52px;
   margin-top: auto;
   border: none;
-  border-radius: 980px;
+  border-radius: 999px;
   background: var(--coral);
-  color: #fff;
+  color: var(--ink);
   font: inherit;
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   padding: 14px 16px;
 }
@@ -346,12 +359,12 @@ h1 {
 
 .buy--quiet {
   background: transparent;
-  color: var(--text);
-  border: 1.5px solid rgba(0, 0, 0, 0.16);
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
 }
 
 .buy--quiet:hover {
-  background: rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .buy:disabled {
@@ -426,22 +439,28 @@ form input:focus {
 }
 
 .skip {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  margin-top: 14px;
-  border: none;
-  background: none;
-  padding: 8px 0;
+  min-height: 52px;
+  margin-top: 12px;
+  padding: 12px 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--coral);
+  line-height: 1.3;
   text-align: center;
   cursor: pointer;
 }
 
 .skip:hover {
-  color: var(--coral-hover);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fff;
 }
 
 .sheet.is-five .banner {
@@ -481,11 +500,14 @@ form input:focus {
 
 .sheet.is-five .skip,
 .sheet.is-five .skip:hover {
-  color: var(--blue);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .sheet.is-five .skip:hover {
-  color: var(--blue-hover);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fff;
 }
 
 .hp {
@@ -538,7 +560,7 @@ form input:focus {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ff5a5f;
+  background: var(--coral);
   animation: wait-dot 0.9s ease-in-out infinite;
 }
 
@@ -591,20 +613,28 @@ form input:focus {
 }
 
 .rate .score {
-  margin: 0 0 18px;
-  padding: 16px 12px 14px;
-  border: 1px solid #ffd0d2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 18px;
+  padding: 16px 16px 14px;
+  border: 0;
   border-radius: 18px;
-  background: #fff8f8;
+  background: #f7faf6;
   text-align: center;
 }
 
 .rate .score legend {
-  padding: 0 8px;
-  color: #ff5a5f;
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 14px 8px 0;
+  color: #5c5c61;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .rate .stars {
@@ -633,7 +663,7 @@ form input:focus {
   place-items: center;
   width: 42px;
   height: 42px;
-  color: #e4e4e8;
+  color: #c5c5ca;
   font-size: 34px;
   line-height: 1;
 }
@@ -642,21 +672,43 @@ form input:focus {
 
 .rate .score small {
   display: block;
-  margin-top: 4px;
-  color: #ff5a5f;
-  font-size: 13px;
+  max-width: 34rem;
+  margin: 10px auto 0;
+  color: #3a3a3c;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
-.rate .field,
-.rate .note {
+.rate__lead:empty {
+  display: none;
+}
+
+.rate .field {
   display: grid;
   gap: 6px;
   margin: 0 0 14px;
   font-size: 14px;
   font-weight: 650;
+  color: var(--text);
+}
+
+.rate .field:has(.note) {
+  display: block;
+}
+
+.rate .field:has(.note) > span:first-child,
+.rate .note {
+  display: inline;
+}
+
+.rate .field:has(.note) textarea {
+  display: block;
+  margin-top: 6px;
 }
 
 .rate .note {
+  margin: 0 0 0 8px;
   color: var(--muted);
   font-weight: 400;
   font-size: 13px;
@@ -670,7 +722,7 @@ form input:focus {
   padding: 12px 14px;
   font: inherit;
   font-weight: 500;
-  color: inherit;
+  color: var(--ink);
   background: #fff;
 }
 
@@ -683,7 +735,7 @@ form input:focus {
   margin: 0 0 16px;
   padding: 12px 14px;
   border-radius: 16px;
-  background: #fff1f1;
+  background: rgba(255, 90, 95, 0.14);
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
@@ -691,15 +743,16 @@ form input:focus {
 
 .rate button[type="submit"] {
   width: 100%;
-  height: 50px;
+  height: 52px;
   border: 0;
-  border-radius: 980px;
+  border-radius: 999px;
   background: var(--coral);
-  color: #fff;
+  color: var(--ink);
   font: inherit;
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -716,12 +769,12 @@ form input:focus {
   display: none;
 }
 
-.rate button[type="submit"]:hover { background: #e84c51; }
+.rate button[type="submit"]:hover { background: var(--coral-hover); }
 .rate button[type="submit"]:disabled { opacity: 0.6; cursor: default; }
 
 .rate .form-error {
   margin: 10px 0 0;
-  color: #ff5a5f;
+  color: #ffb4b0;
   font-size: 14px;
   text-align: center;
 }
@@ -747,11 +800,13 @@ form input:focus {
     align-items: center;
     justify-content: center;
     padding: 0 16px;
-    border-radius: 980px;
+    border-radius: 999px;
     background: var(--coral);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     letter-spacing: -0.02em;
     text-align: center;
     text-decoration: none;
@@ -770,7 +825,7 @@ form input:focus {
   }
 
   h1 {
-    font-size: 56px;
+    font-size: 44px;
   }
 
   .next h2,

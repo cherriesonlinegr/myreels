@@ -2,10 +2,11 @@
   const stay = window.MyReelsStay;
 
   const boot = async () => {
+  stay.applyChrome();
   const params = new URLSearchParams(window.location.search);
   const pathStay = (() => {
     try {
-      const match = decodeURIComponent(window.location.pathname).match(/^\/(?:luxurystayreels|myairbnbreels)\/(.+?)\/?$/);
+      const match = decodeURIComponent(window.location.pathname).match(/^\/(?:en\/)?(?:luxurystayreels|myairbnbreels)\/(.+?)\/?$/);
       return match ? match[1] : "";
     } catch {
       return "";
@@ -26,6 +27,17 @@
       const response = await fetch(`/api/reel-config?slug=${encodeURIComponent(pathStay)}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.ok && data.videoId) {
+        const dealLang = data.lang === "en" ? "en" : "el";
+        stay.setLang(dealLang);
+        const onEn = /^\/en(\/|$)/.test(location.pathname);
+        if (dealLang === "en" && !onEn) {
+          location.replace(`/en${location.pathname}${location.search}${location.hash}`);
+          return;
+        }
+        if (dealLang === "el" && onEn) {
+          location.replace(`${location.pathname.replace(/^\/en(?=\/)/, "") || "/"}${location.search}${location.hash}`);
+          return;
+        }
         name = stay.cleanName(data.property) || name;
         videoId = stay.parseYouTubeId(data.videoId);
         driveId = stay.parseDriveId(data.driveUrl) || driveId;
@@ -36,10 +48,14 @@
         if (data.samples && typeof data.samples === "object") sampleOverrides = data.samples;
         if (Number(data.posterAt) > 0) posterAt = Math.round(Number(data.posterAt) * 10) / 10;
         if (data.mobile === "b") document.documentElement.classList.add("is-mobile-b");
+      } else {
+        stay.clearLangLock();
       }
     } catch {
       /* an older link still carries the video in the query */
     }
+  } else {
+    stay.clearLangLock();
   }
   net = net ?? stay.NET;
   pack5 = pack5 ?? stay.PACK_5;
@@ -55,7 +71,8 @@
     return;
   }
 
-  const pages = stay.resolvePages(copyRaw);
+  stay.applyChrome();
+  const pages = stay.resolvePages(copyRaw, stay.currentLang());
   const copy = pages.landing;
   const tokens = { name, net: netLabel, gross: grossLabel };
   try {
@@ -89,7 +106,7 @@
     node.hidden = html.length === 0;
     node.innerHTML = html;
   });
-  const ctaLabel = textOf("cta") || stay.fillTokens(stay.COPY.cta, tokens);
+  const ctaLabel = textOf("cta") || stay.fillTokens(stay.resolvePages("", stay.currentLang()).landing.cta, tokens);
   const buyBtn = document.getElementById("buy-btn");
   const dock = document.getElementById("dock");
   if (buyBtn) buyBtn.textContent = ctaLabel;
@@ -149,7 +166,7 @@
   const setHeroPlaying = (playing) => {
     frame?.classList.toggle("is-playing", playing);
     if (playing) frame?.classList.add("is-started");
-    frameHit?.setAttribute("aria-label", playing ? "Σταμάτα το Reel" : "Παίξε το Reel");
+    frameHit?.setAttribute("aria-label", playing ? stay.t("pause") : stay.t("play"));
   };
 
   const pauseHero = () => {
@@ -252,7 +269,7 @@
     applyHeroSound();
     if (soundOn) ytPlayer.playVideo();
     soundBtn.querySelector("#sound-path")?.setAttribute("d", soundOn ? SOUND_ON : SOUND_OFF);
-    soundBtn.setAttribute("aria-label", soundOn ? "Κλείσε τον ήχο" : "Άνοιξε τον ήχο");
+    soundBtn.setAttribute("aria-label", soundOn ? stay.t("mute") : stay.t("unmute"));
   });
 
   frameHit?.addEventListener("click", () => {
@@ -313,7 +330,7 @@
     const token = ++lookupToken;
     if (companyEl) {
       companyEl.hidden = false;
-      companyEl.textContent = "Ψάχνω τα στοιχεία…";
+      companyEl.textContent = stay.t("afmLooking");
     }
     try {
       const response = await fetch("/api/viva", {
@@ -323,7 +340,7 @@
       });
       const payload = await response.json().catch(() => ({}));
       if (token !== lookupToken) return;
-      if (!response.ok || !payload.name) throw new Error(payload.error || "Δεν βρέθηκαν στοιχεία για αυτό το ΑΦΜ.");
+      if (!response.ok || !payload.name) throw new Error(payload.error || stay.t("afmMissing"));
       billing = {
         document: "invoice",
         afm: payload.afm || afm,
@@ -334,7 +351,7 @@
       };
     } catch (err) {
       if (token !== lookupToken) return;
-      billing.error = err?.message || "Η αναζήτηση ΑΦΜ δεν απάντησε. Δοκίμασε ξανά.";
+      billing.error = stay.localError(err?.message, "afmDown");
     }
     paintCompany();
   };
@@ -371,7 +388,7 @@
     if (!accepted) {
       if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = "Τσέκαρε ότι αποδέχεσαι την Πολιτική Απορρήτου.";
+        errorEl.textContent = stay.t("privacyCheck");
       }
       return;
     }
@@ -380,7 +397,7 @@
     if (invoice && (billing.afm !== afm || !billing.name)) {
       if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = billing.error || "Βάλε ένα σωστό ΑΦΜ για να βρεθούν τα στοιχεία του τιμολογίου.";
+        errorEl.textContent = billing.error || stay.t("afmInvalid");
       }
       return;
     }
@@ -388,14 +405,14 @@
       if (errorEl) {
         errorEl.hidden = false;
         errorEl.textContent = phone.replace(/\D/g, "").length < 10
-          ? "Γράψε ένα τηλέφωνο."
-          : "Συμπλήρωσε όλα τα πεδία.";
+          ? stay.t("phoneInvalid")
+          : stay.t("fieldsMissing");
       }
       return;
     }
 
     buyBtn.disabled = true;
-    buyBtn.textContent = "Μετάβαση στην πληρωμή…";
+    buyBtn.textContent = stay.t("paying");
 
     try {
       sessionStorage.setItem(
@@ -416,11 +433,12 @@
           acceptPrivacy: true,
           document: invoice ? "invoice" : "receipt",
           afm: invoice ? afm : "",
+          lang: stay.currentLang(),
         }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.url) {
-        throw new Error(payload.error || "Η πληρωμή δεν άνοιξε.");
+        throw new Error(payload.error || stay.t("payClosed"));
       }
       window.location.assign(payload.url);
     } catch (err) {
@@ -428,7 +446,7 @@
       buyBtn.textContent = ctaLabel;
       if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = err?.message || "Κάτι πήγε στραβά. Δοκίμασε ξανά.";
+        errorEl.textContent = stay.localError(err?.message, "payFailed");
       }
     }
   });

@@ -1,3 +1,11 @@
+import { statSync } from "node:fs";
+
+function loadBoardModule() {
+  if (process.env.VERCEL) return import("../lib/stay-board.mjs");
+  const file = new URL("../lib/stay-board.mjs", import.meta.url);
+  return import(`${file.href}?m=${Math.floor(statSync(file).mtimeMs)}`);
+}
+
 function builtInAccess(body) {
   const user = String(body.user || "");
   const pass = String(body.pass || "");
@@ -64,11 +72,14 @@ export default async function handler(req, res) {
   try {
     const {
       defaultSequences,
+      defaultSequencesEn,
+      defaultMessages,
       advanceLanding,
       loginStayUser,
       markUninterested,
       markViber,
       markOutreach,
+      saveOutreachTemplate,
       removeCost,
       saveCost,
       setDealNote,
@@ -90,7 +101,7 @@ export default async function handler(req, res) {
       sendTest,
       syncLeadSheet,
       upsertLanding,
-    } = await import("../lib/stay-board.mjs");
+    } = await loadBoardModule();
     if (action === "login") {
       const result = loginStayUser(await loadBoard(), body);
       if (!result.ok) return res.status(401).json({ ok: false, error: "Δεν έχεις πρόσβαση." });
@@ -153,13 +164,22 @@ export default async function handler(req, res) {
     }
     if (action === "sequences") {
       const current = await loadBoard();
-      current.sequences = body.sequences || current.sequences;
+      if (body.sequences) current.sequences = body.sequences;
+      if (body.sequencesEn) current.sequencesEn = body.sequencesEn;
+      if (body.messages) current.messages = body.messages;
       const board = await saveBoard(current);
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "resetSequences") {
       const current = await loadBoard();
-      current.sequences = defaultSequences();
+      const lang = body.lang === "en" ? "en" : "el";
+      const part = body.part === "viber" || body.part === "review" ? body.part : "";
+      if (part) {
+        const fresh = defaultMessages();
+        current.messages = current.messages || {};
+        current.messages[lang] = { ...(current.messages[lang] || {}), [part]: fresh[lang][part] };
+      } else if (lang === "en") current.sequencesEn = defaultSequencesEn();
+      else current.sequences = defaultSequences();
       const board = await saveBoard(current);
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
@@ -169,6 +189,8 @@ export default async function handler(req, res) {
         subject: body.subject,
         body: body.body,
         stage: body.stage,
+        lang: body.lang,
+        review: body.review,
       });
       return res.status(200).json({ ok: true, ...result });
     }
@@ -232,11 +254,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "outreach") {
-      const result = markOutreach(await loadBoard(), { videoId: body.videoId, id: body.id });
+      const payload = { videoId: body.videoId, id: body.id };
+      if (Array.isArray(body.channels)) payload.channels = body.channels;
+      if (typeof body.text === "string") payload.text = body.text;
+      const result = markOutreach(await loadBoard(), payload);
       if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
       const board = await saveBoard(result.board);
-      const sheet = await noteLead(result.deal?.property, result.label, "", result.deal);
+      const sheet = Array.isArray(body.channels) ? await noteLead(result.deal?.property, result.label, "", result.deal) : "";
       return res.status(200).json({ ok: true, sheet, ...openBoard(board, access) });
+    }
+    if (action === "outreachTemplate") {
+      const result = saveOutreachTemplate(await loadBoard(), { id: body.id, text: body.text });
+      if (!result.ok) return res.status(400).json({ ok: false, error: result.error });
+      const board = await saveBoard(result.board);
+      return res.status(200).json({ ok: true, ...openBoard(board, access) });
     }
     if (action === "costSave") {
       const result = saveCost(await loadBoard(), body);

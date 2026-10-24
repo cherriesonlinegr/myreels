@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/admin/admin.css?v=56" />
+  <link rel="stylesheet" href="/admin/admin.css?v=60" />
   <meta name="theme-color" content="#ff5a5f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="LuxuryStayReels" />
@@ -216,6 +216,11 @@
             </label>
           </div>
           <fieldset class="stay-mobile">
+            <legend>Γλώσσα του καταλύματος</legend>
+            <label><input type="radio" name="reel-lang" value="el" checked /> Ελληνικά</label>
+            <label><input type="radio" name="reel-lang" value="en" /> English, για κατάλυμα από την Αγγλία</label>
+          </fieldset>
+          <fieldset class="stay-mobile">
             <legend>Κινητό</legend>
             <label><input type="radio" name="reel-mobile" value="a" checked /> Α · όπως είναι τώρα</label>
             <label><input type="radio" name="reel-mobile" value="b" /> Β · τιμή και κουμπί στην πρώτη οθόνη</label>
@@ -308,6 +313,11 @@
                 <small class="stay-hint" id="stay-pack10-preview">Με ΦΠΑ: 434€</small>
               </label>
             </div>
+            <fieldset class="stay-mobile">
+              <legend>Γλώσσα του καταλύματος</legend>
+              <label><input type="radio" name="stay-lang" value="el" checked /> Ελληνικά</label>
+              <label><input type="radio" name="stay-lang" value="en" /> English, για κατάλυμα από την Αγγλία</label>
+            </fieldset>
             <fieldset class="stay-mobile">
               <legend>Κινητό</legend>
               <label><input type="radio" name="stay-mobile" value="a" checked /> Α · όπως είναι τώρα</label>
@@ -472,7 +482,11 @@
       <div id="stay-panel-sequences" class="stay-panel" hidden>
         <header class="stay-panel__head">
           <h2>Emails</h2>
-          <p>Ό,τι φεύγει μόνο του σε κάθε στάδιο.</p>
+          <p>Ό,τι φεύγει μόνο του σε κάθε στάδιο. Κάθε κατάλυμα παίρνει τη γλώσσα του.</p>
+          <div class="stay-seq__lang" id="stay-seq-lang">
+            <button type="button" class="stay-subtab is-active" data-seq-lang="el">Ελληνικά</button>
+            <button type="button" class="stay-subtab" data-seq-lang="en">English</button>
+          </div>
         </header>
         <div class="stay-seq">
           <aside class="stay-seq__stages" id="stay-seq-stages"></aside>
@@ -811,8 +825,8 @@
   </dialog>
 
   <script src="/services-data.js"></script>
-  <script src="/stay-reel.js?v=3"></script>
+  <script src="/stay-reel.js?v=13"></script>
   <script type="module" src="/admin/reel-upload.js?v=6"></script>
-  <script src="/admin/admin.js?v=74"></script>
+  <script src="/admin/admin.js?v=80"></script>
 </body>
 </html>

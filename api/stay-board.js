@@ -1,10 +1,35 @@
-import { statSync } from "node:fs";
-
-function loadBoardModule() {
-  if (process.env.VERCEL) return import("../lib/stay-board.mjs");
-  const file = new URL("../lib/stay-board.mjs", import.meta.url);
-  return import(`${file.href}?m=${Math.floor(statSync(file).mtimeMs)}`);
-}
+import {
+  defaultSequences,
+  defaultSequencesEn,
+  defaultMessages,
+  advanceLanding,
+  loginStayUser,
+  markUninterested,
+  markViber,
+  markOutreach,
+  saveOutreachTemplate,
+  removeCost,
+  saveCost,
+  setDealNote,
+  updateDeal,
+  ensureReviewToken,
+  loadBoard,
+  moderateReview,
+  noteLead,
+  publicUsers,
+  removeDeals,
+  removeStayUser,
+  removeLanding,
+  saveStayUser,
+  setArchived,
+  saveBoard,
+  savePublicCopy,
+  sendDue,
+  sendOne,
+  sendTest,
+  syncLeadSheet,
+  upsertLanding,
+} from "../lib/stay-board.mjs";
 
 function builtInAccess(body) {
   const user = String(body.user || "");
@@ -70,38 +95,6 @@ export default async function handler(req, res) {
   const action = String(body.action || "load");
 
   try {
-    const {
-      defaultSequences,
-      defaultSequencesEn,
-      defaultMessages,
-      advanceLanding,
-      loginStayUser,
-      markUninterested,
-      markViber,
-      markOutreach,
-      saveOutreachTemplate,
-      removeCost,
-      saveCost,
-      setDealNote,
-      updateDeal,
-      ensureReviewToken,
-      loadBoard,
-      moderateReview,
-      noteLead,
-      publicUsers,
-      removeDeals,
-      removeStayUser,
-      removeLanding,
-      saveStayUser,
-      setArchived,
-      saveBoard,
-      savePublicCopy,
-      sendDue,
-      sendOne,
-      sendTest,
-      syncLeadSheet,
-      upsertLanding,
-    } = await loadBoardModule();
     if (action === "login") {
       const result = loginStayUser(await loadBoard(), body);
       if (!result.ok) return res.status(401).json({ ok: false, error: "Δεν έχεις πρόσβαση." });
